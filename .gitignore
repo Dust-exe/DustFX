@@ -1,0 +1,23 @@
+# Build outputs
+*.exe
+*.dll
+*.obj
+*.pdb
+*.tmp
+
+# Test scripts
+diag.cs
+diag.exe
+make_icon.cs
+make_icon.exe
+process_logo.cs
+process_logo.exe
+
+# Configuration & user files
+dustfx_config.txt
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
