@@ -57,13 +57,13 @@ bool DustFxApp::Initialize() {
     // 6. Overlay & OSD
     OverlayToast::Instance().Initialize();
 
-    // 7. Auto Updater (Watching Dust-exe/DustReplay)
-    AutoUpdater::Instance().Configure("Dust-exe", "DustReplay", DUSTFX_VERSION_STRING);
+    // 7. Auto Updater (Watching Dust-exe/DustFX - every 10 minutes)
+    AutoUpdater::Instance().Configure("Dust-exe", "DustFX", DUSTFX_VERSION_STRING);
     AutoUpdater::Instance().StartBackgroundChecker(
         [this](bool available, const ReleaseInfo& info) {
             OnUpdateDetected(available, info);
         },
-        std::chrono::minutes(30)
+        std::chrono::minutes(10)
     );
 
     // 8. HTTP UI Server

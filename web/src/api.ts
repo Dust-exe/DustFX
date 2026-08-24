@@ -158,9 +158,9 @@ export const api = {
         currentVersion: '1.1.0',
         latestVersion: '1.1.0',
         tagName: 'v1.1.0',
-        htmlUrl: 'https://github.com/Dust-exe/DustReplay/releases',
-        downloadUrl: 'https://github.com/Dust-exe/DustReplay/releases/download/v1.1.0/DustFX_Setup.exe',
-        releaseNotes: '• Otomatik GitHub güncelleme takip sistemi entegre edildi.\n• Çoklu monitör desteği ve bağımsız parlaklık yönetimi eklendi.\n• Modern Medal.tv / DustPlay tarzı Glassmorphism UI tasarımı.',
+        htmlUrl: 'https://github.com/Dust-exe/DustFX/releases',
+        downloadUrl: '',
+        releaseNotes: '• DCCW Gama Boost ve Magnification donanım motoru entegre edildi.\n• Çoklu monitör desteği ve bağımsız parlaklık yönetimi eklendi.\n• Modern glassmorphism arayüz ve sayfa bazlı sekme navigasyonu.',
         publishedAt: '2026-08-24'
       };
     }

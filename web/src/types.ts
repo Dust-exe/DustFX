@@ -8,7 +8,7 @@ export interface DisplaySettings {
   rgbBlue: number;
   sharpness: number;
   crosshairEnabled: boolean;
-  crosshairStyle: 'dot' | 'cross' | 'circle' | 'gap-cross';
+  crosshairStyle: 'dot' | 'cross' | 'circle' | 'gap-cross' | 'x-cross' | 't-cross' | 'cross-dot' | 'square';
   crosshairColor: string;
   crosshairSize: number;
   sniperZoomEnabled?: boolean;

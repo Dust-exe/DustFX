@@ -21,16 +21,35 @@
 static NOTIFYICONDATA g_nid = {0};
 static HWND g_hHiddenWnd = NULL;
 
+// Open in default system browser (NOT Edge forced)
+void OpenInDefaultBrowser(const char* url) {
+    ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOW);
+}
+
 void LaunchStudioUI() {
+    // Try Edge in --app mode first for app-like experience
     HINSTANCE hRes = ShellExecuteA(
         NULL,
         "open",
         "msedge.exe",
-        "--app=http://127.0.0.1:19840/ --window-size=1150,780",
+        "--app=http://127.0.0.1:19840/ --window-size=1150,780 --disable-extensions",
         NULL,
         SW_SHOW
     );
 
+    // Fallback: try chrome in app mode
+    if ((intptr_t)hRes <= 32) {
+        hRes = ShellExecuteA(
+            NULL,
+            "open",
+            "chrome.exe",
+            "--app=http://127.0.0.1:19840/ --window-size=1150,780",
+            NULL,
+            SW_SHOW
+        );
+    }
+
+    // Final fallback: default browser
     if ((intptr_t)hRes <= 32) {
         ShellExecuteA(NULL, "open", "http://127.0.0.1:19840/", NULL, NULL, SW_SHOW);
     }
@@ -46,7 +65,7 @@ void AddTrayIcon(HWND hWnd) {
     if (!g_nid.hIcon) {
         g_nid.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     }
-    lstrcpyA(g_nid.szTip, "DustFX PRO — GPU Display & Gamma Optimizer");
+    lstrcpyA(g_nid.szTip, "DustFX PRO - GPU Display & Gamma Optimizer");
     Shell_NotifyIconA(NIM_ADD, &g_nid);
 }
 
@@ -65,11 +84,13 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
                 POINT pt;
                 GetCursorPos(&pt);
                 HMENU hMenu = CreatePopupMenu();
-                InsertMenuA(hMenu, 0, MF_BYPOSITION | MF_STRING, IDM_TRAY_OPEN, "🎮 DustFX Panelini Aç");
-                InsertMenuA(hMenu, 1, MF_BYPOSITION | MF_STRING, IDM_TRAY_MAXGAMMA, "🔥 MAX DCCW Gama (F11)");
-                InsertMenuA(hMenu, 2, MF_BYPOSITION | MF_STRING, IDM_TRAY_RESET, "🔄 Ayarları Sıfırla (F10)");
+
+                // Use ASCII-safe strings to avoid encoding issues
+                InsertMenuA(hMenu, 0, MF_BYPOSITION | MF_STRING, IDM_TRAY_OPEN,      "DustFX Paneli Ac");
+                InsertMenuA(hMenu, 1, MF_BYPOSITION | MF_STRING, IDM_TRAY_MAXGAMMA,  "MAX DCCW Gama Toggl (F11)");
+                InsertMenuA(hMenu, 2, MF_BYPOSITION | MF_STRING, IDM_TRAY_RESET,     "Ayarlari Sifirla (F10)");
                 InsertMenuA(hMenu, 3, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
-                InsertMenuA(hMenu, 4, MF_BYPOSITION | MF_STRING, IDM_TRAY_EXIT, "Çıkış");
+                InsertMenuA(hMenu, 4, MF_BYPOSITION | MF_STRING, IDM_TRAY_EXIT,      "Cikis (Exit)");
 
                 SetForegroundWindow(hWnd);
                 int cmd = TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_NONOTIFY, pt.x, pt.y, 0, hWnd, NULL);
@@ -100,9 +121,10 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    // Single instance mutex
+    // Single instance mutex - if already running, open the UI
     HANDLE hMutex = CreateMutexA(NULL, TRUE, "DustFX_SingleInstance_Mutex");
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        // Bring existing window to front + open UI
         LaunchStudioUI();
         return 0;
     }
