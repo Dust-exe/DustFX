@@ -1,0 +1,1 @@
+{"root":["./src/App.tsx","./src/api.ts","./src/main.tsx","./src/types.ts","./src/vite-env.d.ts","./src/components/CrosshairOverlay.tsx","./src/components/HotkeyManagerUI.tsx","./src/components/MonitorPicker.tsx","./src/components/Navbar.tsx","./src/components/ProfileCards.tsx","./src/components/SliderGroup.tsx","./src/components/UpdateModal.tsx"],"version":"6.0.3"}

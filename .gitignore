@@ -1,0 +1,19 @@
+# Build directories
+build/
+bin/
+lib/
+*.exe
+*.o
+*.obj
+
+# Web Node modules and build
+web/node_modules/
+web/dist/
+web/.tmp/
+*.log
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

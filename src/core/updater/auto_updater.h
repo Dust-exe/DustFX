@@ -1,0 +1,54 @@
+#pragma once
+
+#include "core/common.h"
+#include <string>
+#include <functional>
+#include <thread>
+#include <atomic>
+#include <chrono>
+
+namespace dustfx {
+
+using UpdateCheckCallback = std::function<void(bool updateAvailable, const ReleaseInfo& info)>;
+
+class AutoUpdater {
+public:
+    static AutoUpdater& Instance();
+
+    void Configure(
+        const std::string& owner = "Dust-exe",
+        const std::string& repo = "DustReplay",
+        const std::string& currentVersion = DUSTFX_VERSION_STRING
+    );
+
+    // One-shot manual check
+    bool CheckForUpdate(ReleaseInfo& outInfo);
+
+    // Background periodic checker
+    void StartBackgroundChecker(
+        UpdateCheckCallback callback,
+        std::chrono::minutes interval = std::chrono::minutes(30)
+    );
+    void StopBackgroundChecker();
+
+    std::string GetCurrentVersion() const { return m_currentVersion; }
+    static bool IsNewerVersion(const std::string& current, const std::string& remote);
+
+private:
+    AutoUpdater();
+    ~AutoUpdater();
+
+    void BackgroundLoop();
+    std::string FetchLatestRelease();
+
+    std::string m_owner = "Dust-exe";
+    std::string m_repo = "DustReplay";
+    std::string m_currentVersion = DUSTFX_VERSION_STRING;
+
+    UpdateCheckCallback m_callback;
+    std::chrono::minutes m_checkInterval{30};
+    std::thread m_bgThread;
+    std::atomic<bool> m_running{false};
+};
+
+} // namespace dustfx
