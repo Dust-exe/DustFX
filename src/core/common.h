@@ -34,9 +34,14 @@ struct DisplaySettings {
     
     // PvP Tools
     bool crosshairEnabled = false;
-    std::string crosshairStyle = "dot"; // "dot", "cross", "circle", "gap-cross"
+    std::string crosshairStyle = "cross"; // "dot", "cross", "x-cross", "t-cross", "gap-cross", "circle", "cross-dot", "square"
     std::string crosshairColor = "#00FF66";
-    int crosshairSize = 6;
+    int crosshairSize = 10;            // Length / Uzunluk (2 - 40)
+    int crosshairThickness = 2;       // Thickness / Kalınlık (1 - 10)
+    int crosshairGap = 4;             // Center Gap / Boşluk (0 - 30)
+    int crosshairDotSize = 0;         // Center Dot / Nokta Boyutu (0 = kapalı)
+    int crosshairOutline = 1;         // Black Outline / Dış Kenarlık (0 - 3)
+    float crosshairOpacity = 1.0f;    // Opacity / Opaklık (0.2 - 1.0)
     bool sniperZoomEnabled = false;
     float sniperZoomFactor = 1.5f;     // 1.2x - 2.5x
 };

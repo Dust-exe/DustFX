@@ -10,7 +10,12 @@ export interface DisplaySettings {
   crosshairEnabled: boolean;
   crosshairStyle: 'dot' | 'cross' | 'circle' | 'gap-cross' | 'x-cross' | 't-cross' | 'cross-dot' | 'square';
   crosshairColor: string;
-  crosshairSize: number;
+  crosshairSize: number;            // Uzunluk (Length)
+  crosshairThickness?: number;      // Kalınlık (Thickness)
+  crosshairGap?: number;            // Boşluk (Gap)
+  crosshairDotSize?: number;        // Nokta boyutu (Dot size)
+  crosshairOutline?: number;        // Dış çizgi kalınlığı (Outline)
+  crosshairOpacity?: number;        // Opaklık (0.2 - 1.0)
   sniperZoomEnabled?: boolean;
   sniperZoomFactor?: number;
 }

@@ -27,9 +27,14 @@ export function App() {
     rgbBlue: 1.0,
     sharpness: 0.0,
     crosshairEnabled: false,
-    crosshairStyle: 'dot',
+    crosshairStyle: 'cross',
     crosshairColor: '#00FF66',
-    crosshairSize: 6,
+    crosshairSize: 10,
+    crosshairThickness: 2,
+    crosshairGap: 4,
+    crosshairDotSize: 0,
+    crosshairOutline: 1,
+    crosshairOpacity: 1.0,
   });
   const [activeProfileId, setActiveProfileId] = useState<string>('');
   const [selectedMonitorIndex, setSelectedMonitorIndex] = useState<number>(-1);
@@ -79,13 +84,18 @@ export function App() {
     setActiveProfileId(id);
     const p = profiles.find((item) => item.id === id);
     if (p) {
-      // Clone profile settings but keep the current crosshair state
+      // Clone profile settings but keep all current crosshair properties
       const profileSettings: DisplaySettings = {
         ...p.settings,
         crosshairEnabled: settings.crosshairEnabled,
         crosshairStyle: settings.crosshairStyle,
         crosshairColor: settings.crosshairColor,
         crosshairSize: settings.crosshairSize,
+        crosshairThickness: settings.crosshairThickness,
+        crosshairGap: settings.crosshairGap,
+        crosshairDotSize: settings.crosshairDotSize,
+        crosshairOutline: settings.crosshairOutline,
+        crosshairOpacity: settings.crosshairOpacity,
       };
       setSettings(profileSettings);
       await api.applySettings(profileSettings);
@@ -114,6 +124,11 @@ export function App() {
       crosshairStyle: settings.crosshairStyle,
       crosshairColor: settings.crosshairColor,
       crosshairSize: settings.crosshairSize,
+      crosshairThickness: settings.crosshairThickness,
+      crosshairGap: settings.crosshairGap,
+      crosshairDotSize: settings.crosshairDotSize,
+      crosshairOutline: settings.crosshairOutline,
+      crosshairOpacity: settings.crosshairOpacity,
     };
     setSettings(defaultSettings);
     await api.resetSettings();

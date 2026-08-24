@@ -61,9 +61,14 @@ bool SettingsManager::LoadFromFile(const std::string& configPath) {
             m_settings.currentSettings.rgbBlue = s.value("rgbBlue", 1.0f);
             m_settings.currentSettings.sharpness = s.value("sharpness", 0.0f);
             m_settings.currentSettings.crosshairEnabled = s.value("crosshairEnabled", false);
-            m_settings.currentSettings.crosshairStyle = s.value("crosshairStyle", "dot");
+            m_settings.currentSettings.crosshairStyle = s.value("crosshairStyle", "cross");
             m_settings.currentSettings.crosshairColor = s.value("crosshairColor", "#00FF66");
-            m_settings.currentSettings.crosshairSize = s.value("crosshairSize", 6);
+            m_settings.currentSettings.crosshairSize = s.value("crosshairSize", 10);
+            m_settings.currentSettings.crosshairThickness = s.value("crosshairThickness", 2);
+            m_settings.currentSettings.crosshairGap = s.value("crosshairGap", 4);
+            m_settings.currentSettings.crosshairDotSize = s.value("crosshairDotSize", 0);
+            m_settings.currentSettings.crosshairOutline = s.value("crosshairOutline", 1);
+            m_settings.currentSettings.crosshairOpacity = s.value("crosshairOpacity", 1.0f);
         }
 
         return true;
@@ -113,7 +118,12 @@ bool SettingsManager::SaveToFile(const std::string& configPath) {
             {"crosshairEnabled", m_settings.currentSettings.crosshairEnabled},
             {"crosshairStyle", m_settings.currentSettings.crosshairStyle},
             {"crosshairColor", m_settings.currentSettings.crosshairColor},
-            {"crosshairSize", m_settings.currentSettings.crosshairSize}
+            {"crosshairSize", m_settings.currentSettings.crosshairSize},
+            {"crosshairThickness", m_settings.currentSettings.crosshairThickness},
+            {"crosshairGap", m_settings.currentSettings.crosshairGap},
+            {"crosshairDotSize", m_settings.currentSettings.crosshairDotSize},
+            {"crosshairOutline", m_settings.currentSettings.crosshairOutline},
+            {"crosshairOpacity", m_settings.currentSettings.crosshairOpacity}
         };
 
         std::ofstream f(m_configPath);

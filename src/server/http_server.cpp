@@ -205,7 +205,12 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
                 {"crosshairEnabled", s.crosshairEnabled},
                 {"crosshairStyle", s.crosshairStyle},
                 {"crosshairColor", s.crosshairColor},
-                {"crosshairSize", s.crosshairSize}
+                {"crosshairSize", s.crosshairSize},
+                {"crosshairThickness", s.crosshairThickness},
+                {"crosshairGap", s.crosshairGap},
+                {"crosshairDotSize", s.crosshairDotSize},
+                {"crosshairOutline", s.crosshairOutline},
+                {"crosshairOpacity", s.crosshairOpacity}
             }},
             {"monitors", jMonitors}
         };
@@ -230,10 +235,16 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
             if (j.contains("crosshairStyle")) s.crosshairStyle = j["crosshairStyle"].get<std::string>();
             if (j.contains("crosshairColor")) s.crosshairColor = j["crosshairColor"].get<std::string>();
             if (j.contains("crosshairSize")) s.crosshairSize = j["crosshairSize"].get<int>();
+            if (j.contains("crosshairThickness")) s.crosshairThickness = j["crosshairThickness"].get<int>();
+            if (j.contains("crosshairGap")) s.crosshairGap = j["crosshairGap"].get<int>();
+            if (j.contains("crosshairDotSize")) s.crosshairDotSize = j["crosshairDotSize"].get<int>();
+            if (j.contains("crosshairOutline")) s.crosshairOutline = j["crosshairOutline"].get<int>();
+            if (j.contains("crosshairOpacity")) s.crosshairOpacity = j["crosshairOpacity"].get<float>();
 
             int targetMon = SettingsManager::Instance().GetTargetMonitorIndex();
             GpuController::Instance().ApplySettings(s, targetMon);
             SettingsManager::Instance().SetCurrentDisplaySettings(s);
+            OverlayToast::Instance().UpdateCrosshair(s);
 
             return MakeHttpResponse(200, "OK", "application/json", "{\"success\":true}");
         } catch (const std::exception& e) {
