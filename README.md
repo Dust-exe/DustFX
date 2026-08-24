@@ -1,8 +1,8 @@
-# 🎮 DUSTFX PRO — GPU Display & DCCW Gamma Optimizer
+# 🎮 DUSTFX — GPU Display & DCCW Gamma Optimizer
 
 > **Yüksek Performanslı GPU Ekran Filtreleme, DCCW Gama Boost, Digital Vibrance, PvP Özel Nişangah & GitHub Otomatik Güncelleme Takip Sistemi**
 
-[![Release](https://img.shields.io/badge/Release-v1.1.0-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustReplay/releases)
+[![Release](https://img.shields.io/badge/Release-v1.1.1-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
 [![Tech](https://img.shields.io/badge/C%2B%2B20-React%20%2F%20Tailwind-purple?style=for-the-badge)](https://dust-studio.com)
 [![Status](https://img.shields.io/badge/DirectX%20%2F%20NVAPI-Zero--Lag-fuchsia?style=for-the-badge)](https://dust-studio.com)
 

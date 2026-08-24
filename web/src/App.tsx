@@ -11,7 +11,7 @@ import { api } from './api';
 import { AppStatus, DisplaySettings, GameProfile, ReleaseInfo } from './types';
 import { Flame, RotateCcw, Download, X, Minus } from 'lucide-react';
 
-const CURRENT_VERSION = '1.1.0';
+const CURRENT_VERSION = '1.1.1';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<TabId>('filter');

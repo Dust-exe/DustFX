@@ -11,7 +11,7 @@ export const api = {
     } catch {
       return {
         status: 'online',
-        version: '1.1.0',
+        version: '1.1.1',
         gpuVendor: 'NVIDIA GeForce RTX 4070 (NVAPI Active)',
         activeProfileId: 'pvp_contrast',
         targetMonitorIndex: -1,
@@ -199,12 +199,12 @@ export const api = {
     } catch {
       return {
         hasUpdate: false,
-        currentVersion: '1.1.0',
-        latestVersion: '1.1.0',
-        tagName: 'v1.1.0',
+        currentVersion: '1.1.1',
+        latestVersion: '1.1.1',
+        tagName: 'v1.1.1',
         htmlUrl: 'https://github.com/Dust-exe/DustFX/releases',
         downloadUrl: '',
-        releaseNotes: '• DCCW Gama Boost ve Magnification donanım motoru entegre edildi.\n• Çoklu monitör desteği ve bağımsız parlaklık yönetimi eklendi.\n• Modern glassmorphism arayüz ve sayfa bazlı sekme navigasyonu.',
+        releaseNotes: '• Windows Şeffaf Click-Through Crosshair Overlay entegre edildi.\n• Detaylı nişangah çizgi, boyut, kalınlık, merkez nokta ve opaklık ayarları eklendi.\n• Topluluk Renk Profili & Crosshair Paylaşım Kodu Sistemi (DUST-COLOR & DUST-CROSS) getirildi.\n• CAS (Contrast Adaptive Sharpening) donanım algoritması aktifleştirildi.\n• Çoklu monitör seçimi düzeltildi.\n• F11/F12 tarayıcı kısayolları engellendi.',
         publishedAt: '2026-08-24'
       };
     }
