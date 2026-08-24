@@ -15,6 +15,10 @@ VIAddVersionKey "FileDescription" "DustFX GPU & DCCW Gamma Optimizer Setup"
 VIAddVersionKey "FileVersion" "1.1.0"
 
 !define MUI_ABORTWARNING
+!define MUI_ICON "app.ico"
+!define MUI_UNICON "app.ico"
+Icon "app.ico"
+UninstallIcon "app.ico"
 
 ; Installer Pages
 !insertmacro MUI_PAGE_WELCOME
@@ -45,17 +49,18 @@ Section "MainSection" SEC01
   Sleep 400
 
   File "DustFX.exe"
+  File "app.ico"
 
   SetOutPath "$INSTDIR\web\dist"
   File /r "web\dist\*.*"
 
   SetOutPath "$INSTDIR"
 
-  ; Create Shortcuts
+  ; Create Shortcuts with Custom Icon
   CreateDirectory "$SMPROGRAMS\DustFX"
-  CreateShortcut "$SMPROGRAMS\DustFX\DustFX PRO.lnk" "$INSTDIR\DustFX.exe"
-  CreateShortcut "$SMPROGRAMS\DustFX\Kaldır (Uninstall).lnk" "$INSTDIR\Uninstall.exe"
-  CreateShortcut "$DESKTOP\DustFX PRO.lnk" "$INSTDIR\DustFX.exe"
+  CreateShortcut "$SMPROGRAMS\DustFX\DustFX PRO.lnk" "$INSTDIR\DustFX.exe" "" "$INSTDIR\app.ico" 0
+  CreateShortcut "$SMPROGRAMS\DustFX\Kaldır (Uninstall).lnk" "$INSTDIR\Uninstall.exe" "" "$INSTDIR\app.ico" 0
+  CreateShortcut "$DESKTOP\DustFX PRO.lnk" "$INSTDIR\DustFX.exe" "" "$INSTDIR\app.ico" 0
 
   ; Write Uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -63,7 +68,7 @@ Section "MainSection" SEC01
   ; Registry for Add/Remove Programs
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "DisplayName" "DustFX PRO"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "UninstallString" '"$INSTDIR\Uninstall.exe"'
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "DisplayIcon" '"$INSTDIR\DustFX.exe"'
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "DisplayIcon" '"$INSTDIR\app.ico"'
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "DisplayVersion" "1.1.0"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "Publisher" "Dust Studio"
 SectionEnd
@@ -80,6 +85,7 @@ Section "Uninstall"
 
   RMDir /r "$INSTDIR\web"
   Delete "$INSTDIR\DustFX.exe"
+  Delete "$INSTDIR\app.ico"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir /r "$INSTDIR"
 
