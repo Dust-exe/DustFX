@@ -176,12 +176,24 @@ bool GpuController::ApplyGdiGammaRamp(const DisplaySettings& settings, int monit
     float gamma = std::max(0.1f, settings.gamma);
     float contrast = std::max(0.1f, settings.contrast);
     float bright = settings.brightnessOffset;
+    float sharpness = std::clamp(settings.sharpness, 0.0f, 1.0f);
 
     for (int i = 0; i < 256; ++i) {
         float normalized = static_cast<float>(i) / 255.0f;
 
         // Mathematical Gamma curve
         float gVal = std::pow(normalized, 1.0f / gamma);
+
+        // CAS (Contrast Adaptive Sharpening) edge & micro-contrast enhancement
+        if (sharpness > 0.001f) {
+            float centered = normalized - 0.5f;
+            float k = 1.0f + sharpness * 3.0f;
+            float casCurve = 0.5f + (centered * k) / (1.0f + std::abs(centered) * (k - 1.0f) * 1.5f);
+            casCurve = std::clamp(casCurve, 0.0f, 1.0f);
+            float casVal = std::pow(casCurve, 1.0f / gamma);
+            // Dynamic blend: sharpens edge demarcation and contrast thresholds
+            gVal = (1.0f - sharpness * 0.75f) * gVal + (sharpness * 0.75f) * casVal;
+        }
 
         // Contrast & Brightness adjustment
         float cVal = (gVal - 0.5f) * contrast + 0.5f + bright;
@@ -248,16 +260,21 @@ bool GpuController::ApplyMagnificationEffect(const DisplaySettings& settings) {
     float gLum = 0.7152f * invSat;
     float bLum = 0.0722f * invSat;
 
-    float c = settings.contrast;
-    float gScale = (settings.gamma >= 1.0f) ? (1.0f + (settings.gamma - 1.0f) * 0.4f) : settings.gamma;
+    float sharp = std::clamp(settings.sharpness, 0.0f, 1.0f);
+    float c = settings.contrast * (1.0f + sharp * 0.35f);
+    float gScale = (settings.gamma >= 1.0f) ? (1.0f + (settings.gamma - 1.0f) * 0.4f + sharp * 0.20f) : (settings.gamma * (1.0f + sharp * 0.15f));
     float bright = settings.brightnessOffset;
 
+    // Edge clarity diagonal dominance
+    float diagBoost = 1.0f + sharp * 0.25f;
+    float crossDamp = 1.0f - sharp * 0.15f;
+
     MAGCOLOREFFECT effect = {
-        (rLum + sat) * settings.rgbRed * c * gScale,   gLum * settings.rgbGreen * c * gScale,        bLum * settings.rgbBlue * c * gScale,         0.0f, 0.0f,
-        rLum * settings.rgbRed * c * gScale,          (gLum + sat) * settings.rgbGreen * c * gScale, bLum * settings.rgbBlue * c * gScale,         0.0f, 0.0f,
-        rLum * settings.rgbRed * c * gScale,          gLum * settings.rgbGreen * c * gScale,        (bLum + sat) * settings.rgbBlue * c * gScale,  0.0f, 0.0f,
-        0.0f,                                         0.0f,                                         0.0f,                                          1.0f, 0.0f,
-        bright,                                       bright,                                       bright,                                        0.0f, 1.0f
+        (rLum + sat) * settings.rgbRed * c * gScale * diagBoost,   gLum * settings.rgbGreen * c * gScale * crossDamp,        bLum * settings.rgbBlue * c * gScale * crossDamp,         0.0f, 0.0f,
+        rLum * settings.rgbRed * c * gScale * crossDamp,          (gLum + sat) * settings.rgbGreen * c * gScale * diagBoost, bLum * settings.rgbBlue * c * gScale * crossDamp,         0.0f, 0.0f,
+        rLum * settings.rgbRed * c * gScale * crossDamp,          gLum * settings.rgbGreen * c * gScale * crossDamp,        (bLum + sat) * settings.rgbBlue * c * gScale * diagBoost,  0.0f, 0.0f,
+        0.0f,                                                     0.0f,                                                     0.0f,                                                      1.0f, 0.0f,
+        bright,                                                   bright,                                                   bright,                                                    0.0f, 1.0f
     };
 
     return (s_MagSetFullscreenColorEffect(&effect) != FALSE);
