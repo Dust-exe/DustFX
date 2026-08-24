@@ -27,12 +27,12 @@ void OpenInDefaultBrowser(const char* url) {
 }
 
 void LaunchStudioUI() {
-    // Try Edge in --app mode first for app-like experience
+    // Try Edge in --app mode with DevTools and fullscreen disabled
     HINSTANCE hRes = ShellExecuteA(
         NULL,
         "open",
         "msedge.exe",
-        "--app=http://127.0.0.1:19840/ --window-size=1150,780 --disable-extensions",
+        "--app=http://127.0.0.1:19840/ --window-size=1150,780 --disable-extensions --disable-features=DevTools,Fullscreen --disable-default-apps",
         NULL,
         SW_SHOW
     );
@@ -43,7 +43,7 @@ void LaunchStudioUI() {
             NULL,
             "open",
             "chrome.exe",
-            "--app=http://127.0.0.1:19840/ --window-size=1150,780",
+            "--app=http://127.0.0.1:19840/ --window-size=1150,780 --disable-extensions --disable-features=DevTools,Fullscreen --disable-default-apps",
             NULL,
             SW_SHOW
         );

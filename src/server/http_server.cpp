@@ -271,6 +271,24 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
         return MakeHttpResponse(200, "OK", "application/json", "{\"success\":true}");
     }
 
+    // 4b. POST /api/monitor/select
+    if (path == "/api/monitor/select" && method == "POST") {
+        try {
+            json j = json::parse(body);
+            int monIndex = j.value("index", -1);
+            SettingsManager::Instance().SetTargetMonitorIndex(monIndex);
+            DisplaySettings s = GpuController::Instance().GetCurrentSettings();
+            GpuController::Instance().ApplySettings(s, monIndex);
+            
+            std::string monMsg = (monIndex == -1) ? "Tüm Monitörler (Senkronize)" : ("Monitör " + std::to_string(monIndex + 1));
+            OverlayToast::Instance().ShowToast("🖥️ HEDEF MONİTÖR", monMsg);
+            
+            return MakeHttpResponse(200, "OK", "application/json", "{\"success\":true,\"targetMonitorIndex\":" + std::to_string(monIndex) + "}");
+        } catch (...) {
+            return MakeHttpResponse(400, "Bad Request", "application/json", "{\"error\":\"Invalid JSON\"}");
+        }
+    }
+
     // 5. GET /api/profiles
     if (path == "/api/profiles" && method == "GET") {
         auto profiles = ProfileManager::Instance().GetAllProfiles();

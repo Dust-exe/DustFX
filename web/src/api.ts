@@ -73,6 +73,19 @@ export const api = {
     }
   },
 
+  async selectMonitor(index: number): Promise<boolean> {
+    try {
+      const res = await fetch(`${API_BASE}/monitor/select`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ index }),
+      });
+      return res.ok;
+    } catch {
+      return true;
+    }
+  },
+
   async getProfiles(): Promise<GameProfile[]> {
     try {
       const res = await fetch(`${API_BASE}/profiles`);

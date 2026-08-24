@@ -103,6 +103,11 @@ export function App() {
     }
   };
 
+  const handleSelectMonitor = async (index: number) => {
+    setSelectedMonitorIndex(index);
+    await api.selectMonitor(index);
+  };
+
   const handleMaxGamma = async () => {
     const isMax = settings.gamma >= 2.4;
     const newGamma = isMax ? 1.0 : 2.5;
@@ -133,6 +138,26 @@ export function App() {
     setSettings(defaultSettings);
     await api.resetSettings();
   };
+
+  // Listen to in-window keyboard triggers
+  useEffect(() => {
+    const onMaxGamma = () => handleMaxGamma();
+    const onReset = () => handleReset();
+    const onVibrance = () => {
+      const nextVib = settings.digitalVibrance > 0 ? 0 : 75;
+      handleSettingsChange({ digitalVibrance: nextVib });
+    };
+
+    window.addEventListener('dustfx-action-maxgamma', onMaxGamma);
+    window.addEventListener('dustfx-action-reset', onReset);
+    window.addEventListener('dustfx-action-vibrance', onVibrance);
+
+    return () => {
+      window.removeEventListener('dustfx-action-maxgamma', onMaxGamma);
+      window.removeEventListener('dustfx-action-reset', onReset);
+      window.removeEventListener('dustfx-action-vibrance', onVibrance);
+    };
+  }, [settings]);
 
   // Open external links in DEFAULT browser (not edge)
   const openExternal = (url: string) => {
@@ -223,7 +248,7 @@ export function App() {
               <MonitorsTab
                 monitors={status?.monitors || []}
                 selectedIndex={selectedMonitorIndex}
-                onSelectMonitor={setSelectedMonitorIndex}
+                onSelectMonitor={handleSelectMonitor}
               />
             )}
             {activeTab === 'hotkeys' && <HotkeysTab />}
