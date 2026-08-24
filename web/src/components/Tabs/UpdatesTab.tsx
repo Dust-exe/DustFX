@@ -42,7 +42,7 @@ export const UpdatesTab: React.FC<UpdatesTabProps> = ({ releaseInfo, onCheckAgai
             </div>
             <div>
               <h3 className="text-base font-bold text-white font-mono">
-                DustFX PRO v{releaseInfo?.latestVersion || '1.1.0'}
+                DustFX v{releaseInfo?.latestVersion || '1.1.0'}
               </h3>
               <p className="text-xs text-zinc-400">
                 Yüklü: <span className="font-mono text-zinc-300 font-bold">v{releaseInfo?.currentVersion || '1.1.0'}</span>

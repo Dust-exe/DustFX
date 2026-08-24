@@ -26,7 +26,7 @@ DustFxApp::~DustFxApp() {
 
 bool DustFxApp::Initialize() {
     std::cout << "==========================================" << std::endl;
-    std::cout << "   DUSTFX PRO — GPU & Display Optimizer   " << std::endl;
+    std::cout << "       DUSTFX — GPU & Display Optimizer   " << std::endl;
     std::cout << "   Version " << DUSTFX_VERSION_STRING << " | Dust Studio       " << std::endl;
     std::cout << "==========================================" << std::endl;
 

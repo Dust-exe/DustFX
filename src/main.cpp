@@ -65,7 +65,7 @@ void AddTrayIcon(HWND hWnd) {
     if (!g_nid.hIcon) {
         g_nid.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     }
-    lstrcpyA(g_nid.szTip, "DustFX PRO - GPU Display & Gamma Optimizer");
+    lstrcpyA(g_nid.szTip, "DustFX - GPU Display & Gamma Optimizer");
     Shell_NotifyIconA(NIM_ADD, &g_nid);
 }
 

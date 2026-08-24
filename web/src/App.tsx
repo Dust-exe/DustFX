@@ -133,41 +133,38 @@ export function App() {
         <div className="absolute bottom-[5%] left-[30%] w-[450px] h-[450px] bg-cyan-600/8 rounded-full blur-[120px]" />
       </div>
 
-      {/* === INTEGRATED TOP BAR (replaces OS black bar) === */}
-      <div
-        className="flex items-center justify-between px-4 h-12 border-b border-white/5 bg-[#08060f]/95 z-50 backdrop-blur-xl"
-        style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
-      >
+      {/* Top App Header */}
+      <header className="flex items-center justify-between px-5 h-12 border-b border-purple-500/10 bg-[#08060f]/90 z-20 backdrop-blur-xl">
         {/* Left: Logo + App Name + GPU */}
-        <div className="flex items-center gap-2.5" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
+        <div className="flex items-center gap-3">
           <img
             src="/logo.png"
-            alt="Dust Logo"
+            alt="DustFX Logo"
             className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(168,85,247,0.5)]"
           />
           <span className="text-xs font-bold text-white font-mono tracking-widest">
             DUST<span className="text-fuchsia-400">FX</span>
           </span>
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30">
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30 font-bold">
             v{status?.version || CURRENT_VERSION}
           </span>
-          <span className="text-[11px] text-zinc-500 hidden sm:inline border-l border-white/10 pl-2">
+          <span className="text-[11px] text-zinc-500 hidden sm:inline border-l border-white/10 pl-3">
             {status?.gpuVendor || 'GPU Engine'}
           </span>
         </div>
 
-        {/* Center: Action Buttons */}
-        <div className="flex items-center gap-2" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
+        {/* Right: Quick Action Controls */}
+        <div className="flex items-center gap-2">
           <button
             onClick={handleMaxGamma}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white text-[11px] font-bold tracking-wide transition-all shadow-[0_0_12px_rgba(239,68,68,0.3)] active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white text-[11px] font-bold tracking-wide transition-all shadow-[0_0_12px_rgba(239,68,68,0.3)] active:scale-95"
           >
             <Flame className="w-3 h-3 text-orange-200" />
             MAX GAMA (F11)
           </button>
           <button
             onClick={handleReset}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 text-[11px] font-medium border border-white/10 transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 text-[11px] font-medium border border-white/10 transition-all active:scale-95"
           >
             <RotateCcw className="w-3 h-3 text-zinc-400" />
             Sıfırla (F10)
@@ -175,25 +172,14 @@ export function App() {
           {releaseInfo?.hasUpdate && (
             <button
               onClick={() => setShowUpdateModal(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.3)]"
             >
               <Download className="w-3 h-3" />
               Güncelleme (v{releaseInfo.latestVersion})
             </button>
           )}
         </div>
-
-        {/* Right: Window Controls */}
-        <div className="flex items-center gap-1" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
-          <button
-            onClick={() => window.close()}
-            className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-red-500/80 text-zinc-500 hover:text-white transition-colors"
-            title="Kapat"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
+      </header>
 
       {/* === MAIN BODY: Sidebar + Tab Content === */}
       <div className="flex-1 flex overflow-hidden relative z-10">

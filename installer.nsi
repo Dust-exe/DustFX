@@ -1,14 +1,14 @@
 !include "MUI2.nsh"
 !include "FileFunc.nsh"
 
-Name "DustFX PRO"
+Name "DustFX"
 OutFile "DustFX_Setup.exe"
 InstallDir "$LOCALAPPDATA\DustFX"
 RequestExecutionLevel user
 SetCompressor /SOLID lzma
 
 VIProductVersion "1.1.0.0"
-VIAddVersionKey "ProductName" "DustFX PRO"
+VIAddVersionKey "ProductName" "DustFX"
 VIAddVersionKey "CompanyName" "Dust Studio"
 VIAddVersionKey "LegalCopyright" "Copyright (C) 2026 Dust Studio"
 VIAddVersionKey "FileDescription" "DustFX GPU & DCCW Gamma Optimizer Setup"
@@ -25,7 +25,7 @@ UninstallIcon "app.ico"
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !define MUI_FINISHPAGE_RUN "$INSTDIR\DustFX.exe"
-!define MUI_FINISHPAGE_RUN_TEXT "DustFX PRO'yu Başlat"
+!define MUI_FINISHPAGE_RUN_TEXT "DustFX'i Başlat"
 !insertmacro MUI_PAGE_FINISH
 
 ; Uninstaller Pages
@@ -58,15 +58,15 @@ Section "MainSection" SEC01
 
   ; Create Shortcuts with Custom Icon
   CreateDirectory "$SMPROGRAMS\DustFX"
-  CreateShortcut "$SMPROGRAMS\DustFX\DustFX PRO.lnk" "$INSTDIR\DustFX.exe" "" "$INSTDIR\app.ico" 0
+  CreateShortcut "$SMPROGRAMS\DustFX\DustFX.lnk" "$INSTDIR\DustFX.exe" "" "$INSTDIR\app.ico" 0
   CreateShortcut "$SMPROGRAMS\DustFX\Kaldır (Uninstall).lnk" "$INSTDIR\Uninstall.exe" "" "$INSTDIR\app.ico" 0
-  CreateShortcut "$DESKTOP\DustFX PRO.lnk" "$INSTDIR\DustFX.exe" "" "$INSTDIR\app.ico" 0
+  CreateShortcut "$DESKTOP\DustFX.lnk" "$INSTDIR\DustFX.exe" "" "$INSTDIR\app.ico" 0
 
   ; Write Uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
   ; Registry for Add/Remove Programs
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "DisplayName" "DustFX PRO"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "DisplayName" "DustFX"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "UninstallString" '"$INSTDIR\Uninstall.exe"'
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "DisplayIcon" '"$INSTDIR\app.ico"'
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "DisplayVersion" "1.1.0"
@@ -78,8 +78,8 @@ Section "Uninstall"
   nsExec::Exec 'cmd /c taskkill /F /IM DustFX.exe /T >nul 2>&1'
   Sleep 500
 
-  Delete "$DESKTOP\DustFX PRO.lnk"
-  Delete "$SMPROGRAMS\DustFX\DustFX PRO.lnk"
+  Delete "$DESKTOP\DustFX.lnk"
+  Delete "$SMPROGRAMS\DustFX\DustFX.lnk"
   Delete "$SMPROGRAMS\DustFX\Kaldır (Uninstall).lnk"
   RMDir "$SMPROGRAMS\DustFX"
 
