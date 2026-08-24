@@ -17,7 +17,7 @@ public:
 
     void Configure(
         const std::string& owner = "Dust-exe",
-        const std::string& repo = "DustReplay",
+        const std::string& repo = "DustFX",
         const std::string& currentVersion = DUSTFX_VERSION_STRING
     );
 
@@ -27,7 +27,7 @@ public:
     // Background periodic checker
     void StartBackgroundChecker(
         UpdateCheckCallback callback,
-        std::chrono::minutes interval = std::chrono::minutes(30)
+        std::chrono::minutes interval = std::chrono::minutes(10)
     );
     void StopBackgroundChecker();
 
@@ -42,11 +42,11 @@ private:
     std::string FetchLatestRelease();
 
     std::string m_owner = "Dust-exe";
-    std::string m_repo = "DustReplay";
+    std::string m_repo = "DustFX";
     std::string m_currentVersion = DUSTFX_VERSION_STRING;
 
     UpdateCheckCallback m_callback;
-    std::chrono::minutes m_checkInterval{30};
+    std::chrono::minutes m_checkInterval{10};
     std::thread m_bgThread;
     std::atomic<bool> m_running{false};
 };

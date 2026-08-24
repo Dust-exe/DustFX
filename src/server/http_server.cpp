@@ -317,7 +317,7 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
             {"currentVersion", AutoUpdater::Instance().GetCurrentVersion()},
             {"latestVersion", info.version.empty() ? DUSTFX_VERSION_STRING : info.version},
             {"tagName", info.tagName},
-            {"htmlUrl", info.htmlUrl.empty() ? "https://github.com/Dust-exe/DustReplay/releases" : info.htmlUrl},
+            {"htmlUrl", info.htmlUrl.empty() ? "https://github.com/Dust-exe/DustFX/releases" : info.htmlUrl},
             {"downloadUrl", info.downloadUrl},
             {"releaseNotes", info.releaseNotes},
             {"publishedAt", info.publishedAt}
