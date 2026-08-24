@@ -106,8 +106,8 @@ void ProfileManager::LoadBuiltinProfiles() {
         p.id = "night_vision";
         p.name = "Gece Görüşü Boost";
         p.icon = "🌙";
-        p.description = "Rust ve FiveM gece vakitlerinde karanlık alanları ve binaların içini aydınlatır.";
-        p.exePattern = "RustClient.exe;FiveM.exe;GTA5.exe";
+        p.description = "Karanlık haritalarda, gece operasyonlarında ve kapalı binalarda görüş mesafesini maksimuma çıkarır.";
+        p.exePattern = "";
         p.settings.gamma = 2.0f;
         p.settings.digitalVibrance = 45;
         p.settings.brightnessOffset = 0.12f;
@@ -124,8 +124,8 @@ void ProfileManager::LoadBuiltinProfiles() {
         p.id = "cave_boost";
         p.name = "Mağara Parlatıcı Modu";
         p.icon = "🕳️";
-        p.description = "Zifiri karanlık tüneller ve yeraltı mağaraları için maksimum gama ve gölge detayı.";
-        p.exePattern = "RustClient.exe;EscapeFromTarkov.exe";
+        p.description = "Zifiri karanlık tüneller ve yeraltı alanları için maksimum gama ve gölge detayı.";
+        p.exePattern = "";
         p.settings.gamma = 2.5f;
         p.settings.digitalVibrance = 30;
         p.settings.brightnessOffset = 0.25f;
@@ -143,7 +143,7 @@ void ProfileManager::LoadBuiltinProfiles() {
         p.name = "PVP Netlik & Kontrast";
         p.icon = "🎯";
         p.description = "Düşman silüetlerini keskinleştiren ve hızlı hedef almayı sağlayan rekabetçi PvP modu.";
-        p.exePattern = "cs2.exe;VALORANT-Win64-Shipping.exe;FiveM.exe;Overwatch.exe";
+        p.exePattern = "";
         p.settings.gamma = 1.35f;
         p.settings.digitalVibrance = 65;
         p.settings.brightnessOffset = 0.05f;
@@ -164,7 +164,7 @@ void ProfileManager::LoadBuiltinProfiles() {
         p.name = "Gündüz Canlılık Modu";
         p.icon = "☀️";
         p.description = "Zengin ve sinematik renk doygunluğu; çimen, gökyüzü ve çevre detaylarını canlandırır.";
-        p.exePattern = "GTA5.exe;Cyberpunk2077.exe;ForzaHorizon5.exe";
+        p.exePattern = "";
         p.settings.gamma = 1.10f;
         p.settings.digitalVibrance = 80;
         p.settings.brightnessOffset = 0.0f;
@@ -182,7 +182,7 @@ void ProfileManager::LoadBuiltinProfiles() {
         p.name = "Göz Dinlendirme Modu";
         p.icon = "👁️";
         p.description = "Gece geç saatlerde göz yorgunluğunu azaltan yumuşak sıcak mavi ışık kırma filtresi.";
-        p.exePattern = "devenv.exe;Code.exe;chrome.exe;msedge.exe";
+        p.exePattern = "";
         p.settings.gamma = 0.95f;
         p.settings.digitalVibrance = 0;
         p.settings.brightnessOffset = -0.05f;

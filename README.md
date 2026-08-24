@@ -23,19 +23,19 @@
 - 6 farklı neon renk seçeneği ve dinamik boyut ayarı.
 
 ### 3. 🤖 Akıllı Oyun Algılama & Alt+Tab Sıfırlama
-- `FiveM.exe`, `RustClient.exe`, `cs2.exe`, `EscapeFromTarkov.exe` gibi oyunlar açıldığında profilin otomatik devreye girmesi.
-- Masaüstüne dönüldüğünde (Alt+Tab) veya oyundan çıkıldığında ayarları otomatik olarak varsayılan Windows değerlerine çekme.
+- Rekabetçi oyunlar ve 3D uygulamalar açıldığında profilin otomatik devreye girmesi.
+- Masaüstüne dönüldüğünde (Alt+Tab) veya oyundan çıkıldığında ayarları otomatik olarak varsayılan Windows değerlerine çekme (göz yorgunluğunu önler).
 
 ### 4. 🌙 Hazır Ekran Profilleri & Topluluk Paylaşımı
-- **🌙 Gece Görüşü Boost:** Rust ve FiveM gece baskınları için binaların içini aydınlatır.
+- **🌙 Gece Görüşü Boost:** Karanlık haritalarda, gece operasyonlarında ve binaların içini aydınlatır.
 - **🕳️ Mağara Parlatıcı Modu:** Maksimum gama (2.5x) ve gölge detayı.
-- **🎯 PVP Netlik & Kontrast:** Rekabetçi shooter oyunları için düşman silüeti keskinleştirici.
+- **🎯 PVP Netlik & Kontrast:** Rekabetçi oyunlar için düşman silüeti keskinleştirici.
 - **☀️ Gündüz Canlılık Modu:** Sinematik %80 renk doygunluğu.
 - **👁️ Göz Dinlendirme Modu:** Mavi ışık kıran sıcak gece filtresi.
 - **Topluluk İçe/Dışa Aktarma:** Tek tıkla JSON formatında profil paylaşma.
 
 ### 5. 🔄 GitHub Otomatik Güncelleme Takibi
-- Arka planda GitHub Releases API (`Dust-exe/DustReplay`) üzerinden otomatik versiyon kontrolü.
+- Arka planda GitHub Releases API (`Dust-exe/DustFX`) üzerinden otomatik versiyon kontrolü.
 - Yeni sürüm yayınlandığında arayüzde ve oyun içi OSD bildiriminde anında uyarı.
 - Tek tıkla doğrudan `.exe` indirme ve sürüm notlarını inceleme.
 

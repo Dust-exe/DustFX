@@ -1,19 +1,27 @@
 #include "core/updater/auto_updater.h"
-#include "curl_compat.h"
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <sstream>
 #include <vector>
 
+#ifdef _WIN32
+#include <windows.h>
+#include <wininet.h>
+#else
+#include "curl_compat.h"
+#endif
+
 namespace dustfx {
 
 using json = nlohmann::json;
 
+#ifndef _WIN32
 static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
     size_t total = size * nmemb;
     static_cast<std::string*>(userp)->append(static_cast<char*>(contents), total);
     return total;
 }
+#endif
 
 AutoUpdater& AutoUpdater::Instance() {
     static AutoUpdater instance;
@@ -33,10 +41,33 @@ void AutoUpdater::Configure(const std::string& owner, const std::string& repo, c
 }
 
 std::string AutoUpdater::FetchLatestRelease() {
+    std::string url = "https://api.github.com/repos/" + m_owner + "/" + m_repo + "/releases/latest";
+
+#ifdef _WIN32
+    HINTERNET hInternet = InternetOpenA("DustFX-AutoUpdater/1.1", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    if (!hInternet) return "";
+
+    DWORD flags = INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_SECURE;
+    HINTERNET hFile = InternetOpenUrlA(hInternet, url.c_str(), "Accept: application/vnd.github+json\r\nX-GitHub-Api-Version: 2022-11-28", -1, flags, 0);
+    if (!hFile) {
+        InternetCloseHandle(hInternet);
+        return "";
+    }
+
+    std::string response;
+    char buffer[4096];
+    DWORD bytesRead = 0;
+    while (InternetReadFile(hFile, buffer, sizeof(buffer), &bytesRead) && bytesRead > 0) {
+        response.append(buffer, bytesRead);
+    }
+
+    InternetCloseHandle(hFile);
+    InternetCloseHandle(hInternet);
+    return response;
+#else
     CURL* curl = curl_easy_init();
     if (!curl) return "";
 
-    std::string url = "https://api.github.com/repos/" + m_owner + "/" + m_repo + "/releases/latest";
     std::string response;
 
     struct curl_slist* headers = nullptr;
@@ -63,6 +94,7 @@ std::string AutoUpdater::FetchLatestRelease() {
     }
 
     return response;
+#endif
 }
 
 bool AutoUpdater::CheckForUpdate(ReleaseInfo& outInfo) {
