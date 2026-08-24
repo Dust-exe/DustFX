@@ -34,13 +34,13 @@ private:
 
     void DetectVendor();
     bool ApplyGdiGammaRamp(const DisplaySettings& settings, int monitorIndex);
-    bool ApplyNvidiaVibrance(int percentage, int monitorIndex);
-    bool ApplyAmdSaturation(int percentage, int monitorIndex);
+    bool ApplyMagnificationEffect(const DisplaySettings& settings);
 
     mutable std::mutex m_mutex;
     GpuVendor m_vendor = GpuVendor::GENERIC;
     DisplaySettings m_currentSettings;
     bool m_initialized = false;
+    bool m_magInitialized = false;
 };
 
 } // namespace dustfx

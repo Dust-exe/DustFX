@@ -42,7 +42,10 @@ void AddTrayIcon(HWND hWnd) {
     g_nid.uID = ID_TRAY_ICON;
     g_nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     g_nid.uCallbackMessage = WM_TRAYICON;
-    g_nid.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    g_nid.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(1));
+    if (!g_nid.hIcon) {
+        g_nid.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    }
     lstrcpyA(g_nid.szTip, "DustFX PRO — GPU Display & Gamma Optimizer");
     Shell_NotifyIconA(NIM_ADD, &g_nid);
 }

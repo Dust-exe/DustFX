@@ -1,0 +1,232 @@
+import React from 'react';
+import { Sun, Palette, Contrast, Eye, Sparkles, Layers, Sliders, RotateCcw } from 'lucide-react';
+import { DisplaySettings } from '../../types';
+
+interface ScreenFilterTabProps {
+  settings: DisplaySettings;
+  onChange: (newSettings: Partial<DisplaySettings>) => void;
+}
+
+export const ScreenFilterTab: React.FC<ScreenFilterTabProps> = ({ settings, onChange }) => {
+  return (
+    <div className="flex flex-col gap-6 animate-fadeIn">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-3 border-b border-white/5">
+        <div>
+          <h2 className="text-lg font-bold text-white font-mono flex items-center gap-2">
+            <Sliders className="w-5 h-5 text-fuchsia-400" />
+            Ekran Görüntü Filtresi & Donanım Gama
+          </h2>
+          <p className="text-xs text-zinc-400 mt-0.5">
+            DWM ve GPU donanım renk dönüşüm matrisi ile sıfır gecikmeli parlaklık, gama ve canlılık kontrolü.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 font-mono text-xs">
+          <span className="px-3 py-1 rounded-xl bg-purple-500/10 text-purple-300 border border-purple-500/20">
+            Gama: <strong className="text-white">{settings.gamma.toFixed(2)}x</strong>
+          </span>
+          <span className="px-3 py-1 rounded-xl bg-pink-500/10 text-pink-300 border border-pink-500/20">
+            Canlılık: <strong className="text-white">%{settings.digitalVibrance}</strong>
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Left Card: Core Lighting & Gamma */}
+        <div className="glass-card p-6 rounded-3xl border border-purple-500/15 flex flex-col gap-6 shadow-xl">
+          <div className="text-xs font-bold text-zinc-200 uppercase tracking-wider font-mono flex items-center gap-2 pb-2 border-b border-white/5">
+            <Sun className="w-4 h-4 text-amber-400" />
+            Aydınlatma & Renk Canlılığı
+          </div>
+
+          {/* 1. DCCW Gama Boost */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-zinc-200 flex items-center gap-1.5">
+                DCCW Gama Boost (Gece Görüşü)
+              </span>
+              <span className="font-mono font-bold text-fuchsia-400 bg-fuchsia-500/10 px-2.5 py-0.5 rounded-lg border border-fuchsia-500/30">
+                {settings.gamma.toFixed(2)}x
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0.5"
+              max="3.0"
+              step="0.05"
+              value={settings.gamma}
+              onChange={(e) => onChange({ gamma: parseFloat(e.target.value) })}
+              className="w-full"
+            />
+            <div className="flex justify-between text-[10px] text-zinc-500 font-mono">
+              <span>0.5x (Karanlık)</span>
+              <span>1.0x (Varsayılan)</span>
+              <span>3.0x (Maksimum Gece Aydınlatması)</span>
+            </div>
+          </div>
+
+          {/* 2. Digital Vibrance */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-zinc-200 flex items-center gap-1.5">
+                <Palette className="w-4 h-4 text-pink-400" />
+                Digital Vibrance (Renk Doygunluğu)
+              </span>
+              <span className="font-mono font-bold text-pink-400 bg-pink-500/10 px-2.5 py-0.5 rounded-lg border border-pink-500/30">
+                %{settings.digitalVibrance}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value={settings.digitalVibrance}
+              onChange={(e) => onChange({ digitalVibrance: parseInt(e.target.value) })}
+              className="w-full"
+            />
+            <div className="flex justify-between text-[10px] text-zinc-500 font-mono">
+              <span>%0 (Doğal)</span>
+              <span>%50 (Canlı)</span>
+              <span>%100 (Ultra Doygun)</span>
+            </div>
+          </div>
+
+          {/* 3. Parlaklık Ofseti */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-zinc-200 flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-cyan-400" />
+                Parlaklık Ofseti (Gölge Detay)
+              </span>
+              <span className="font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2.5 py-0.5 rounded-lg border border-cyan-500/30">
+                {settings.brightnessOffset >= 0 ? `+${(settings.brightnessOffset * 100).toFixed(0)}%` : `${(settings.brightnessOffset * 100).toFixed(0)}%`}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="-0.5"
+              max="0.5"
+              step="0.02"
+              value={settings.brightnessOffset}
+              onChange={(e) => onChange({ brightnessOffset: parseFloat(e.target.value) })}
+              className="w-full"
+            />
+          </div>
+
+          {/* 4. Kontrast */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-zinc-200 flex items-center gap-1.5">
+                <Contrast className="w-4 h-4 text-purple-400" />
+                Kontrast Keskinliği
+              </span>
+              <span className="font-mono font-bold text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-lg border border-purple-500/30">
+                {settings.contrast.toFixed(2)}x
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0.5"
+              max="2.0"
+              step="0.05"
+              value={settings.contrast}
+              onChange={(e) => onChange({ contrast: parseFloat(e.target.value) })}
+              className="w-full"
+            />
+          </div>
+        </div>
+
+        {/* Right Card: RGB Channels & CAS Sharpness */}
+        <div className="glass-card p-6 rounded-3xl border border-purple-500/15 flex flex-col gap-6 shadow-xl">
+          <div className="text-xs font-bold text-zinc-200 uppercase tracking-wider font-mono flex items-center gap-2 pb-2 border-b border-white/5">
+            <Sparkles className="w-4 h-4 text-indigo-400" />
+            RGB Renk Kanalları & Netlik
+          </div>
+
+          {/* Red Channel */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-red-400 font-semibold flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]"></span>
+                Kırmızı Kanalı (R)
+              </span>
+              <span className="font-mono font-bold text-red-300">{settings.rgbRed.toFixed(2)}x</span>
+            </div>
+            <input
+              type="range"
+              min="0.5"
+              max="1.8"
+              step="0.02"
+              value={settings.rgbRed}
+              onChange={(e) => onChange({ rgbRed: parseFloat(e.target.value) })}
+              className="w-full"
+            />
+          </div>
+
+          {/* Green Channel */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-emerald-400 font-semibold flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]"></span>
+                Yeşil Kanalı (G)
+              </span>
+              <span className="font-mono font-bold text-emerald-300">{settings.rgbGreen.toFixed(2)}x</span>
+            </div>
+            <input
+              type="range"
+              min="0.5"
+              max="1.8"
+              step="0.02"
+              value={settings.rgbGreen}
+              onChange={(e) => onChange({ rgbGreen: parseFloat(e.target.value) })}
+              className="w-full"
+            />
+          </div>
+
+          {/* Blue Channel */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-blue-400 font-semibold flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)]"></span>
+                Mavi Kanalı (B)
+              </span>
+              <span className="font-mono font-bold text-blue-300">{settings.rgbBlue.toFixed(2)}x</span>
+            </div>
+            <input
+              type="range"
+              min="0.5"
+              max="1.8"
+              step="0.02"
+              value={settings.rgbBlue}
+              onChange={(e) => onChange({ rgbBlue: parseFloat(e.target.value) })}
+              className="w-full"
+            />
+          </div>
+
+          {/* CAS / RIS Sharpness */}
+          <div className="flex flex-col gap-2 pt-4 border-t border-white/5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-zinc-100 font-semibold flex items-center gap-1.5">
+                <Eye className="w-4 h-4 text-fuchsia-400" />
+                Düşman Netliği & Kenar Keskinliği (CAS)
+              </span>
+              <span className="font-mono font-bold text-fuchsia-400 bg-fuchsia-500/10 px-2.5 py-0.5 rounded-lg border border-fuchsia-500/30">
+                %{(settings.sharpness * 100).toFixed(0)}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0.0"
+              max="1.0"
+              step="0.05"
+              value={settings.sharpness}
+              onChange={(e) => onChange({ sharpness: parseFloat(e.target.value) })}
+              className="w-full"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

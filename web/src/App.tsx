@@ -1,15 +1,18 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Navbar } from './components/Navbar';
-import { SliderGroup } from './components/SliderGroup';
-import { ProfileCards } from './components/ProfileCards';
-import { MonitorPicker } from './components/MonitorPicker';
-import { CrosshairOverlay } from './components/CrosshairOverlay';
-import { HotkeyManagerUI } from './components/HotkeyManagerUI';
+import { TitleBar } from './components/TitleBar';
+import { Sidebar, TabId } from './components/Sidebar';
+import { ScreenFilterTab } from './components/Tabs/ScreenFilterTab';
+import { ProfilesTab } from './components/Tabs/ProfilesTab';
+import { CrosshairTab } from './components/Tabs/CrosshairTab';
+import { MonitorsTab } from './components/Tabs/MonitorsTab';
+import { HotkeysTab } from './components/Tabs/HotkeysTab';
+import { UpdatesTab } from './components/Tabs/UpdatesTab';
 import { UpdateModal } from './components/UpdateModal';
 import { api } from './api';
 import { AppStatus, DisplaySettings, GameProfile, ReleaseInfo } from './types';
 
 export function App() {
+  const [activeTab, setActiveTab] = useState<TabId>('filter');
   const [status, setStatus] = useState<AppStatus | null>(null);
   const [profiles, setProfiles] = useState<GameProfile[]>([]);
   const [settings, setSettings] = useState<DisplaySettings>({
@@ -31,7 +34,7 @@ export function App() {
   const [releaseInfo, setReleaseInfo] = useState<ReleaseInfo | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState<boolean>(false);
 
-  // Load initial data
+  // Load initial backend status and profiles
   useEffect(() => {
     async function loadData() {
       const [st, profs, upd] = await Promise.all([
@@ -50,7 +53,7 @@ export function App() {
     loadData();
   }, []);
 
-  // Handle slider change (debounced apply)
+  // Handle slider changes and apply immediately
   const handleSettingsChange = useCallback((patch: Partial<DisplaySettings>) => {
     setSettings((prev) => {
       const next = { ...prev, ...patch };
@@ -71,7 +74,11 @@ export function App() {
 
   // Quick Max Gamma
   const handleMaxGamma = async () => {
-    setSettings((prev) => ({ ...prev, gamma: 2.5 }));
+    setSettings((prev) => {
+      const next = { ...prev, gamma: 2.5 };
+      api.applySettings(next);
+      return next;
+    });
     await api.maxGamma();
   };
 
@@ -96,68 +103,84 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
-      {/* Dynamic Background Shader Lights */}
+    <div className="h-screen w-screen bg-background text-foreground flex flex-col overflow-hidden select-none font-sans">
+      {/* Dynamic Ambient Background Glow */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[140px]" />
         <div className="absolute top-[60%] left-[70%] w-[600px] h-[600px] bg-fuchsia-600/10 rounded-full blur-[160px]" />
         <div className="absolute bottom-[5%] left-[30%] w-[450px] h-[450px] bg-cyan-600/10 rounded-full blur-[120px]" />
       </div>
 
-      {/* Main Header / Navbar */}
-      <Navbar
+      {/* 1. Integrated Window TitleBar */}
+      <TitleBar
         version={status?.version || '1.1.0'}
-        gpuVendor={status?.gpuVendor || 'NVIDIA GeForce (Hardware NVAPI)'}
+        gpuVendor={status?.gpuVendor || 'DirectX / DWM Engine'}
         onMaxGamma={handleMaxGamma}
         onReset={handleReset}
         onOpenUpdateModal={() => setShowUpdateModal(true)}
         releaseInfo={releaseInfo}
       />
 
-      {/* Main Content Layout */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 relative z-10 flex flex-col gap-8">
-        {/* Top Sliders & Control Panel */}
-        <section className="glass-panel p-6 rounded-3xl border border-purple-500/20 shadow-2xl">
-          <SliderGroup
-            settings={settings}
-            onChange={handleSettingsChange}
-          />
-        </section>
+      {/* 2. Main Studio Body with Sidebar + Tab Content */}
+      <div className="flex-1 flex overflow-hidden relative z-10">
+        {/* Left Navigation Sidebar */}
+        <Sidebar
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          releaseInfo={releaseInfo}
+        />
 
-        {/* Profile Cards Grid */}
-        <section className="glass-panel p-6 rounded-3xl border border-purple-500/20 shadow-2xl">
-          <ProfileCards
-            profiles={profiles}
-            activeProfileId={activeProfileId}
-            onSelectProfile={handleSelectProfile}
-          />
-        </section>
+        {/* Tab View Container */}
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 relative">
+          <div className="max-w-5xl mx-auto flex flex-col gap-6">
+            {activeTab === 'filter' && (
+              <ScreenFilterTab
+                settings={settings}
+                onChange={handleSettingsChange}
+              />
+            )}
 
-        {/* Tools: Crosshair, Monitor Picker & Hotkeys */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <CrosshairOverlay
-            settings={settings}
-            onChange={handleSettingsChange}
-          />
-          <MonitorPicker
-            monitors={status?.monitors || []}
-            selectedIndex={selectedMonitorIndex}
-            onSelectMonitor={(idx) => {
-              setSelectedMonitorIndex(idx);
-            }}
-          />
-        </div>
+            {activeTab === 'profiles' && (
+              <ProfilesTab
+                profiles={profiles}
+                activeProfileId={activeProfileId}
+                onSelectProfile={handleSelectProfile}
+              />
+            )}
 
-        {/* Global Hotkeys & Short Info */}
-        <HotkeyManagerUI />
-      </main>
+            {activeTab === 'crosshair' && (
+              <CrosshairTab
+                settings={settings}
+                onChange={handleSettingsChange}
+              />
+            )}
 
-      {/* Footer */}
-      <footer className="w-full border-t border-white/5 py-4 px-6 text-center text-xs text-zinc-500 font-light relative z-10">
-        DUSTFX PRO — Engineered by <span className="text-zinc-300 font-medium">dust.exe</span> • Dust Studio
-      </footer>
+            {activeTab === 'monitors' && (
+              <MonitorsTab
+                monitors={status?.monitors || []}
+                selectedIndex={selectedMonitorIndex}
+                onSelectMonitor={async (idx) => {
+                  setSelectedMonitorIndex(idx);
+                }}
+              />
+            )}
 
-      {/* GitHub Update Modal */}
+            {activeTab === 'hotkeys' && <HotkeysTab />}
+
+            {activeTab === 'updates' && (
+              <UpdatesTab
+                releaseInfo={releaseInfo}
+                onCheckAgain={async () => {
+                  const upd = await api.checkUpdate();
+                  setReleaseInfo(upd);
+                }}
+              />
+            )}
+          </div>
+        </main>
+      </div>
+
+      {/* Modal Popup */}
       {showUpdateModal && (
         <UpdateModal
           releaseInfo={releaseInfo}
