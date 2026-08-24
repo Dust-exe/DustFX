@@ -337,6 +337,73 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
         }
     }
 
+    // 6b. POST /api/profile/save
+    if (path == "/api/profile/save" && method == "POST") {
+        try {
+            json j = json::parse(body);
+            GameProfile p;
+            p.id = j.value("id", "");
+            if (p.id.empty()) {
+                p.id = "custom_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+            }
+            // Sanitize ID: only alphanumeric and underscores
+            p.id.erase(std::remove_if(p.id.begin(), p.id.end(), [](char c) {
+                return !std::isalnum(c) && c != '_' && c != '-';
+            }), p.id.end());
+
+            p.name = j.value("name", "Özel Profil");
+            if (p.name.length() > 50) p.name = p.name.substr(0, 50);
+
+            p.icon = j.value("icon", "🎯");
+            if (p.icon.length() > 10) p.icon = "🎯";
+
+            p.description = j.value("description", "");
+            if (p.description.length() > 200) p.description = p.description.substr(0, 200);
+
+            p.exePattern = j.value("exePattern", "");
+            p.hotkey = j.value("hotkey", "");
+            p.autoApplyOnLaunch = j.value("autoApplyOnLaunch", true);
+            p.isBuiltin = false;
+
+            if (j.contains("settings")) {
+                json s = j["settings"];
+                p.settings.gamma = std::clamp(s.value("gamma", 1.0f), 0.5f, 3.0f);
+                p.settings.digitalVibrance = std::clamp(s.value("digitalVibrance", 0), 0, 100);
+                p.settings.brightnessOffset = std::clamp(s.value("brightnessOffset", 0.0f), -1.0f, 1.0f);
+                p.settings.contrast = std::clamp(s.value("contrast", 1.0f), 0.5f, 2.5f);
+                p.settings.rgbRed = std::clamp(s.value("rgbRed", 1.0f), 0.2f, 2.0f);
+                p.settings.rgbGreen = std::clamp(s.value("rgbGreen", 1.0f), 0.2f, 2.0f);
+                p.settings.rgbBlue = std::clamp(s.value("rgbBlue", 1.0f), 0.2f, 2.0f);
+                p.settings.sharpness = std::clamp(s.value("sharpness", 0.0f), 0.0f, 1.0f);
+            }
+
+            bool ok = ProfileManager::Instance().SaveProfile(p);
+            if (ok) {
+                OverlayToast::Instance().ShowToast("💾 PROFİL KAYDEDİLDİ", p.name);
+                return MakeHttpResponse(200, "OK", "application/json", "{\"success\":true,\"id\":\"" + p.id + "\"}");
+            }
+            return MakeHttpResponse(500, "Internal Error", "application/json", "{\"error\":\"Save failed\"}");
+        } catch (const std::exception& e) {
+            return MakeHttpResponse(400, "Bad Request", "application/json", "{\"error\":\"Invalid JSON\"}");
+        }
+    }
+
+    // 6c. POST /api/profile/delete
+    if (path == "/api/profile/delete" && method == "POST") {
+        try {
+            json j = json::parse(body);
+            std::string id = j.value("id", "");
+            bool ok = ProfileManager::Instance().DeleteProfile(id);
+            if (ok) {
+                OverlayToast::Instance().ShowToast("🗑️ PROFİL SİLİNDİ", id);
+                return MakeHttpResponse(200, "OK", "application/json", "{\"success\":true}");
+            }
+            return MakeHttpResponse(400, "Bad Request", "application/json", "{\"error\":\"Cannot delete profile or not found\"}");
+        } catch (...) {
+            return MakeHttpResponse(400, "Bad Request", "application/json", "{\"error\":\"Invalid JSON\"}");
+        }
+    }
+
     // 7. GET /api/updater/check
     if (path == "/api/updater/check" && method == "GET") {
         ReleaseInfo info;

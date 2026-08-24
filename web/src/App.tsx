@@ -103,6 +103,22 @@ export function App() {
     }
   };
 
+  const handleSaveProfile = async (profile: GameProfile) => {
+    await api.saveProfile(profile);
+    const updated = await api.getProfiles();
+    setProfiles(updated);
+    setActiveProfileId(profile.id);
+  };
+
+  const handleDeleteProfile = async (id: string) => {
+    await api.deleteProfile(id);
+    const updated = await api.getProfiles();
+    setProfiles(updated);
+    if (activeProfileId === id) {
+      setActiveProfileId('night_vision');
+    }
+  };
+
   const handleSelectMonitor = async (index: number) => {
     setSelectedMonitorIndex(index);
     await api.selectMonitor(index);
@@ -238,7 +254,10 @@ export function App() {
               <ProfilesTab
                 profiles={profiles}
                 activeProfileId={activeProfileId}
+                currentSettings={settings}
                 onSelectProfile={handleSelectProfile}
+                onSaveProfile={handleSaveProfile}
+                onDeleteProfile={handleDeleteProfile}
               />
             )}
             {activeTab === 'crosshair' && (

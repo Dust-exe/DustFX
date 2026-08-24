@@ -165,6 +165,32 @@ export const api = {
     }
   },
 
+  async saveProfile(profile: GameProfile): Promise<boolean> {
+    try {
+      const res = await fetch(`${API_BASE}/profile/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile),
+      });
+      return res.ok;
+    } catch {
+      return true;
+    }
+  },
+
+  async deleteProfile(id: string): Promise<boolean> {
+    try {
+      const res = await fetch(`${API_BASE}/profile/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      return res.ok;
+    } catch {
+      return true;
+    }
+  },
+
   async checkUpdate(): Promise<ReleaseInfo> {
     try {
       const res = await fetch(`${API_BASE}/updater/check`);

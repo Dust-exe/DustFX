@@ -1,5 +1,19 @@
-import React from 'react';
-import { Target, Sliders, Sparkles, RotateCcw, Plus, Minus } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import {
+  Target,
+  Sliders,
+  Sparkles,
+  RotateCcw,
+  Plus,
+  Minus,
+  Share2,
+  Upload,
+  Copy,
+  CheckCircle,
+  Search,
+  X,
+  ShieldCheck,
+} from 'lucide-react';
 import { DisplaySettings } from '../../types';
 
 type CrosshairStyleType = 'dot' | 'cross' | 'circle' | 'gap-cross' | 'x-cross' | 't-cross' | 'cross-dot' | 'square';
@@ -7,6 +21,215 @@ type CrosshairStyleType = 'dot' | 'cross' | 'circle' | 'gap-cross' | 'x-cross' |
 interface CrosshairTabProps {
   settings: DisplaySettings;
   onChange: (newSettings: Partial<DisplaySettings>) => void;
+}
+
+interface CommunityCrosshairPreset {
+  id: string;
+  name: string;
+  creator: string;
+  tag: string;
+  style: CrosshairStyleType;
+  color: string;
+  size: number;
+  thickness: number;
+  gap: number;
+  dotSize: number;
+  outline: number;
+  opacity: number;
+}
+
+const communityCrosshairs: CommunityCrosshairPreset[] = [
+  {
+    id: 'tenz_cyan',
+    name: 'TenZ Pro Cyan Cross',
+    creator: 'TenZ',
+    tag: 'Valorant / CS2',
+    style: 'cross',
+    color: '#00E5FF',
+    size: 6,
+    thickness: 2,
+    gap: 2,
+    dotSize: 0,
+    outline: 1,
+    opacity: 1.0,
+  },
+  {
+    id: 'scream_dot',
+    name: 'Scream One-Tap Dot',
+    creator: 'Scream',
+    tag: 'One-Tap Headshot',
+    style: 'dot',
+    color: '#00FF66',
+    size: 4,
+    thickness: 2,
+    gap: 0,
+    dotSize: 3,
+    outline: 1,
+    opacity: 1.0,
+  },
+  {
+    id: 'cs2_classic',
+    name: 'CS2 Classic Green',
+    creator: 'CS2 Esports',
+    tag: 'CS2 / Competitive',
+    style: 'cross',
+    color: '#00FF66',
+    size: 10,
+    thickness: 2,
+    gap: 4,
+    dotSize: 0,
+    outline: 1,
+    opacity: 1.0,
+  },
+  {
+    id: 'shroud_compact',
+    name: 'Shroud Compact Red',
+    creator: 'Shroud',
+    tag: 'FPS All-Rounder',
+    style: 'cross',
+    color: '#FF0055',
+    size: 7,
+    thickness: 2,
+    gap: 3,
+    dotSize: 0,
+    outline: 1,
+    opacity: 1.0,
+  },
+  {
+    id: 'shaiiko_t',
+    name: 'Shaiiko Yellow T-Cross',
+    creator: 'Shaiiko',
+    tag: 'R6 / Tactical',
+    style: 't-cross',
+    color: '#FFFF00',
+    size: 8,
+    thickness: 2,
+    gap: 2,
+    dotSize: 0,
+    outline: 1,
+    opacity: 1.0,
+  },
+  {
+    id: 'white_minimal',
+    name: 'Clean White 1px Dot',
+    creator: 'AimLab Pro',
+    tag: 'Micro-Aiming',
+    style: 'dot',
+    color: '#FFFFFF',
+    size: 3,
+    thickness: 1,
+    gap: 0,
+    dotSize: 2,
+    outline: 1,
+    opacity: 1.0,
+  },
+  {
+    id: 'neon_gap',
+    name: 'Neon Gap Hollow Cross',
+    creator: 'Dust Pro',
+    tag: 'Clarity / Dynamic',
+    style: 'gap-cross',
+    color: '#FF00FF',
+    size: 9,
+    thickness: 2,
+    gap: 6,
+    dotSize: 0,
+    outline: 1,
+    opacity: 1.0,
+  },
+  {
+    id: 'tactical_circle',
+    name: 'Tactical Precision Circle',
+    creator: 'Apex Master',
+    tag: 'Apex Legends / Fast Tracking',
+    style: 'circle',
+    color: '#00FF66',
+    size: 6,
+    thickness: 2,
+    gap: 3,
+    dotSize: 2,
+    outline: 1,
+    opacity: 1.0,
+  },
+];
+
+// Helper: Generate safe crosshair share code
+function generateCrosshairCode(s: DisplaySettings): string {
+  const style = s.crosshairStyle || 'cross';
+  const color = s.crosshairColor || '#00FF66';
+  const size = s.crosshairSize ?? 10;
+  const thick = s.crosshairThickness ?? 2;
+  const gap = s.crosshairGap ?? 4;
+  const dot = s.crosshairDotSize ?? 0;
+  const outline = s.crosshairOutline ?? 1;
+  const opacity = Math.round((s.crosshairOpacity ?? 1.0) * 100);
+
+  return `DUST-CROSS:${style}:${color}:S${size}:T${thick}:G${gap}:D${dot}:O${outline}:A${opacity}`;
+}
+
+// Helper: Parse & safely validate crosshair share code
+function parseCrosshairCode(code: string): Partial<DisplaySettings> | null {
+  try {
+    const trimmed = code.trim();
+
+    // Format 1: DUST-CROSS:style:color:S..:T..:G..:D..:O..:A..
+    if (trimmed.startsWith('DUST-CROSS:')) {
+      const parts = trimmed.split(':');
+      if (parts.length >= 3) {
+        const styleRaw = parts[1] as CrosshairStyleType;
+        const validStyles: CrosshairStyleType[] = ['dot', 'cross', 'circle', 'gap-cross', 'x-cross', 't-cross', 'cross-dot', 'square'];
+        const style = validStyles.includes(styleRaw) ? styleRaw : 'cross';
+
+        const colorRaw = parts[2];
+        const color = /^#[0-9A-Fa-f]{6}$/.test(colorRaw) ? colorRaw : '#00FF66';
+
+        let size = 10;
+        let thickness = 2;
+        let gap = 4;
+        let dotSize = 0;
+        let outline = 1;
+        let opacity = 1.0;
+
+        for (let i = 3; i < parts.length; i++) {
+          const p = parts[i];
+          if (p.startsWith('S')) size = Math.max(2, Math.min(40, parseInt(p.slice(1)) || 10));
+          if (p.startsWith('T')) thickness = Math.max(1, Math.min(10, parseInt(p.slice(1)) || 2));
+          if (p.startsWith('G')) gap = Math.max(0, Math.min(30, parseInt(p.slice(1)) || 4));
+          if (p.startsWith('D')) dotSize = Math.max(0, Math.min(10, parseInt(p.slice(1)) || 0));
+          if (p.startsWith('O')) outline = Math.max(0, Math.min(3, parseInt(p.slice(1)) || 1));
+          if (p.startsWith('A')) opacity = Math.max(0.2, Math.min(1.0, (parseInt(p.slice(1)) || 100) / 100));
+        }
+
+        return {
+          crosshairEnabled: true,
+          crosshairStyle: style,
+          crosshairColor: color,
+          crosshairSize: size,
+          crosshairThickness: thickness,
+          crosshairGap: gap,
+          crosshairDotSize: dotSize,
+          crosshairOutline: outline,
+          crosshairOpacity: opacity,
+        };
+      }
+    }
+
+    // Format 2: JSON format
+    const parsed = JSON.parse(trimmed);
+    return {
+      crosshairEnabled: true,
+      crosshairStyle: parsed.crosshairStyle || 'cross',
+      crosshairColor: /^#[0-9A-Fa-f]{6}$/.test(parsed.crosshairColor) ? parsed.crosshairColor : '#00FF66',
+      crosshairSize: Math.max(2, Math.min(40, Number(parsed.crosshairSize) || 10)),
+      crosshairThickness: Math.max(1, Math.min(10, Number(parsed.crosshairThickness) || 2)),
+      crosshairGap: Math.max(0, Math.min(30, Number(parsed.crosshairGap) || 4)),
+      crosshairDotSize: Math.max(0, Math.min(10, Number(parsed.crosshairDotSize) || 0)),
+      crosshairOutline: Math.max(0, Math.min(3, Number(parsed.crosshairOutline) || 1)),
+      crosshairOpacity: Math.max(0.2, Math.min(1.0, Number(parsed.crosshairOpacity) || 1.0)),
+    };
+  } catch {
+    return null;
+  }
 }
 
 // Reusable SVG Crosshair Renderer
@@ -57,13 +280,9 @@ export const CrosshairSvgRenderer: React.FC<{
       case 'cross':
         return (
           <g stroke={strokeCol} strokeWidth={strokeW} strokeLinecap="square">
-            {/* Top */}
             <line x1={cx} y1={cy - g - s} x2={cx} y2={cy - g} />
-            {/* Bottom */}
             <line x1={cx} y1={cy + g} x2={cx} y2={cy + g + s} />
-            {/* Left */}
             <line x1={cx - g - s} y1={cy} x2={cx - g} y2={cy} />
-            {/* Right */}
             <line x1={cx + g} y1={cy} x2={cx + g + s} y2={cy} />
           </g>
         );
@@ -71,11 +290,8 @@ export const CrosshairSvgRenderer: React.FC<{
       case 't-cross':
         return (
           <g stroke={strokeCol} strokeWidth={strokeW} strokeLinecap="square">
-            {/* Bottom */}
             <line x1={cx} y1={cy + g} x2={cx} y2={cy + g + s} />
-            {/* Left */}
             <line x1={cx - g - s} y1={cy} x2={cx - g} y2={cy} />
-            {/* Right */}
             <line x1={cx + g} y1={cy} x2={cx + g + s} y2={cy} />
           </g>
         );
@@ -155,11 +371,8 @@ export const CrosshairSvgRenderer: React.FC<{
       xmlns="http://www.w3.org/2000/svg"
       style={{ opacity, filter: glow }}
     >
-      {/* 1. Outline Layer */}
       {renderShapes(true)}
-      {/* 2. Main Color Layer */}
       {renderShapes(false)}
-      {/* 3. Center Dot (if explicitly enabled on other styles) */}
       {dotSize > 0 && style !== 'dot' && style !== 'cross-dot' && (
         <>
           {outline > 0 && <circle cx={cx} cy={cy} r={dotSize + outline} fill="#000000" />}
@@ -171,6 +384,12 @@ export const CrosshairSvgRenderer: React.FC<{
 };
 
 export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }) => {
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importCodeInput, setImportCodeInput] = useState('');
+  const [importError, setImportError] = useState('');
+  const [searchPreset, setSearchPreset] = useState('');
+
   const colors = [
     '#00FF66', // Toxic Green
     '#00E5FF', // Cyan
@@ -220,39 +439,110 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
     });
   };
 
+  const handleCopyShareCode = () => {
+    const code = generateCrosshairCode(settings);
+    navigator.clipboard.writeText(code);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
+
+  const handleConfirmImport = () => {
+    setImportError('');
+    if (!importCodeInput.trim()) return;
+
+    const parsed = parseCrosshairCode(importCodeInput);
+    if (!parsed) {
+      setImportError('Geçersiz veya bozuk crosshair kodu! Lütfen DUST-CROSS kodunu kontrol edin.');
+      return;
+    }
+
+    onChange(parsed);
+    setShowImportModal(false);
+    setImportCodeInput('');
+  };
+
+  const handleApplyPreset = (preset: CommunityCrosshairPreset) => {
+    onChange({
+      crosshairEnabled: true,
+      crosshairStyle: preset.style,
+      crosshairColor: preset.color,
+      crosshairSize: preset.size,
+      crosshairThickness: preset.thickness,
+      crosshairGap: preset.gap,
+      crosshairDotSize: preset.dotSize,
+      crosshairOutline: preset.outline,
+      crosshairOpacity: preset.opacity,
+    });
+  };
+
+  // Filtered community presets
+  const filteredCommunityPresets = useMemo(() => {
+    const q = searchPreset.toLowerCase().trim();
+    if (!q) return communityCrosshairs;
+    return communityCrosshairs.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.creator.toLowerCase().includes(q) ||
+        p.tag.toLowerCase().includes(q)
+    );
+  }, [searchPreset]);
+
   return (
     <div className="flex flex-col gap-6 animate-fadeIn">
-      {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-white/5">
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/5">
         <div>
           <h2 className="text-lg font-bold text-white font-mono flex items-center gap-2">
             <Target className="w-5 h-5 text-emerald-400" />
-            Özel PvP Nişangah — Crosshair Overlay
+            Özel PvP Nişangah — Crosshair Hub & Paylaşım
           </h2>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Ekranın tam merkezine kilitlenen, tüm oyunların üzerinde çalışan şeffaf neon nişangah. <strong className="text-white">Ekran filtresinden tamamen bağımsızdır.</strong>
+            Ekranın tam merkezine kilitlenen, tüm oyunların üzerinde çalışan şeffaf neon nişangah. <strong className="text-white">Ekran filtresinden bağımsızdır.</strong>
           </p>
         </div>
 
-        {/* Master Toggle */}
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-zinc-400 font-mono">Alt + Z</span>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={settings.crosshairEnabled}
-              onChange={(e) => onChange({ crosshairEnabled: e.target.checked })}
-              className="sr-only peer"
-            />
-            <div className="w-12 h-6 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
-          </label>
+        {/* Action Controls */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={handleCopyShareCode}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-xs font-bold text-white transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] active:scale-95"
+          >
+            {copiedCode ? <CheckCircle className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+            <span>{copiedCode ? 'Kod Kopyalandı ✓' : 'Kodu Kopyala / Paylaş'}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setImportCodeInput('');
+              setImportError('');
+              setShowImportModal(true);
+            }}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-zinc-200 border border-white/10 transition-all active:scale-95"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span>Kod İçe Aktar</span>
+          </button>
+
+          {/* Master Toggle */}
+          <div className="flex items-center gap-2 pl-2 border-l border-white/10">
+            <span className="text-xs text-zinc-400 font-mono hidden md:inline">Alt+Z</span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={settings.crosshairEnabled}
+                onChange={(e) => onChange({ crosshairEnabled: e.target.checked })}
+                className="sr-only peer"
+              />
+              <div className="w-12 h-6 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+            </label>
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Preset Styles & Tuning Sliders (7 cols) */}
+        {/* Left Column: Shapes & Tuning Sliders (7 cols) */}
         <div className="lg:col-span-7 flex flex-col gap-5">
-          {/* Preset Styles 4x2 Grid */}
+          {/* Preset Shapes 4x2 Grid */}
           <div className="glass-card p-5 rounded-3xl border border-purple-500/15 flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider font-mono">
@@ -287,8 +577,8 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
                     dotSize={0}
                     outline={1}
                     opacity={1}
-                    width={40}
-                    height={40}
+                    width={38}
+                    height={38}
                   />
                   <span>{s.label}</span>
                 </button>
@@ -296,7 +586,7 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
             </div>
           </div>
 
-          {/* Detailed Tuning Controls */}
+          {/* Detailed Tuning Sliders */}
           <div className="glass-card p-5 rounded-3xl border border-purple-500/15 flex flex-col gap-4">
             <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider font-mono flex items-center gap-2">
               <Sliders className="w-3.5 h-3.5 text-fuchsia-400" />
@@ -427,7 +717,6 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
 
             {/* 5. Outline & Opacity */}
             <div className="grid grid-cols-2 gap-4 pt-2 border-t border-white/5">
-              {/* Outline */}
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-zinc-300 font-medium">Siyah Dış Hat:</span>
@@ -445,7 +734,6 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
                 />
               </div>
 
-              {/* Opacity */}
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-zinc-300 font-medium">Opaklık / Netlik:</span>
@@ -467,7 +755,7 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
           </div>
         </div>
 
-        {/* Right Column: Live Interactive Preview & Color Palette (5 cols) */}
+        {/* Right Column: Live Interactive Canvas + Community Presets (5 cols) */}
         <div className="lg:col-span-5 flex flex-col gap-5">
           {/* Color Palette */}
           <div className="glass-card p-5 rounded-3xl border border-purple-500/15 flex flex-col gap-3">
@@ -501,11 +789,11 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
           </div>
 
           {/* Live Dynamic Preview Canvas */}
-          <div className="glass-card p-5 rounded-3xl border border-purple-500/15 flex flex-col gap-3 flex-1">
+          <div className="glass-card p-5 rounded-3xl border border-purple-500/15 flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider font-mono flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                Canlı Ekran Önizleme:
+                Canlı Önizleme:
               </span>
               <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
                 settings.crosshairEnabled
@@ -516,18 +804,11 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
               </span>
             </div>
 
-            {/* Simulated Game/Desktop Viewport */}
-            <div className="flex-1 min-h-[250px] rounded-2xl bg-[#07050d] border border-white/10 flex items-center justify-center relative overflow-hidden shadow-inner">
-              {/* Tactical Grid Background */}
-              <div className="absolute inset-0 bg-[radial-gradient(#332454_1px,transparent_1px)] [background-size:24px_24px] opacity-40 pointer-events-none" />
+            <div className="h-[180px] rounded-2xl bg-[#07050d] border border-white/10 flex items-center justify-center relative overflow-hidden shadow-inner">
+              <div className="absolute inset-0 bg-[radial-gradient(#332454_1px,transparent_1px)] [background-size:20px_20px] opacity-40 pointer-events-none" />
+              <div className="absolute w-32 h-32 rounded-full border border-purple-500/10 pointer-events-none" />
+              <div className="absolute w-16 h-16 rounded-full border border-purple-500/15 pointer-events-none" />
 
-              {/* Center Target Rings (Subtle) */}
-              <div className="absolute w-40 h-40 rounded-full border border-purple-500/10 pointer-events-none" />
-              <div className="absolute w-20 h-20 rounded-full border border-purple-500/15 pointer-events-none" />
-              <div className="absolute w-60 h-[1px] bg-purple-500/10 pointer-events-none" />
-              <div className="absolute h-60 w-[1px] bg-purple-500/10 pointer-events-none" />
-
-              {/* Crosshair Render */}
               <div className="relative z-10">
                 <CrosshairSvgRenderer
                   style={currentStyle}
@@ -538,31 +819,143 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
                   dotSize={dotSize}
                   outline={outline}
                   opacity={opacity}
-                  width={150}
-                  height={150}
+                  width={120}
+                  height={120}
                 />
               </div>
 
-              {/* Status Badge inside Canvas */}
-              <div className="absolute bottom-3 left-3 text-[10px] font-mono text-zinc-500 bg-black/60 px-2 py-1 rounded-lg border border-white/5 backdrop-blur-sm pointer-events-none">
-                {size}L × {thickness}T • Gap: {gap} • {settings.crosshairColor}
+              <div className="absolute bottom-2 left-2 text-[9px] font-mono text-zinc-500 bg-black/60 px-2 py-0.5 rounded border border-white/5">
+                {size}L × {thickness}T • Gap: {gap}
               </div>
             </div>
+          </div>
 
-            {/* Info Footer */}
-            <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
-              <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-zinc-400">
-                <span className="text-zinc-500">Kısayol:</span><br />
-                <strong className="text-white">Alt + Z</strong>
-              </div>
-              <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-zinc-400">
-                <span className="text-zinc-500">Masaüstü & Oyun:</span><br />
-                <strong className="text-emerald-400">Zero-Lag Click-Through ✓</strong>
-              </div>
+          {/* Community Crosshair Presets & Search */}
+          <div className="glass-card p-5 rounded-3xl border border-purple-500/15 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider font-mono flex items-center gap-1.5">
+                <Target className="w-3.5 h-3.5 text-cyan-400" />
+                Popüler Oyuncu Nişangahları:
+              </span>
+            </div>
+
+            {/* Mini Search */}
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchPreset}
+                onChange={(e) => setSearchPreset(e.target.value)}
+                placeholder="Oyuncu veya stil ara (TenZ, Scream, CS2...)"
+                className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-black/40 border border-white/10 text-[11px] text-white outline-none focus:border-cyan-500 placeholder:text-zinc-500"
+              />
+            </div>
+
+            {/* Presets List */}
+            <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
+              {filteredCommunityPresets.map((preset) => (
+                <div
+                  key={preset.id}
+                  onClick={() => handleApplyPreset(preset)}
+                  className="p-2.5 rounded-2xl bg-white/5 hover:bg-purple-950/40 border border-white/5 hover:border-purple-500/40 cursor-pointer flex items-center justify-between gap-3 transition-all group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-black/50 border border-white/10 flex items-center justify-center p-0.5">
+                      <CrosshairSvgRenderer
+                        style={preset.style}
+                        color={preset.color}
+                        size={preset.size}
+                        thickness={preset.thickness}
+                        gap={preset.gap}
+                        dotSize={preset.dotSize}
+                        outline={preset.outline}
+                        opacity={preset.opacity}
+                        width={28}
+                        height={28}
+                      />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">
+                        {preset.name}
+                      </div>
+                      <div className="text-[10px] text-zinc-400 font-mono">
+                        {preset.creator} • {preset.tag}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleApplyPreset(preset);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/30 text-cyan-300 text-[10px] font-bold border border-cyan-500/20"
+                  >
+                    Uygula
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Import Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="w-full max-w-md glass-panel p-6 rounded-3xl border border-purple-500/30 flex flex-col gap-4 shadow-2xl animate-fadeIn relative">
+            <button
+              onClick={() => setShowImportModal(false)}
+              className="absolute top-5 right-5 w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <h3 className="text-base font-bold text-white font-mono flex items-center gap-2">
+              <Upload className="w-5 h-5 text-emerald-400" />
+              Crosshair Kodunu İçe Aktar
+            </h3>
+            <p className="text-xs text-zinc-400">
+              Diğer oyunculardan aldığınız <strong className="text-white">DUST-CROSS</strong> kodunu buraya yapıştırın.
+            </p>
+
+            <textarea
+              rows={3}
+              value={importCodeInput}
+              onChange={(e) => setImportCodeInput(e.target.value)}
+              placeholder="Örn: DUST-CROSS:cross:#00FF66:S10:T2:G4:D0:O1:A100"
+              className="w-full p-3 rounded-2xl bg-black/50 border border-white/10 text-xs font-mono text-zinc-200 outline-none focus:border-emerald-500 resize-none"
+            />
+
+            {importError && (
+              <p className="text-xs text-red-400 bg-red-950/40 p-2.5 rounded-xl border border-red-500/30 font-medium">
+                ⚠️ {importError}
+              </p>
+            )}
+
+            <div className="flex items-center gap-2 text-[10px] text-zinc-400 bg-emerald-950/20 p-2.5 rounded-xl border border-emerald-500/20 font-mono">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <span>Güvenlik Doğrulaması: Kod parametreleri otomatik olarak güvenli aralıklara sınırlandırılır.</span>
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-white/5">
+              <button
+                onClick={() => setShowImportModal(false)}
+                className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs text-zinc-300"
+              >
+                İptal
+              </button>
+              <button
+                onClick={handleConfirmImport}
+                disabled={!importCodeInput.trim()}
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-xs font-bold text-white shadow-lg disabled:opacity-40"
+              >
+                İçe Aktar & Ekrana Yansıt
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
