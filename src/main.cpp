@@ -152,6 +152,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         NULL, NULL, hInstance, NULL
     );
 
+    dustfx::OverlayToast::Instance().Initialize();
+
     LaunchStudioUI();
 
     MSG msg;

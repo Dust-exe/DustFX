@@ -184,15 +184,11 @@ bool GpuController::ApplyGdiGammaRamp(const DisplaySettings& settings, int monit
         // Mathematical Gamma curve
         float gVal = std::pow(normalized, 1.0f / gamma);
 
-        // CAS (Contrast Adaptive Sharpening) edge & micro-contrast enhancement
+        // True CAS / High-Pass Edge Clarity Thresholding
+        // Enhances transition band steepness around texture boundaries without shifting global midtone contrast
         if (sharpness > 0.001f) {
-            float centered = normalized - 0.5f;
-            float k = 1.0f + sharpness * 3.0f;
-            float casCurve = 0.5f + (centered * k) / (1.0f + std::abs(centered) * (k - 1.0f) * 1.5f);
-            casCurve = std::clamp(casCurve, 0.0f, 1.0f);
-            float casVal = std::pow(casCurve, 1.0f / gamma);
-            // Dynamic blend: sharpens edge demarcation and contrast thresholds
-            gVal = (1.0f - sharpness * 0.75f) * gVal + (sharpness * 0.75f) * casVal;
+            float edgeDiff = std::sin(gVal * 6.2831853f) * (1.0f - std::abs(2.0f * gVal - 1.0f));
+            gVal = std::clamp(gVal + sharpness * 0.18f * edgeDiff, 0.0f, 1.0f);
         }
 
         // Contrast & Brightness adjustment
@@ -251,30 +247,25 @@ bool GpuController::ApplyMagnificationEffect(const DisplaySettings& settings) {
         return false;
     }
 
-    // Calculate saturation & vibrance matrix
-    // Standard Luminance weights: R: 0.2126, G: 0.7152, B: 0.0722
-    float sat = 1.0f + (static_cast<float>(settings.digitalVibrance) / 100.0f) * 1.5f;
+    // Standard Digital Vibrance (Color Saturation Matrix)
+    // Percentage 0-100 mapped to saturation multiplier 1.0 - 2.8
+    float sat = 1.0f + (static_cast<float>(settings.digitalVibrance) / 100.0f) * 1.8f;
     float invSat = 1.0f - sat;
 
+    // Standard Rec. 709 Luminance weights: R: 0.2126, G: 0.7152, B: 0.0722
     float rLum = 0.2126f * invSat;
     float gLum = 0.7152f * invSat;
     float bLum = 0.0722f * invSat;
 
-    float sharp = std::clamp(settings.sharpness, 0.0f, 1.0f);
-    float c = settings.contrast * (1.0f + sharp * 0.35f);
-    float gScale = (settings.gamma >= 1.0f) ? (1.0f + (settings.gamma - 1.0f) * 0.4f + sharp * 0.20f) : (settings.gamma * (1.0f + sharp * 0.15f));
+    float c = settings.contrast;
     float bright = settings.brightnessOffset;
 
-    // Edge clarity diagonal dominance
-    float diagBoost = 1.0f + sharp * 0.25f;
-    float crossDamp = 1.0f - sharp * 0.15f;
-
     MAGCOLOREFFECT effect = {
-        (rLum + sat) * settings.rgbRed * c * gScale * diagBoost,   gLum * settings.rgbGreen * c * gScale * crossDamp,        bLum * settings.rgbBlue * c * gScale * crossDamp,         0.0f, 0.0f,
-        rLum * settings.rgbRed * c * gScale * crossDamp,          (gLum + sat) * settings.rgbGreen * c * gScale * diagBoost, bLum * settings.rgbBlue * c * gScale * crossDamp,         0.0f, 0.0f,
-        rLum * settings.rgbRed * c * gScale * crossDamp,          gLum * settings.rgbGreen * c * gScale * crossDamp,        (bLum + sat) * settings.rgbBlue * c * gScale * diagBoost,  0.0f, 0.0f,
-        0.0f,                                                     0.0f,                                                     0.0f,                                                      1.0f, 0.0f,
-        bright,                                                   bright,                                                   bright,                                                    0.0f, 1.0f
+        (rLum + sat) * settings.rgbRed * c,   gLum * settings.rgbGreen * c,         bLum * settings.rgbBlue * c,          0.0f, 0.0f,
+        rLum * settings.rgbRed * c,           (gLum + sat) * settings.rgbGreen * c, bLum * settings.rgbBlue * c,          0.0f, 0.0f,
+        rLum * settings.rgbRed * c,           gLum * settings.rgbGreen * c,         (bLum + sat) * settings.rgbBlue * c,  0.0f, 0.0f,
+        0.0f,                                 0.0f,                                 0.0f,                                 1.0f, 0.0f,
+        bright,                               bright,                               bright,                               0.0f, 1.0f
     };
 
     return (s_MagSetFullscreenColorEffect(&effect) != FALSE);
