@@ -1,4 +1,5 @@
 #include "core/app/dustfx_app.h"
+#include "overlay/overlay_toast.h"
 #include "server/http_server.h"
 #include <iostream>
 #include <csignal>

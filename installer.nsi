@@ -5,14 +5,16 @@ Name "DustFX"
 OutFile "DustFX_Setup.exe"
 InstallDir "$LOCALAPPDATA\DustFX"
 RequestExecutionLevel user
-SetCompressor /SOLID lzma
+SetCompressor lzma
 
 VIProductVersion "1.1.1.0"
 VIAddVersionKey "ProductName" "DustFX"
 VIAddVersionKey "CompanyName" "Dust Studio"
-VIAddVersionKey "LegalCopyright" "Copyright (C) 2026 Dust Studio"
+VIAddVersionKey "LegalCopyright" "Copyright (C) 2026 Dust Studio. All rights reserved."
 VIAddVersionKey "FileDescription" "DustFX GPU & DCCW Gamma Optimizer Setup"
 VIAddVersionKey "FileVersion" "1.1.1"
+VIAddVersionKey "OriginalFilename" "DustFX_Setup.exe"
+VIAddVersionKey "InternalName" "DustFX_Setup"
 
 !define MUI_ABORTWARNING
 !define MUI_ICON "app.ico"

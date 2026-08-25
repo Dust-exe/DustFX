@@ -1,6 +1,7 @@
 #include "overlay/overlay_toast.h"
 #include <iostream>
 #include <cmath>
+#include <algorithm>
 #include <sstream>
 
 #ifdef _WIN32
@@ -132,7 +133,7 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                     DrawFilledRect(cx - halfThick, cy + gap, cx + tRem, cy + gap + size);
                 }
                 else if (style == "gap-cross") {
-                    int bigGap = MathMax(4, gap);
+                    int bigGap = std::max(4, gap);
                     DrawFilledRect(cx - bigGap - size, cy - halfThick, cx - bigGap, cy + tRem);
                     DrawFilledRect(cx + bigGap, cy - halfThick, cx + bigGap + size, cy + tRem);
                     DrawFilledRect(cx - halfThick, cy - bigGap - size, cx + tRem, cy - bigGap);
@@ -178,7 +179,7 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                     DrawFilledRect(cx - halfThick, cy - gap - size, cx + tRem, cy - gap);
                     DrawFilledRect(cx - halfThick, cy + gap, cx + tRem, cy + gap + size);
                     // Center dot
-                    int d = MathMax(2, dotSize > 0 ? dotSize : thickness);
+                    int d = std::max(2, dotSize > 0 ? dotSize : thickness);
                     if (outline > 0) {
                         SelectObject(memDC, outlineBrush);
                         SelectObject(memDC, nullPen);
@@ -237,10 +238,6 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 #endif
 
 namespace dustfx {
-
-#ifndef MathMax
-#define MathMax(a, b) (((a) > (b)) ? (a) : (b))
-#endif
 
 OverlayToast& OverlayToast::Instance() {
     static OverlayToast instance;
