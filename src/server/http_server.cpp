@@ -1,3 +1,9 @@
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+typedef int socklen_t;
+#endif
+
 #include "server/http_server.h"
 #include "core/gpu/gpu_controller.h"
 #include "core/profile/profile_manager.h"
@@ -15,11 +21,7 @@
 #include <cstring>
 #include <filesystem>
 
-#ifdef _WIN32
-#include <winsock2.h>
-#include <ws2tcpip.h>
-typedef int socklen_t;
-#else
+#ifndef _WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>

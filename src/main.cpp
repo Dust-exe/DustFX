@@ -74,11 +74,32 @@ void RemoveTrayIcon() {
     Shell_NotifyIconA(NIM_DELETE, &g_nid);
 }
 
+#define HK_ID_F11   3001
+#define HK_ID_F10   3002
+#define HK_ID_ALT_Z 3003
+#define HK_ID_ALT_X 3004
+
 LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
         case WM_CREATE:
             AddTrayIcon(hWnd);
+            RegisterHotKey(hWnd, HK_ID_F11, 0, VK_F11);
+            RegisterHotKey(hWnd, HK_ID_F10, 0, VK_F10);
+            RegisterHotKey(hWnd, HK_ID_ALT_Z, MOD_ALT, 'Z');
+            RegisterHotKey(hWnd, HK_ID_ALT_X, MOD_ALT, 'X');
             break;
+
+        case WM_HOTKEY: {
+            int id = (int)wParam;
+            if (id == HK_ID_F11) {
+                dustfx::DustFxApp::Instance().QuickMaxGamma();
+            } else if (id == HK_ID_F10) {
+                dustfx::DustFxApp::Instance().QuickReset();
+            } else if (id == HK_ID_ALT_Z) {
+                dustfx::DustFxApp::Instance().ToggleCrosshair();
+            }
+            break;
+        }
 
         case WM_TRAYICON: {
             if (lParam == WM_RBUTTONUP || lParam == WM_LBUTTONUP) {
@@ -111,6 +132,10 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
         }
 
         case WM_DESTROY:
+            UnregisterHotKey(hWnd, HK_ID_F11);
+            UnregisterHotKey(hWnd, HK_ID_F10);
+            UnregisterHotKey(hWnd, HK_ID_ALT_Z);
+            UnregisterHotKey(hWnd, HK_ID_ALT_X);
             RemoveTrayIcon();
             PostQuitMessage(0);
             break;

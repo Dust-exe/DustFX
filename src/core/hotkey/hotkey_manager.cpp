@@ -1,10 +1,12 @@
 #include "core/hotkey/hotkey_manager.h"
 #include <iostream>
-#include <chrono>
 #include <algorithm>
 
 #ifdef _WIN32
 #include <windows.h>
+
+#define HOTKEY_ID_BASE 3000
+static HWND g_hHotkeyWnd = NULL;
 #endif
 
 namespace dustfx {
@@ -23,18 +25,12 @@ HotkeyManager::~HotkeyManager() {
 bool HotkeyManager::Start() {
     if (m_running.load()) return true;
     m_running.store(true);
-    m_thread = std::thread(&HotkeyManager::ListenerLoop, this);
-    std::cout << "[HotkeyManager] Global hotkey listener active." << std::endl;
+    std::cout << "[HotkeyManager] Global hotkey system active." << std::endl;
     return true;
 }
 
 void HotkeyManager::Stop() {
-    if (m_running.load()) {
-        m_running.store(false);
-        if (m_thread.joinable()) {
-            m_thread.join();
-        }
-    }
+    m_running.store(false);
 }
 
 void HotkeyManager::SetConfig(const HotkeyConfig& config) {
@@ -90,81 +86,7 @@ int HotkeyManager::ParseVirtualKey(const std::string& keyStr) {
 }
 
 void HotkeyManager::ListenerLoop() {
-#ifdef _WIN32
-    bool prevF11 = false;
-    bool prevF12 = false;
-    bool prevF10 = false;
-    bool prevAltX = false;
-    bool prevAltZ = false;
-
-    while (m_running.load()) {
-        HotkeyConfig cfg;
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            cfg = m_config;
-        }
-
-        int vkF11 = ParseVirtualKey(cfg.maxGammaKey);
-        int vkF12 = ParseVirtualKey(cfg.vibranceKey);
-        int vkF10 = ParseVirtualKey(cfg.quickResetKey);
-
-        bool altPressed = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
-        bool xPressed = (GetAsyncKeyState('X') & 0x8000) != 0;
-        bool zPressed = (GetAsyncKeyState('Z') & 0x8000) != 0;
-
-        // F11 (Max Gamma)
-        if (vkF11 > 0) {
-            bool f11Pressed = (GetAsyncKeyState(vkF11) & 0x8000) != 0;
-            if (f11Pressed && !prevF11) {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                if (m_callback) m_callback(HotkeyAction::MAX_GAMMA_TOGGLE, "");
-            }
-            prevF11 = f11Pressed;
-        }
-
-        // F12 (Vibrance Toggle)
-        if (vkF12 > 0) {
-            bool f12Pressed = (GetAsyncKeyState(vkF12) & 0x8000) != 0;
-            if (f12Pressed && !prevF12) {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                if (m_callback) m_callback(HotkeyAction::VIBRANCE_TOGGLE, "");
-            }
-            prevF12 = f12Pressed;
-        }
-
-        // F10 (Quick Reset)
-        if (vkF10 > 0) {
-            bool f10Pressed = (GetAsyncKeyState(vkF10) & 0x8000) != 0;
-            if (f10Pressed && !prevF10) {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                if (m_callback) m_callback(HotkeyAction::QUICK_RESET, "");
-            }
-            prevF10 = f10Pressed;
-        }
-
-        // Alt+X (Toggle Overlay)
-        bool altX = altPressed && xPressed;
-        if (altX && !prevAltX) {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            if (m_callback) m_callback(HotkeyAction::TOGGLE_OVERLAY, "");
-        }
-        prevAltX = altX;
-
-        // Alt+Z (Toggle Crosshair)
-        bool altZ = altPressed && zPressed;
-        if (altZ && !prevAltZ) {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            if (m_callback) m_callback(HotkeyAction::TOGGLE_CROSSHAIR, "");
-        }
-        prevAltZ = altZ;
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    }
-#else
-    while (m_running.load()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-#endif
+    // No background polling - hotkeys handled via official Windows RegisterHotKey in main window loop
 }
 
 } // namespace dustfx
