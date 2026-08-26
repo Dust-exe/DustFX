@@ -34,13 +34,15 @@ public:
 
     void RegisterCallback(HotkeyActionCallback callback);
     void BindProfileHotkey(const std::string& keyName, const std::string& profileId);
+    void HandleKeyEvent(int vkCode, bool isAlt, bool isCtrl, bool isShift);
 
 private:
     HotkeyManager();
     ~HotkeyManager();
 
-    void ListenerLoop();
+    void HookThreadProc();
     int ParseVirtualKey(const std::string& keyStr);
+    std::string BuildKeyComboString(int vkCode, bool isAlt, bool isCtrl, bool isShift);
 
     std::atomic<bool> m_running{false};
     std::thread m_thread;

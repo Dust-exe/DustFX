@@ -1,4 +1,4 @@
-import { AppStatus, DisplaySettings, GameProfile, ReleaseInfo } from './types';
+import { AppStatus, DisplaySettings, GameProfile, ReleaseInfo, HotkeyConfig } from './types';
 
 const API_BASE = '/api';
 
@@ -231,6 +231,35 @@ export const api = {
       return await res.json();
     } catch {
       return { success: false, error: 'Network error' };
+    }
+  },
+
+  async getHotkeys(): Promise<HotkeyConfig> {
+    try {
+      const res = await fetch(`${API_BASE}/hotkeys`);
+      if (!res.ok) throw new Error('Hotkeys fetch failed');
+      return await res.json();
+    } catch {
+      return {
+        maxGammaKey: 'F11',
+        vibranceKey: 'F12',
+        quickResetKey: 'F10',
+        toggleOverlayKey: 'Alt+X',
+        toggleCrosshairKey: 'Alt+Z',
+      };
+    }
+  },
+
+  async saveHotkeys(config: HotkeyConfig): Promise<boolean> {
+    try {
+      const res = await fetch(`${API_BASE}/hotkeys`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      return res.ok;
+    } catch {
+      return true;
     }
   },
 };

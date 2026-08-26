@@ -18,6 +18,30 @@ static pfnMagInitialize s_MagInitialize = nullptr;
 static pfnMagUninitialize s_MagUninitialize = nullptr;
 static pfnMagSetFullscreenColorEffect s_MagSetFullscreenColorEffect = nullptr;
 static HMODULE s_hMagDll = nullptr;
+
+// NVIDIA NVAPI Driver Interface
+typedef void* (*pfnNvAPI_QueryInterface)(unsigned int offset);
+typedef int (*pfnNvAPI_Initialize)();
+typedef int (*pfnNvAPI_EnumPhysicalGPUs)(void* phPhysicalGPUArray[64], int* pGpuCount);
+typedef int (*pfnNvAPI_GPU_GetDVCInfoEx)(void* hPhysicalGpu, unsigned int outputId, void* pDVCInfo);
+typedef int (*pfnNvAPI_GPU_SetDVCLevelEx)(void* hPhysicalGpu, unsigned int outputId, void* pDVCInfo);
+
+static HMODULE s_hNvApiDll = nullptr;
+static pfnNvAPI_QueryInterface s_NvAPI_QueryInterface = nullptr;
+static pfnNvAPI_Initialize s_NvAPI_Initialize = nullptr;
+static pfnNvAPI_EnumPhysicalGPUs s_NvAPI_EnumPhysicalGPUs = nullptr;
+static pfnNvAPI_GPU_GetDVCInfoEx s_NvAPI_GPU_GetDVCInfoEx = nullptr;
+static pfnNvAPI_GPU_SetDVCLevelEx s_NvAPI_GPU_SetDVCLevelEx = nullptr;
+
+typedef struct {
+    unsigned int version;
+    int currentLevel;
+    int minLevel;
+    int maxLevel;
+    int defaultLevel;
+} NV_DISPLAY_DVC_INFO_EX;
+
+#define NV_DISPLAY_DVC_INFO_EX_VER (sizeof(NV_DISPLAY_DVC_INFO_EX) | 0x10000)
 #endif
 
 namespace dustfx {
@@ -38,6 +62,28 @@ bool GpuController::Initialize() {
     if (m_initialized) return true;
 
 #ifdef _WIN32
+    // 1. Initialize NVIDIA NVAPI Hardware Engine
+    if (!s_hNvApiDll) {
+        s_hNvApiDll = LoadLibraryA("nvapi64.dll");
+        if (!s_hNvApiDll) s_hNvApiDll = LoadLibraryA("nvapi.dll");
+        if (s_hNvApiDll) {
+            s_NvAPI_QueryInterface = (pfnNvAPI_QueryInterface)GetProcAddress(s_hNvApiDll, "nvapi_QueryInterface");
+            if (s_NvAPI_QueryInterface) {
+                s_NvAPI_Initialize = (pfnNvAPI_Initialize)s_NvAPI_QueryInterface(0x0150E828);
+                s_NvAPI_EnumPhysicalGPUs = (pfnNvAPI_EnumPhysicalGPUs)s_NvAPI_QueryInterface(0xE5AC921F);
+                s_NvAPI_GPU_GetDVCInfoEx = (pfnNvAPI_GPU_GetDVCInfoEx)s_NvAPI_QueryInterface(0x0E45002D);
+                s_NvAPI_GPU_SetDVCLevelEx = (pfnNvAPI_GPU_SetDVCLevelEx)s_NvAPI_QueryInterface(0x4A82C2B1);
+
+                if (s_NvAPI_Initialize && s_NvAPI_Initialize() == 0) {
+                    m_nvapiInitialized = true;
+                    m_vendor = GpuVendor::NVIDIA;
+                    std::cout << "[GpuController] NVIDIA NVAPI Hardware Digital Vibrance driver initialized." << std::endl;
+                }
+            }
+        }
+    }
+
+    // 2. Initialize Windows Magnification API as Fallback/Matrix Engine
     if (!s_hMagDll) {
         s_hMagDll = LoadLibraryA("Magnification.dll");
         if (s_hMagDll) {
@@ -74,6 +120,11 @@ void GpuController::Shutdown() {
     if (s_hMagDll) {
         FreeLibrary(s_hMagDll);
         s_hMagDll = nullptr;
+    }
+    if (s_hNvApiDll) {
+        FreeLibrary(s_hNvApiDll);
+        s_hNvApiDll = nullptr;
+        m_nvapiInitialized = false;
     }
 #endif
 
@@ -116,14 +167,66 @@ void GpuController::DetectVendor() {
     m_vendor = GpuVendor::GENERIC;
 }
 
+bool GpuController::ApplyNvapiVibrance(int percentage, int monitorIndex) {
+    (void)monitorIndex;
+#ifdef _WIN32
+    if (!m_nvapiInitialized || !s_NvAPI_EnumPhysicalGPUs || !s_NvAPI_GPU_SetDVCLevelEx) {
+        return false;
+    }
+
+    void* gpus[64] = {0};
+    int gpuCount = 0;
+    if (s_NvAPI_EnumPhysicalGPUs(gpus, &gpuCount) != 0 || gpuCount == 0) {
+        return false;
+    }
+
+    int vib = std::clamp(percentage, 0, 100);
+    bool anyGpuSuccess = false;
+
+    for (int g = 0; g < gpuCount; ++g) {
+        if (!gpus[g]) continue;
+        for (unsigned int outId = 0; outId < 8; ++outId) {
+            NV_DISPLAY_DVC_INFO_EX dvcInfo = {0};
+            dvcInfo.version = NV_DISPLAY_DVC_INFO_EX_VER;
+
+            if (s_NvAPI_GPU_GetDVCInfoEx && s_NvAPI_GPU_GetDVCInfoEx(gpus[g], outId, &dvcInfo) == 0) {
+                int minL = dvcInfo.minLevel;
+                int maxL = dvcInfo.maxLevel;
+                int targetL = minL + static_cast<int>((static_cast<float>(vib) / 100.0f) * (maxL - minL));
+
+                NV_DISPLAY_DVC_INFO_EX setInfo = {0};
+                setInfo.version = NV_DISPLAY_DVC_INFO_EX_VER;
+                setInfo.currentLevel = targetL;
+
+                if (s_NvAPI_GPU_SetDVCLevelEx(gpus[g], outId, &setInfo) == 0) {
+                    anyGpuSuccess = true;
+                }
+            } else {
+                NV_DISPLAY_DVC_INFO_EX setInfo = {0};
+                setInfo.version = NV_DISPLAY_DVC_INFO_EX_VER;
+                setInfo.currentLevel = vib;
+                if (s_NvAPI_GPU_SetDVCLevelEx(gpus[g], outId, &setInfo) == 0) {
+                    anyGpuSuccess = true;
+                }
+            }
+        }
+    }
+    return anyGpuSuccess;
+#else
+    (void)percentage;
+    return false;
+#endif
+}
+
 bool GpuController::ApplySettings(const DisplaySettings& settings, int monitorIndex) {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_currentSettings = settings;
 
     bool gdiOk = ApplyGdiGammaRamp(settings, monitorIndex);
+    bool nvOk = ApplyNvapiVibrance(settings.digitalVibrance, monitorIndex);
     bool magOk = ApplyMagnificationEffect(settings);
 
-    return (gdiOk || magOk);
+    return (gdiOk || nvOk || magOk);
 }
 
 bool GpuController::SetGamma(float gamma, int monitorIndex) {

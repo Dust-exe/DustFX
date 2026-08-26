@@ -28,12 +28,17 @@ void OpenInDefaultBrowser(const char* url) {
 }
 
 void LaunchStudioUI() {
-    // Try Edge in --app mode with DevTools and fullscreen disabled
+    char localAppData[MAX_PATH] = {0};
+    GetEnvironmentVariableA("LOCALAPPDATA", localAppData, MAX_PATH);
+    std::string profileArg = "--user-data-dir=\"" + std::string(localAppData) + "\\DustFX\\app_profile\"";
+    std::string browserArgs = "--app=http://127.0.0.1:19840/ " + profileArg + " --window-size=1180,800 --window-controls-overlay --enable-gpu-rasterization --enable-zero-copy --disable-software-rasterizer --disable-extensions --disable-features=DevTools,Fullscreen --disable-default-apps";
+
+    // Try Edge in standalone app mode
     HINSTANCE hRes = ShellExecuteA(
         NULL,
         "open",
         "msedge.exe",
-        "--app=http://127.0.0.1:19840/ --window-size=1150,780 --window-controls-overlay --disable-extensions --disable-features=DevTools,Fullscreen --disable-default-apps",
+        browserArgs.c_str(),
         NULL,
         SW_SHOW
     );
@@ -44,7 +49,7 @@ void LaunchStudioUI() {
             NULL,
             "open",
             "chrome.exe",
-            "--app=http://127.0.0.1:19840/ --window-size=1150,780 --window-controls-overlay --disable-extensions --disable-features=DevTools,Fullscreen --disable-default-apps",
+            browserArgs.c_str(),
             NULL,
             SW_SHOW
         );
@@ -74,32 +79,11 @@ void RemoveTrayIcon() {
     Shell_NotifyIconA(NIM_DELETE, &g_nid);
 }
 
-#define HK_ID_F11   3001
-#define HK_ID_F10   3002
-#define HK_ID_ALT_Z 3003
-#define HK_ID_ALT_X 3004
-
 LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
         case WM_CREATE:
             AddTrayIcon(hWnd);
-            RegisterHotKey(hWnd, HK_ID_F11, 0, VK_F11);
-            RegisterHotKey(hWnd, HK_ID_F10, 0, VK_F10);
-            RegisterHotKey(hWnd, HK_ID_ALT_Z, MOD_ALT, 'Z');
-            RegisterHotKey(hWnd, HK_ID_ALT_X, MOD_ALT, 'X');
             break;
-
-        case WM_HOTKEY: {
-            int id = (int)wParam;
-            if (id == HK_ID_F11) {
-                dustfx::DustFxApp::Instance().QuickMaxGamma();
-            } else if (id == HK_ID_F10) {
-                dustfx::DustFxApp::Instance().QuickReset();
-            } else if (id == HK_ID_ALT_Z) {
-                dustfx::DustFxApp::Instance().ToggleCrosshair();
-            }
-            break;
-        }
 
         case WM_TRAYICON: {
             if (lParam == WM_RBUTTONUP || lParam == WM_LBUTTONUP) {
@@ -109,8 +93,8 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
                 // Use ASCII-safe strings to avoid encoding issues
                 InsertMenuA(hMenu, 0, MF_BYPOSITION | MF_STRING, IDM_TRAY_OPEN,      "DustFX Paneli Ac");
-                InsertMenuA(hMenu, 1, MF_BYPOSITION | MF_STRING, IDM_TRAY_MAXGAMMA,  "MAX DCCW Gama Toggl (F11)");
-                InsertMenuA(hMenu, 2, MF_BYPOSITION | MF_STRING, IDM_TRAY_RESET,     "Ayarlari Sifirla (F10)");
+                InsertMenuA(hMenu, 1, MF_BYPOSITION | MF_STRING, IDM_TRAY_MAXGAMMA,  "MAX DCCW Gama Toggle");
+                InsertMenuA(hMenu, 2, MF_BYPOSITION | MF_STRING, IDM_TRAY_RESET,     "Ayarlari Sifirla");
                 InsertMenuA(hMenu, 3, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
                 InsertMenuA(hMenu, 4, MF_BYPOSITION | MF_STRING, IDM_TRAY_EXIT,      "Cikis (Exit)");
 
@@ -132,10 +116,6 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
         }
 
         case WM_DESTROY:
-            UnregisterHotKey(hWnd, HK_ID_F11);
-            UnregisterHotKey(hWnd, HK_ID_F10);
-            UnregisterHotKey(hWnd, HK_ID_ALT_Z);
-            UnregisterHotKey(hWnd, HK_ID_ALT_X);
             RemoveTrayIcon();
             PostQuitMessage(0);
             break;

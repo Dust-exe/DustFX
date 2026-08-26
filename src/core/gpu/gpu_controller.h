@@ -34,6 +34,7 @@ private:
 
     void DetectVendor();
     bool ApplyGdiGammaRamp(const DisplaySettings& settings, int monitorIndex);
+    bool ApplyNvapiVibrance(int percentage, int monitorIndex);
     bool ApplyMagnificationEffect(const DisplaySettings& settings);
 
     mutable std::mutex m_mutex;
@@ -41,6 +42,7 @@ private:
     DisplaySettings m_currentSettings;
     bool m_initialized = false;
     bool m_magInitialized = false;
+    bool m_nvapiInitialized = false;
 };
 
 } // namespace dustfx

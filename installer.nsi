@@ -7,12 +7,12 @@ InstallDir "$LOCALAPPDATA\DustFX"
 RequestExecutionLevel admin
 SetCompressor lzma
 
-VIProductVersion "1.2.1.0"
+VIProductVersion "1.2.2.0"
 VIAddVersionKey "ProductName" "DustFX"
 VIAddVersionKey "CompanyName" "Dust Studio"
 VIAddVersionKey "LegalCopyright" "Copyright (C) 2026 Dust Studio. All rights reserved."
 VIAddVersionKey "FileDescription" "DustFX GPU & DCCW Gamma Optimizer Setup"
-VIAddVersionKey "FileVersion" "1.2.1"
+VIAddVersionKey "FileVersion" "1.2.2"
 VIAddVersionKey "OriginalFilename" "DustFX_Setup.exe"
 VIAddVersionKey "InternalName" "DustFX_Setup"
 

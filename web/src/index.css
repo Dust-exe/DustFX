@@ -13,22 +13,22 @@ body {
   user-select: none;
 }
 
-/* Custom Glassmorphism */
+/* Custom Glassmorphism - GPU Accelerated */
 .glass-panel {
-  background: rgba(18, 14, 30, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(168, 85, 247, 0.15);
+  background: rgba(18, 14, 30, 0.88);
+  border: 1px solid rgba(168, 85, 247, 0.18);
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .glass-panel:hover {
-  border-color: rgba(168, 85, 247, 0.3);
+  border-color: rgba(168, 85, 247, 0.35);
 }
 
 .glass-card {
-  background: rgba(26, 20, 44, 0.6);
-  backdrop-filter: blur(12px);
+  background: rgba(24, 18, 40, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  transform: translateZ(0);
 }
 
 /* Custom Neon Sliders */

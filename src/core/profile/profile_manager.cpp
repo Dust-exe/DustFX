@@ -1,4 +1,5 @@
 #include "core/profile/profile_manager.h"
+#include "core/hotkey/hotkey_manager.h"
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <fstream>
@@ -96,11 +97,38 @@ void ProfileManager::Initialize(const std::string& profilesDir) {
     LoadBuiltinProfiles();
     LoadUserProfiles();
 
+    // Bind hotkeys for profiles to HotkeyManager
+    for (const auto& p : m_profiles) {
+        if (!p.hotkey.empty()) {
+            HotkeyManager::Instance().BindProfileHotkey(p.hotkey, p.id);
+        }
+    }
+
     std::cout << "[ProfileManager] Loaded " << m_profiles.size() << " display profiles." << std::endl;
 }
 
 void ProfileManager::LoadBuiltinProfiles() {
-    // 1. Gece Görüşü Boost
+    // 1. FiveM & GTA ReShade Ultra Vivid
+    {
+        GameProfile p;
+        p.id = "fivem_reshade";
+        p.name = "FiveM / GTA ReShade Ultra Vivid";
+        p.icon = "🎮";
+        p.description = "ReShade Technicolor & HDR Canlılık simülasyonu. Göz alıcı zengin renkler ve netlik.";
+        p.exePattern = "FiveM.exe;GTA5.exe";
+        p.settings.gamma = 1.15f;
+        p.settings.digitalVibrance = 85;
+        p.settings.brightnessOffset = 0.02f;
+        p.settings.contrast = 1.20f;
+        p.settings.sharpness = 0.50f;
+        p.settings.colorTemperature = 6200.0f;
+        p.settings.shadowDetail = 0.15f;
+        p.hotkey = "F6";
+        p.isBuiltin = true;
+        m_profiles.push_back(p);
+    }
+
+    // 2. Gece Görüşü Boost
     {
         GameProfile p;
         p.id = "night_vision";
@@ -109,73 +137,76 @@ void ProfileManager::LoadBuiltinProfiles() {
         p.description = "Karanlık haritalarda, gece operasyonlarında ve kapalı binalarda görüş mesafesini maksimuma çıkarır.";
         p.exePattern = "";
         p.settings.gamma = 2.0f;
-        p.settings.digitalVibrance = 45;
+        p.settings.digitalVibrance = 55;
         p.settings.brightnessOffset = 0.12f;
         p.settings.contrast = 1.15f;
         p.settings.sharpness = 0.5f;
+        p.settings.shadowDetail = 0.30f;
         p.hotkey = "F9";
         p.isBuiltin = true;
         m_profiles.push_back(p);
     }
 
-    // 2. Mağara Parlatıcı Modu
+    // 3. Mağara Parlatıcı Modu
     {
         GameProfile p;
         p.id = "cave_boost";
         p.name = "Mağara Parlatıcı Modu";
         p.icon = "🕳️";
-        p.description = "Zifiri karanlık tüneller ve yeraltı alanları için maksimum gama ve gölge detayı.";
-        p.exePattern = "";
+        p.description = "Zifiri karanlık tüneller ve yeraltı alanları için maksimum gama ve derin gölge kurtarma.";
+        p.exePattern = "RustClient.exe;EscapeFromTarkov.exe";
         p.settings.gamma = 2.5f;
-        p.settings.digitalVibrance = 30;
-        p.settings.brightnessOffset = 0.25f;
+        p.settings.digitalVibrance = 40;
+        p.settings.brightnessOffset = 0.20f;
         p.settings.contrast = 1.25f;
-        p.settings.rgbRed = 1.05f;
-        p.hotkey = "F11";
+        p.settings.shadowDetail = 0.50f;
+        p.hotkey = "F7";
         p.isBuiltin = true;
         m_profiles.push_back(p);
     }
 
-    // 3. PVP Netlik & Kontrast
+    // 4. CS2 & Valorant PVP Netlik
     {
         GameProfile p;
         p.id = "pvp_contrast";
-        p.name = "PVP Netlik & Kontrast";
+        p.name = "CS2 & Valorant PVP Netlik";
         p.icon = "🎯";
-        p.description = "Düşman silüetlerini keskinleştiren ve hızlı hedef almayı sağlayan rekabetçi PvP modu.";
-        p.exePattern = "";
-        p.settings.gamma = 1.35f;
-        p.settings.digitalVibrance = 65;
+        p.description = "Düşman silüetlerini keskinleştiren (CAS Sharpening) ve hızlı hedef almayı sağlayan rekabetçi mod.";
+        p.exePattern = "cs2.exe;VALORANT-Win64-Shipping.exe";
+        p.settings.gamma = 1.40f;
+        p.settings.digitalVibrance = 80;
         p.settings.brightnessOffset = 0.05f;
         p.settings.contrast = 1.30f;
-        p.settings.sharpness = 0.85f;
+        p.settings.sharpness = 0.80f;
+        p.settings.shadowDetail = 0.20f;
         p.settings.crosshairEnabled = true;
-        p.settings.crosshairStyle = "dot";
+        p.settings.crosshairStyle = "cross";
         p.settings.crosshairColor = "#00FF66";
         p.hotkey = "F8";
         p.isBuiltin = true;
         m_profiles.push_back(p);
     }
 
-    // 4. Gündüz Canlılık Modu
+    // 5. FiveM Gece & Siber Şehir
     {
         GameProfile p;
-        p.id = "day_vivid";
-        p.name = "Gündüz Canlılık Modu";
-        p.icon = "☀️";
-        p.description = "Zengin ve sinematik renk doygunluğu; çimen, gökyüzü ve çevre detaylarını canlandırır.";
-        p.exePattern = "";
-        p.settings.gamma = 1.10f;
-        p.settings.digitalVibrance = 80;
-        p.settings.brightnessOffset = 0.0f;
-        p.settings.contrast = 1.10f;
-        p.settings.sharpness = 0.3f;
-        p.hotkey = "F7";
+        p.id = "fivem_night_neon";
+        p.name = "FiveM Gece & Siber Şehir";
+        p.icon = "🌆";
+        p.description = "Karanlık sokakları açıp neon tabela ve araba farlarını parlatan sinematik gece filtresi.";
+        p.exePattern = "FiveM.exe";
+        p.settings.gamma = 1.65f;
+        p.settings.digitalVibrance = 75;
+        p.settings.contrast = 1.25f;
+        p.settings.sharpness = 0.55f;
+        p.settings.colorTemperature = 7200.0f;
+        p.settings.shadowDetail = 0.40f;
+        p.hotkey = "F5";
         p.isBuiltin = true;
         m_profiles.push_back(p);
     }
 
-    // 5. Göz Dinlendirme (Mavi Işık Filtresi)
+    // 6. Göz Dinlendirme (Mavi Işık Filtresi)
     {
         GameProfile p;
         p.id = "eye_care";
@@ -187,10 +218,11 @@ void ProfileManager::LoadBuiltinProfiles() {
         p.settings.digitalVibrance = 0;
         p.settings.brightnessOffset = -0.05f;
         p.settings.contrast = 0.95f;
+        p.settings.colorTemperature = 3800.0f;
         p.settings.rgbRed = 1.0f;
         p.settings.rgbGreen = 0.88f;
         p.settings.rgbBlue = 0.65f;
-        p.hotkey = "Alt+F8";
+        p.hotkey = "";
         p.isBuiltin = true;
         m_profiles.push_back(p);
     }

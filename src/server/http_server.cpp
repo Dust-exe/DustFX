@@ -12,6 +12,7 @@ typedef int socklen_t;
 #include "core/config/settings_manager.h"
 #include "core/display/monitor_manager.h"
 #include "core/process/process_watcher.h"
+#include "core/hotkey/hotkey_manager.h"
 #include "core/updater/auto_updater.h"
 #include "overlay/overlay_toast.h"
 
@@ -411,6 +412,9 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
 
             bool ok = ProfileManager::Instance().SaveProfile(p);
             if (ok) {
+                if (!p.hotkey.empty()) {
+                    HotkeyManager::Instance().BindProfileHotkey(p.hotkey, p.id);
+                }
                 OverlayToast::Instance().ShowToast("💾 PROFİL KAYDEDİLDİ", p.name);
                 return MakeHttpResponse(200, "OK", "application/json", "{\"success\":true,\"id\":\"" + p.id + "\"}");
             }
@@ -432,6 +436,41 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
             }
             return MakeHttpResponse(400, "Bad Request", "application/json", "{\"error\":\"Cannot delete profile or not found\"}");
         } catch (...) {
+            return MakeHttpResponse(400, "Bad Request", "application/json", "{\"error\":\"Invalid JSON\"}");
+        }
+    }
+
+    // 6d. GET /api/hotkeys
+    if (path == "/api/hotkeys" && method == "GET") {
+        HotkeyConfig cfg = SettingsManager::Instance().GetHotkeyConfig();
+        json j = {
+            {"maxGammaKey", cfg.maxGammaKey},
+            {"vibranceKey", cfg.vibranceKey},
+            {"quickResetKey", cfg.quickResetKey},
+            {"toggleOverlayKey", cfg.toggleOverlayKey},
+            {"toggleCrosshairKey", cfg.toggleCrosshairKey}
+        };
+        return MakeHttpResponse(200, "OK", "application/json", j.dump());
+    }
+
+    // 6e. POST /api/hotkeys
+    if (path == "/api/hotkeys" && method == "POST") {
+        try {
+            json j = json::parse(body);
+            HotkeyConfig cfg = SettingsManager::Instance().GetHotkeyConfig();
+            if (j.contains("maxGammaKey")) cfg.maxGammaKey = j["maxGammaKey"].get<std::string>();
+            if (j.contains("vibranceKey")) cfg.vibranceKey = j["vibranceKey"].get<std::string>();
+            if (j.contains("quickResetKey")) cfg.quickResetKey = j["quickResetKey"].get<std::string>();
+            if (j.contains("toggleOverlayKey")) cfg.toggleOverlayKey = j["toggleOverlayKey"].get<std::string>();
+            if (j.contains("toggleCrosshairKey")) cfg.toggleCrosshairKey = j["toggleCrosshairKey"].get<std::string>();
+
+            SettingsManager::Instance().SetHotkeyConfig(cfg);
+            SettingsManager::Instance().SaveToFile();
+            HotkeyManager::Instance().SetConfig(cfg);
+
+            OverlayToast::Instance().ShowToast("⌨️ KISAYOL AYARLARI KAYDEDİLDİ", "Max Gama: " + cfg.maxGammaKey);
+            return MakeHttpResponse(200, "OK", "application/json", "{\"success\":true}");
+        } catch (const std::exception& e) {
             return MakeHttpResponse(400, "Bad Request", "application/json", "{\"error\":\"Invalid JSON\"}");
         }
     }

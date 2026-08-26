@@ -1,10 +1,11 @@
 import React from 'react';
 import { Flame, RotateCcw, Sparkles, RefreshCw, Cpu, Monitor, Download } from 'lucide-react';
-import { ReleaseInfo } from '../types';
+import { ReleaseInfo, HotkeyConfig } from '../types';
 
 interface NavbarProps {
   version: string;
   gpuVendor: string;
+  hotkeys?: HotkeyConfig;
   onMaxGamma: () => void;
   onReset: () => void;
   onOpenUpdateModal: () => void;
@@ -14,11 +15,15 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   version,
   gpuVendor,
+  hotkeys,
   onMaxGamma,
   onReset,
   onOpenUpdateModal,
   releaseInfo,
 }) => {
+  const maxKey = hotkeys?.maxGammaKey || 'F11';
+  const resetKey = hotkeys?.quickResetKey || 'F10';
+
   return (
     <header className="sticky top-0 z-40 w-full glass-panel border-b border-purple-500/20 px-6 py-3.5 flex items-center justify-between shadow-2xl backdrop-blur-xl">
       {/* Brand & Logo */}
@@ -50,20 +55,22 @@ export const Navbar: React.FC<NavbarProps> = ({
         <button
           onClick={onMaxGamma}
           className="group relative flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-600/90 to-orange-600/90 hover:from-red-500 hover:to-orange-500 text-white text-xs font-bold tracking-wide transition-all duration-300 shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] active:scale-95 border border-red-400/30"
+          title={`Anlık Maksimum Gama (${maxKey})`}
         >
           <Flame className="w-4 h-4 text-orange-200 group-hover:scale-110 transition-transform" />
-          <span>MAX DCCW GAMA</span>
-          <span className="text-[10px] opacity-75 font-mono">(F11)</span>
+          <span>MAX GAMA</span>
+          <span className="text-[10px] opacity-90 font-mono font-bold bg-black/30 px-1.5 py-0.5 rounded">({maxKey})</span>
         </button>
 
         {/* Reset Quick Action */}
         <button
           onClick={onReset}
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-200 text-xs font-semibold tracking-wide border border-white/10 hover:border-white/20 transition-all duration-300 active:scale-95 shadow-md"
+          title={`Varsayılan Renkler (${resetKey})`}
         >
           <RotateCcw className="w-4 h-4 text-zinc-400" />
           <span>Sıfırla</span>
-          <span className="text-[10px] text-zinc-500 font-mono">(F10)</span>
+          <span className="text-[10px] text-zinc-400 font-mono font-bold bg-white/10 px-1.5 py-0.5 rounded">({resetKey})</span>
         </button>
       </div>
 

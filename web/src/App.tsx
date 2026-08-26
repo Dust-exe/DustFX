@@ -8,15 +8,22 @@ import { HotkeysTab } from './components/Tabs/HotkeysTab';
 import { UpdatesTab } from './components/Tabs/UpdatesTab';
 import { UpdateModal } from './components/UpdateModal';
 import { api } from './api';
-import { AppStatus, DisplaySettings, GameProfile, ReleaseInfo } from './types';
+import { AppStatus, DisplaySettings, GameProfile, ReleaseInfo, HotkeyConfig } from './types';
 import { Flame, RotateCcw, Download } from 'lucide-react';
 
-const CURRENT_VERSION = '1.2.1';
+const CURRENT_VERSION = '1.2.2';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<TabId>('filter');
   const [status, setStatus] = useState<AppStatus | null>(null);
   const [profiles, setProfiles] = useState<GameProfile[]>([]);
+  const [hotkeys, setHotkeys] = useState<HotkeyConfig>({
+    maxGammaKey: 'F11',
+    vibranceKey: 'F12',
+    quickResetKey: 'F10',
+    toggleOverlayKey: 'Alt+X',
+    toggleCrosshairKey: 'Alt+Z',
+  });
   const [settings, setSettings] = useState<DisplaySettings>({
     gamma: 1.0,
     digitalVibrance: 0,
@@ -52,12 +59,14 @@ export function App() {
   // Load initial data
   useEffect(() => {
     async function loadData() {
-      const [st, profs] = await Promise.all([
+      const [st, profs, hk] = await Promise.all([
         api.getStatus(),
         api.getProfiles(),
+        api.getHotkeys(),
       ]);
       setStatus(st);
       setProfiles(profs);
+      setHotkeys(hk);
       setSettings(st.currentSettings);
       setActiveProfileId(st.activeProfileId);
       setSelectedMonitorIndex(st.targetMonitorIndex);
@@ -234,16 +243,18 @@ export function App() {
           <button
             onClick={handleMaxGamma}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white text-[11px] font-bold tracking-wide transition-all shadow-[0_0_12px_rgba(239,68,68,0.3)] active:scale-95"
+            title={`Anlık Maksimum Gama (${hotkeys.maxGammaKey})`}
           >
             <Flame className="w-3 h-3 text-orange-200" />
-            MAX GAMA (F11)
+            MAX GAMA ({hotkeys.maxGammaKey})
           </button>
           <button
             onClick={handleReset}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 text-[11px] font-medium border border-white/10 transition-all active:scale-95"
+            title={`Varsayılan Renklere Dön (${hotkeys.quickResetKey})`}
           >
             <RotateCcw className="w-3 h-3 text-zinc-400" />
-            Sıfırla (F10)
+            Sıfırla ({hotkeys.quickResetKey})
           </button>
           {releaseInfo?.hasUpdate && (
             <button
@@ -290,7 +301,14 @@ export function App() {
                 onSelectMonitor={handleSelectMonitor}
               />
             )}
-            {activeTab === 'hotkeys' && <HotkeysTab />}
+            {activeTab === 'hotkeys' && (
+              <HotkeysTab
+                hotkeys={hotkeys}
+                onHotkeysChange={setHotkeys}
+                profiles={profiles}
+                onProfilesChange={setProfiles}
+              />
+            )}
             {activeTab === 'updates' && (
               <UpdatesTab
                 releaseInfo={releaseInfo}

@@ -64,3 +64,11 @@ export interface AppStatus {
   currentSettings: DisplaySettings;
   monitors: MonitorInfo[];
 }
+
+export interface HotkeyConfig {
+  maxGammaKey: string;
+  vibranceKey: string;
+  quickResetKey: string;
+  toggleOverlayKey: string;
+  toggleCrosshairKey: string;
+}

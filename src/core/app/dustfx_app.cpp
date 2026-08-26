@@ -157,6 +157,11 @@ void DustFxApp::HandleHotkey(HotkeyAction action, const std::string& param) {
         case HotkeyAction::TOGGLE_OVERLAY:
             OverlayToast::Instance().ShowToast("🎮 DUSTFX PANEL", "http://127.0.0.1:19840");
             break;
+        case HotkeyAction::CUSTOM_PROFILE_TRIGGER:
+            if (!param.empty()) {
+                ApplyProfile(param);
+            }
+            break;
         default:
             break;
     }
