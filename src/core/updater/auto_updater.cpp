@@ -276,49 +276,20 @@ bool AutoUpdater::DownloadUpdate(const ReleaseInfo& info, const std::string& sav
 
 bool AutoUpdater::ApplyUpdate(const std::string& downloadedExePath) {
 #ifdef _WIN32
-    // Get current executable path
-    char currentExePath[MAX_PATH];
-    GetModuleFileNameA(NULL, currentExePath, MAX_PATH);
-
-    // Get temp directory for the update script
-    char tmpDir[MAX_PATH];
-    GetTempPathA(MAX_PATH, tmpDir);
-    std::string batPath = std::string(tmpDir) + "dustfx_update.bat";
-
-    // Create self-replacing batch script
-    std::ofstream bat(batPath);
-    if (!bat.is_open()) {
-        std::cerr << "[AutoUpdater] Cannot create update batch script." << std::endl;
+    if (downloadedExePath.empty()) {
+        std::cerr << "[AutoUpdater] Download path is empty." << std::endl;
         return false;
     }
 
-    bat << "@echo off\r\n";
-    bat << "echo DustFX Guncelleme baslatiliyor...\r\n";
-    bat << "echo Mevcut DustFX kapatiliyor...\r\n";
-    bat << "timeout /t 2 /nobreak >nul\r\n";
-    bat << "taskkill /F /IM DustFX.exe /T >nul 2>&1\r\n";
-    bat << "timeout /t 1 /nobreak >nul\r\n";
-    bat << "echo Eski dosyalar siliniyor...\r\n";
-    bat << "del /f /q \"" << currentExePath << "\" >nul 2>&1\r\n";
-    bat << "timeout /t 1 /nobreak >nul\r\n";
-    bat << "echo Yeni dosyalar kopyalaniyor...\r\n";
-    bat << "copy /y \"" << downloadedExePath << "\" \"" << currentExePath << "\" >nul\r\n";
-    bat << "echo Guncelleme tamamlandi! DustFX yeniden baslatiliyor...\r\n";
-    bat << "timeout /t 1 /nobreak >nul\r\n";
-    bat << "start \"\" \"" << currentExePath << "\"\r\n";
-    bat << "del /f /q \"" << downloadedExePath << "\" >nul 2>&1\r\n";
-    bat << "del /f /q \"%~f0\" >nul 2>&1\r\n";
-    bat.close();
+    std::cout << "[AutoUpdater] Launching update installer: " << downloadedExePath << std::endl;
 
-    std::cout << "[AutoUpdater] Update script created: " << batPath << std::endl;
-    std::cout << "[AutoUpdater] Launching updater and exiting current process..." << std::endl;
-
-    // Launch the batch script hidden
-    ShellExecuteA(NULL, "open", batPath.c_str(), NULL, NULL, SW_HIDE);
-
-    // Exit current process so files can be replaced
-    ExitProcess(0);
-    return true; // never reached
+    // Safely launch the official setup installer
+    HINSTANCE hInst = ShellExecuteA(NULL, "open", downloadedExePath.c_str(), NULL, NULL, SW_SHOWNORMAL);
+    if ((uintptr_t)hInst > 32) {
+        ExitProcess(0);
+        return true;
+    }
+    return false;
 #else
     std::cout << "[AutoUpdater] Auto-apply not supported on this platform. Downloaded to: " << downloadedExePath << std::endl;
     return false;

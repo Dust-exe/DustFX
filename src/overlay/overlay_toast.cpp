@@ -11,8 +11,7 @@ static HWND g_hOverlayWnd = NULL;
 static dustfx::DisplaySettings g_crosshairSettings;
 static bool g_crosshairVisible = false;
 
-// Chroma Key Color: Pure Magenta (255, 0, 255)
-// Everything drawn with this exact color is 100% completely transparent & click-through.
+// Chroma Key Color: Magenta (255, 0, 255) for transparent layered window
 #define TRANSPARENT_COLOR_KEY RGB(255, 0, 255)
 
 // Helper: Parse hex color "#RRGGBB" to COLORREF
@@ -34,14 +33,14 @@ static COLORREF HexToColorRef(const std::string& hex) {
     ss << std::hex << cleanHex.substr(4, 2);
     ss >> b;
 
-    // Guard against exact match with our transparency key (255, 0, 255)
+    // Guard against exact match with our transparency key
     if (r == 255 && g == 0 && b == 255) {
         r = 254; b = 254;
     }
     return RGB(r, g, b);
 }
 
-// Windows Overlay Window Procedure
+// Windows Overlay Window Procedure — Double-Buffered Zero-Flicker Renderer
 static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_ERASEBKGND:
@@ -63,7 +62,7 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
             HBITMAP memBmp = CreateCompatibleBitmap(hdc, w, h);
             HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
 
-            // Fill background with TRANSPARENT_COLOR_KEY (RGB(255, 0, 255))
+            // Fill background with TRANSPARENT_COLOR_KEY
             HBRUSH transBrush = CreateSolidBrush(TRANSPARENT_COLOR_KEY);
             FillRect(memDC, &rc, transBrush);
             DeleteObject(transBrush);
@@ -74,15 +73,15 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                 int thickness = std::max(1, g_crosshairSettings.crosshairThickness);
                 int gap = std::max(0, g_crosshairSettings.crosshairGap);
                 int dotSize = g_crosshairSettings.crosshairDotSize;
-                int outline = g_crosshairSettings.crosshairOutline;
+                int outline = std::max(0, g_crosshairSettings.crosshairOutline);
                 std::string style = g_crosshairSettings.crosshairStyle;
+                if (style.empty()) style = "cross";
 
-                // Color Brush and Pen
                 HBRUSH colorBrush = CreateSolidBrush(color);
                 HPEN colorPen = CreatePen(PS_SOLID, thickness, color);
                 HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
 
-                // True Black Outline Brush and Pen (0, 0, 0)
+                // Outline tools (True Black)
                 HBRUSH outlineBrush = CreateSolidBrush(RGB(0, 0, 0));
                 HPEN outlinePen = CreatePen(PS_SOLID, thickness + outline * 2, RGB(0, 0, 0));
 
@@ -103,8 +102,7 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                 int tRem = thickness - halfThick;
 
                 if (style == "dot") {
-                    int r = size;
-                    if (dotSize > 0) r = dotSize;
+                    int r = dotSize > 0 ? dotSize : size;
                     if (outline > 0) {
                         SelectObject(memDC, outlineBrush);
                         SelectObject(memDC, nullPen);
@@ -129,11 +127,11 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                     DrawFilledRect(cx - gap - size, cy - halfThick, cx - gap, cy + tRem);
                     // Right
                     DrawFilledRect(cx + gap, cy - halfThick, cx + gap + size, cy + tRem);
-                    // Bottom only (No top line)
+                    // Bottom
                     DrawFilledRect(cx - halfThick, cy + gap, cx + tRem, cy + gap + size);
                 }
                 else if (style == "gap-cross") {
-                    int bigGap = std::max(4, gap);
+                    int bigGap = std::max(6, gap);
                     DrawFilledRect(cx - bigGap - size, cy - halfThick, cx - bigGap, cy + tRem);
                     DrawFilledRect(cx + bigGap, cy - halfThick, cx + bigGap + size, cy + tRem);
                     DrawFilledRect(cx - halfThick, cy - bigGap - size, cx + tRem, cy - bigGap);
@@ -199,7 +197,7 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                     FrameRect(memDC, &sRc, colorBrush);
                 }
 
-                // Explicit Center dot
+                // Explicit Center Dot
                 if (dotSize > 0 && style != "dot" && style != "cross-dot") {
                     if (outline > 0) {
                         SelectObject(memDC, outlineBrush);
@@ -217,7 +215,7 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                 DeleteObject(outlinePen);
             }
 
-            // Transfer memory bitmap to layered window DC
+            // Transfer to layered window DC
             BitBlt(hdc, 0, 0, w, h, memDC, 0, 0, SRCCOPY);
 
             SelectObject(memDC, oldBmp);
@@ -256,11 +254,7 @@ OverlayToast::~OverlayToast() {
 }
 
 void OverlayToast::Initialize() {
-#ifdef _WIN32
-    // Crosshair overlay suspended (v1.2) — CreateCrosshairWindow() devre dışı
-    // Defender tetikleyicisi olan transparent topmost overlay penceresi artık oluşturulmuyor
-#endif
-    std::cout << "[OverlayToast] Toast notification engine initialized. Crosshair overlay suspended." << std::endl;
+    std::cout << "[OverlayToast] Modern zero-lag crosshair & OSD engine initialized." << std::endl;
 }
 
 #ifdef _WIN32
@@ -276,10 +270,10 @@ void OverlayToast::CreateCrosshairWindow() {
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     RegisterClassExA(&wc);
 
-    // Continuous Screen Center & Aspect Ratio Alignment
+    // Exact Pixel Center Alignment (200x200 centered box)
     int screenW = GetSystemMetrics(SM_CXSCREEN);
     int screenH = GetSystemMetrics(SM_CYSCREEN);
-    int overlaySize = 300; // 300x300 centered overlay
+    int overlaySize = 200;
     int x = (screenW - overlaySize) / 2;
     int y = (screenH - overlaySize) / 2;
 
@@ -295,9 +289,9 @@ void OverlayToast::CreateCrosshairWindow() {
 
     if (m_hWnd) {
         g_hOverlayWnd = m_hWnd;
-        // Pure Magenta (255, 0, 255) is keyed as 100% transparent click-through!
-        SetLayeredWindowAttributes(m_hWnd, TRANSPARENT_COLOR_KEY, 0, LWA_COLORKEY);
-        std::cout << "[OverlayToast] Created transparent click-through crosshair window at (" << x << ", " << y << ")" << std::endl;
+        BYTE alpha = (BYTE)(std::clamp(g_crosshairSettings.crosshairOpacity, 0.2f, 1.0f) * 255.0f);
+        SetLayeredWindowAttributes(m_hWnd, TRANSPARENT_COLOR_KEY, alpha, LWA_COLORKEY | LWA_ALPHA);
+        std::cout << "[OverlayToast] Created centered crosshair overlay at (" << x << ", " << y << ") size " << overlaySize << "x" << overlaySize << std::endl;
     }
 }
 #endif
@@ -319,14 +313,21 @@ void OverlayToast::ToggleCrosshair(bool enabled) {
     m_crosshairVisible.store(enabled);
 #ifdef _WIN32
     g_crosshairVisible = enabled;
+
+    if (enabled && (!m_hWnd || !IsWindow(m_hWnd))) {
+        CreateCrosshairWindow();
+    }
+
     if (m_hWnd && IsWindow(m_hWnd)) {
         if (enabled) {
-            // Dynamic Screen Center & Aspect Ratio Alignment
             int screenW = GetSystemMetrics(SM_CXSCREEN);
             int screenH = GetSystemMetrics(SM_CYSCREEN);
-            int overlaySize = 300;
+            int overlaySize = 200;
             int x = (screenW - overlaySize) / 2;
             int y = (screenH - overlaySize) / 2;
+
+            BYTE alpha = (BYTE)(std::clamp(g_crosshairSettings.crosshairOpacity, 0.2f, 1.0f) * 255.0f);
+            SetLayeredWindowAttributes(m_hWnd, TRANSPARENT_COLOR_KEY, alpha, LWA_COLORKEY | LWA_ALPHA);
 
             SetWindowPos(m_hWnd, HWND_TOPMOST, x, y, overlaySize, overlaySize, SWP_NOACTIVATE | SWP_SHOWWINDOW);
             RedrawWindow(m_hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ERASE);
@@ -347,18 +348,20 @@ void OverlayToast::UpdateCrosshair(const DisplaySettings& settings) {
     g_crosshairSettings = settings;
     g_crosshairVisible = settings.crosshairEnabled;
 
-    if (!m_hWnd || !IsWindow(m_hWnd)) {
+    if (settings.crosshairEnabled && (!m_hWnd || !IsWindow(m_hWnd))) {
         CreateCrosshairWindow();
     }
 
     if (m_hWnd && IsWindow(m_hWnd)) {
         if (settings.crosshairEnabled) {
-            // Dynamic Screen Center & Aspect Ratio Alignment (4:3, 16:9, 16:10, 21:9 stretched/native)
             int screenW = GetSystemMetrics(SM_CXSCREEN);
             int screenH = GetSystemMetrics(SM_CYSCREEN);
-            int overlaySize = 300;
+            int overlaySize = 200;
             int x = (screenW - overlaySize) / 2;
             int y = (screenH - overlaySize) / 2;
+
+            BYTE alpha = (BYTE)(std::clamp(settings.crosshairOpacity, 0.2f, 1.0f) * 255.0f);
+            SetLayeredWindowAttributes(m_hWnd, TRANSPARENT_COLOR_KEY, alpha, LWA_COLORKEY | LWA_ALPHA);
 
             SetWindowPos(m_hWnd, HWND_TOPMOST, x, y, overlaySize, overlaySize, SWP_NOACTIVATE | SWP_SHOWWINDOW);
             RedrawWindow(m_hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ERASE);

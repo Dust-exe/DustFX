@@ -73,7 +73,7 @@ bool HttpServer::Start(int port, const std::string& webRoot) {
 
     sockaddr_in address{};
     address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     address.sin_port = htons(m_port);
 
     if (bind(m_serverSocket, (struct sockaddr*)&address, sizeof(address)) == SOCKET_ERROR) {

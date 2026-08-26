@@ -178,6 +178,7 @@ bool GpuController::ApplyGdiGammaRamp(const DisplaySettings& settings, int monit
     float bright = settings.brightnessOffset;
     float sharpness = std::clamp(settings.sharpness, 0.0f, 1.0f);
     float shadowDetail = std::clamp(settings.shadowDetail, 0.0f, 1.0f);
+    float vibrance = static_cast<float>(std::clamp(settings.digitalVibrance, 0, 100)) / 100.0f;
 
     // Color Temperature: Kelvin to RGB multipliers (Tanner Helland algorithm)
     float tempK = std::clamp(settings.colorTemperature, 2700.0f, 10000.0f);
@@ -209,15 +210,16 @@ bool GpuController::ApplyGdiGammaRamp(const DisplaySettings& settings, int monit
         tempB = std::clamp(tempB, 0.0f, 1.5f);
 
         // Normalize so that 6500K = identity (no shift)
-        float norm6500R = 1.0f, norm6500G = 1.0f, norm6500B = 1.0f;
         float t65 = 65.0f;
-        norm6500R = 1.0f;
-        norm6500G = 0.3900815788f * std::log(t65) - 0.6318414438f;
-        norm6500B = 0.5432067891f * std::log(t65 - 10.0f) - 1.19625408f;
-        tempR = tempR / std::max(0.001f, norm6500R);
+        float norm6500G = 0.3900815788f * std::log(t65) - 0.6318414438f;
+        float norm6500B = 0.5432067891f * std::log(t65 - 10.0f) - 1.19625408f;
+        tempR = tempR / 1.0f;
         tempG = tempG / std::max(0.001f, norm6500G);
         tempB = tempB / std::max(0.001f, norm6500B);
     }
+
+    // Saturation multiplier for GDI ramp fallback (Rec. 709 luminance)
+    float satScale = 1.0f + vibrance * 0.75f;
 
     for (int i = 0; i < 256; ++i) {
         float normalized = static_cast<float>(i) / 255.0f;
@@ -226,17 +228,14 @@ bool GpuController::ApplyGdiGammaRamp(const DisplaySettings& settings, int monit
         float gVal = std::pow(normalized, 1.0f / gamma);
 
         // 2. Shadow Detail Recovery (Toe curve)
-        // Lifts shadow areas without affecting highlights
         if (shadowDetail > 0.001f) {
             float toePoint = 0.20f;
             float liftAmount = shadowDetail * 0.25f;
             if (gVal < toePoint) {
                 float t = gVal / toePoint;
-                // Quadratic lift: smooth shadow recovery
                 float lifted = gVal + liftAmount * (1.0f - t * t) * toePoint;
                 gVal = lifted;
             } else if (gVal < toePoint * 2.0f) {
-                // Smooth blend zone
                 float blend = (gVal - toePoint) / toePoint;
                 float lifted = gVal + liftAmount * (1.0f - blend) * 0.3f * toePoint;
                 gVal = lifted;
@@ -244,22 +243,17 @@ bool GpuController::ApplyGdiGammaRamp(const DisplaySettings& settings, int monit
         }
 
         // 3. Enhanced CAS (Contrast Adaptive Sharpening) — Unsharp Mask LUT
-        // Multi-band approach: enhances local contrast differently for shadows, mids, highlights
         if (sharpness > 0.001f) {
-            // Frequency-separated edge enhancement
             float midPoint = 0.5f;
             float distFromMid = gVal - midPoint;
             float absDistFromMid = std::abs(distFromMid);
 
-            // S-curve contrast enhancement (midtone punch)
             float sCurveStrength = sharpness * 0.35f;
             float sCurve = midPoint + distFromMid * (1.0f + sCurveStrength * (1.0f - absDistFromMid * 2.0f));
 
-            // High-frequency edge enhancement (Unsharp mask simulation via LUT)
-            float edgeEnhance = 0.0f;
-            float localGradient = std::sin(normalized * 3.14159265f); // transition probability
-            float bandPass = localGradient * (1.0f - absDistFromMid * 1.5f); // suppress in extremes
-            edgeEnhance = sharpness * 0.20f * bandPass;
+            float localGradient = std::sin(normalized * 3.14159265f);
+            float bandPass = localGradient * (1.0f - absDistFromMid * 1.5f);
+            float edgeEnhance = sharpness * 0.20f * bandPass;
 
             gVal = std::clamp(sCurve + edgeEnhance, 0.0f, 1.0f);
         }
@@ -267,29 +261,34 @@ bool GpuController::ApplyGdiGammaRamp(const DisplaySettings& settings, int monit
         // 4. Contrast & Brightness adjustment
         float cVal = (gVal - 0.5f) * contrast + 0.5f + bright;
 
-        // 5. RGB Channel scales + Color Temperature
-        float finalR = std::clamp(cVal * settings.rgbRed * tempR, 0.0f, 1.0f);
+        // 5. RGB Channel scales + Color Temperature + Saturation boost
+        float rVal = cVal * settings.rgbRed * tempR;
+        float gChannelVal = cVal * settings.rgbGreen * tempG;
+        float bVal = cVal * settings.rgbBlue * tempB;
+
+        // Apply saturation contrast to RGB
+        float lum = 0.2126f * rVal + 0.7152f * gChannelVal + 0.0722f * bVal;
+        float finalR = std::clamp(lum + (rVal - lum) * satScale, 0.0f, 1.0f);
+        float finalG = std::clamp(lum + (gChannelVal - lum) * satScale, 0.0f, 1.0f);
+        float finalB = std::clamp(lum + (bVal - lum) * satScale, 0.0f, 1.0f);
+
         ramp[0][i] = static_cast<WORD>(finalR * 65535.0f);
-
-        float finalG = std::clamp(cVal * settings.rgbGreen * tempG, 0.0f, 1.0f);
         ramp[1][i] = static_cast<WORD>(finalG * 65535.0f);
-
-        float finalB = std::clamp(cVal * settings.rgbBlue * tempB, 0.0f, 1.0f);
         ramp[2][i] = static_cast<WORD>(finalB * 65535.0f);
     }
 
     bool anySuccess = false;
 
-    // 1. Primary Display Context
-    HDC hDC = CreateDCA("DISPLAY", NULL, NULL, NULL);
-    if (hDC) {
-        if (SetDeviceGammaRamp(hDC, ramp)) {
+    // 1. Primary Desktop Screen Context (Universal Direct Access)
+    HDC hdcPrimary = GetDC(NULL);
+    if (hdcPrimary) {
+        if (SetDeviceGammaRamp(hdcPrimary, ramp)) {
             anySuccess = true;
         }
-        DeleteDC(hDC);
+        ReleaseDC(NULL, hdcPrimary);
     }
 
-    // 2. Also Apply to all enumerated monitors or target monitor
+    // 2. Also Apply to target or all enumerated monitors
     DISPLAY_DEVICEA dd;
     dd.cb = sizeof(dd);
     for (int dev = 0; EnumDisplayDevicesA(NULL, dev, &dd, 0); ++dev) {
@@ -316,16 +315,26 @@ bool GpuController::ApplyGdiGammaRamp(const DisplaySettings& settings, int monit
 
 bool GpuController::ApplyMagnificationEffect(const DisplaySettings& settings) {
 #ifdef _WIN32
-    if (!m_magInitialized || !s_MagSetFullscreenColorEffect) {
+    if (!s_MagSetFullscreenColorEffect) {
+        return false;
+    }
+
+    // Lazy initialize magnification if not yet initialized
+    if (!m_magInitialized && s_MagInitialize) {
+        if (s_MagInitialize()) {
+            m_magInitialized = true;
+        }
+    }
+
+    if (!m_magInitialized) {
         return false;
     }
 
     // Standard Digital Vibrance (Color Saturation Matrix)
-    // Percentage 0-100 mapped to saturation multiplier 1.0 - 2.8
     float sat = 1.0f + (static_cast<float>(settings.digitalVibrance) / 100.0f) * 1.8f;
     float invSat = 1.0f - sat;
 
-    // Standard Rec. 709 Luminance weights: R: 0.2126, G: 0.7152, B: 0.0722
+    // Rec. 709 Luminance weights: R: 0.2126, G: 0.7152, B: 0.0722
     float rLum = 0.2126f * invSat;
     float gLum = 0.7152f * invSat;
     float bLum = 0.0722f * invSat;

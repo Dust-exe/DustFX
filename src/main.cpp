@@ -85,7 +85,7 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
             AddTrayIcon(hWnd);
             RegisterHotKey(hWnd, HK_ID_F11, 0, VK_F11);
             RegisterHotKey(hWnd, HK_ID_F10, 0, VK_F10);
-            // Alt+Z crosshair hotkey suspended (overlay bakımda)
+            RegisterHotKey(hWnd, HK_ID_ALT_Z, MOD_ALT, 'Z');
             RegisterHotKey(hWnd, HK_ID_ALT_X, MOD_ALT, 'X');
             break;
 
@@ -95,7 +95,7 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
                 dustfx::DustFxApp::Instance().QuickMaxGamma();
             } else if (id == HK_ID_F10) {
                 dustfx::DustFxApp::Instance().QuickReset();
-            } else if (id == HK_ID_ALT_Z) { // suspended
+            } else if (id == HK_ID_ALT_Z) {
                 dustfx::DustFxApp::Instance().ToggleCrosshair();
             }
             break;
@@ -134,7 +134,7 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
         case WM_DESTROY:
             UnregisterHotKey(hWnd, HK_ID_F11);
             UnregisterHotKey(hWnd, HK_ID_F10);
-            // Alt+Z suspended
+            UnregisterHotKey(hWnd, HK_ID_ALT_Z);
             UnregisterHotKey(hWnd, HK_ID_ALT_X);
             RemoveTrayIcon();
             PostQuitMessage(0);
