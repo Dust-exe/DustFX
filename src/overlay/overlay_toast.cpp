@@ -8,8 +8,24 @@
 #ifdef _WIN32
 #include <windows.h>
 
-#define WM_USER_UPDATE_CROSSHAIR (WM_USER + 301)
+#define WM_USER_UPDATE_CROSSHAIR     (WM_USER + 301)
+#define WM_USER_APPLY_MAGNIFICATION  (WM_USER + 302)
 #define TRANSPARENT_COLOR_KEY RGB(255, 0, 255)
+
+typedef struct {
+    float transform[5][5];
+} MAGCOLOREFFECT;
+
+typedef BOOL (WINAPI *pfnMagInitialize)();
+typedef BOOL (WINAPI *pfnMagUninitialize)();
+typedef BOOL (WINAPI *pfnMagSetFullscreenColorEffect)(MAGCOLOREFFECT* pEffect);
+
+static pfnMagInitialize s_MagInitialize = nullptr;
+static pfnMagUninitialize s_MagUninitialize = nullptr;
+static pfnMagSetFullscreenColorEffect s_MagSetFullscreenColorEffect = nullptr;
+static HMODULE s_hMagDll = nullptr;
+static MAGCOLOREFFECT g_magEffect;
+static std::mutex g_magMutex;
 
 static HWND g_hOverlayWnd = NULL;
 static dustfx::DisplaySettings g_crosshairSettings;
@@ -41,6 +57,14 @@ static COLORREF HexToColorRef(const std::string& hex) {
 // Windows Overlay Window Procedure — Double-Buffered Zero-Flicker Renderer
 static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
+        case WM_USER_APPLY_MAGNIFICATION: {
+            if (s_MagSetFullscreenColorEffect) {
+                std::lock_guard<std::mutex> lock(g_magMutex);
+                s_MagSetFullscreenColorEffect(&g_magEffect);
+            }
+            return 0;
+        }
+
         case WM_USER_UPDATE_CROSSHAIR: {
             if (g_crosshairVisible) {
                 int screenW = GetSystemMetrics(SM_CXSCREEN);
@@ -320,15 +344,49 @@ void OverlayToast::OverlayThreadProc() {
         std::cout << "[OverlayToast] Dedicated crosshair overlay message pump active." << std::endl;
     }
 
+    // Initialize Windows Magnification on this dedicated STA/UI thread with message loop
+    if (!s_hMagDll) {
+        s_hMagDll = LoadLibraryA("Magnification.dll");
+        if (s_hMagDll) {
+            s_MagInitialize = (pfnMagInitialize)GetProcAddress(s_hMagDll, "MagInitialize");
+            s_MagUninitialize = (pfnMagUninitialize)GetProcAddress(s_hMagDll, "MagUninitialize");
+            s_MagSetFullscreenColorEffect = (pfnMagSetFullscreenColorEffect)GetProcAddress(s_hMagDll, "MagSetFullscreenColorEffect");
+
+            if (s_MagInitialize && s_MagInitialize()) {
+                std::cout << "[OverlayToast] Windows Magnification API active on dedicated UI message pump thread." << std::endl;
+            }
+        }
+    }
+
     MSG msg;
     while (m_running.load() && GetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
 
+    if (s_MagUninitialize) {
+        s_MagUninitialize();
+    }
+    if (s_hMagDll) {
+        FreeLibrary(s_hMagDll);
+        s_hMagDll = nullptr;
+    }
+
     if (m_hWnd && IsWindow(m_hWnd)) {
         DestroyWindow(m_hWnd);
         m_hWnd = NULL;
+    }
+}
+
+void OverlayToast::ApplyMagnificationColorEffect(float transform[5][5]) {
+    std::lock_guard<std::mutex> lock(g_magMutex);
+    for (int r = 0; r < 5; ++r) {
+        for (int c = 0; c < 5; ++c) {
+            g_magEffect.transform[r][c] = transform[r][c];
+        }
+    }
+    if (m_hWnd && IsWindow(m_hWnd)) {
+        PostMessage(m_hWnd, WM_USER_APPLY_MAGNIFICATION, 0, 0);
     }
 }
 #endif

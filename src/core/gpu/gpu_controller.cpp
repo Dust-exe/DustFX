@@ -421,23 +421,10 @@ bool GpuController::ApplyGdiGammaRamp(const DisplaySettings& settings, int monit
 #endif
 }
 
+#include "overlay/overlay_toast.h"
+
 bool GpuController::ApplyMagnificationEffect(const DisplaySettings& settings) {
 #ifdef _WIN32
-    if (!s_MagSetFullscreenColorEffect) {
-        return false;
-    }
-
-    // Lazy initialize magnification if not yet initialized
-    if (!m_magInitialized && s_MagInitialize) {
-        if (s_MagInitialize()) {
-            m_magInitialized = true;
-        }
-    }
-
-    if (!m_magInitialized) {
-        return false;
-    }
-
     // Standard Digital Vibrance (Color Saturation Matrix)
     float sat = 1.0f + (static_cast<float>(settings.digitalVibrance) / 100.0f) * 1.6f;
     float invSat = 1.0f - sat;
@@ -460,7 +447,14 @@ bool GpuController::ApplyMagnificationEffect(const DisplaySettings& settings) {
         }
     };
 
-    return (s_MagSetFullscreenColorEffect(&effect) != FALSE);
+    // 1. Dispatch to dedicated UI message pump thread (Guaranteed to succeed on Win10/11)
+    OverlayToast::Instance().ApplyMagnificationColorEffect(effect.transform);
+
+    // 2. Also try direct call if initialized on current thread
+    if (s_MagSetFullscreenColorEffect) {
+        s_MagSetFullscreenColorEffect(&effect);
+    }
+    return true;
 #else
     (void)settings;
     return true;

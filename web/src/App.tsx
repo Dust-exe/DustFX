@@ -210,13 +210,14 @@ export function App() {
   };
 
   return (
-    <div className="h-screen w-screen bg-background text-foreground flex flex-col overflow-hidden select-none font-sans">
-      {/* Ambient Background */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] bg-purple-600/8 rounded-full blur-[140px]" />
-        <div className="absolute top-[60%] left-[70%] w-[600px] h-[600px] bg-fuchsia-600/8 rounded-full blur-[160px]" />
-        <div className="absolute bottom-[5%] left-[30%] w-[450px] h-[450px] bg-cyan-600/8 rounded-full blur-[120px]" />
-      </div>
+    <div className="h-screen w-screen bg-[#08060f] text-foreground flex flex-col overflow-hidden select-none font-sans">
+      {/* 0% GPU Static Gradient Background */}
+      <div 
+        className="fixed inset-0 pointer-events-none z-0 opacity-40"
+        style={{
+          background: 'radial-gradient(circle at 20% 15%, rgba(168, 85, 247, 0.12) 0%, transparent 40%), radial-gradient(circle at 80% 65%, rgba(217, 70, 239, 0.10) 0%, transparent 45%), radial-gradient(circle at 35% 85%, rgba(6, 182, 212, 0.08) 0%, transparent 40%)'
+        }}
+      />
 
       {/* Top App Header (With app-titlebar-drag for window move & controls overlay) */}
       <header className="app-titlebar-drag flex items-center justify-between px-5 h-12 border-b border-purple-500/10 bg-[#08060f]/95 z-20 backdrop-blur-xl">

@@ -26,6 +26,7 @@ public:
 #ifdef _WIN32
     void SetCrosshairHwnd(HWND hWnd) { m_hWnd = hWnd; }
     HWND GetCrosshairHwnd() const { return m_hWnd; }
+    void ApplyMagnificationColorEffect(float transform[5][5]);
 #endif
 
 private:
