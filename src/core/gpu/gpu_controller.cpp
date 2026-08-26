@@ -186,27 +186,32 @@ bool GpuController::ApplyNvapiVibrance(int percentage, int monitorIndex) {
     for (int g = 0; g < gpuCount; ++g) {
         if (!gpus[g]) continue;
         for (unsigned int outId = 0; outId < 8; ++outId) {
-            NV_DISPLAY_DVC_INFO_EX dvcInfo = {0};
-            dvcInfo.version = NV_DISPLAY_DVC_INFO_EX_VER;
+            // Try both direct outputId and bitmask (1 << outId)
+            unsigned int outputIds[2] = { outId, 1u << outId };
 
-            if (s_NvAPI_GPU_GetDVCInfoEx && s_NvAPI_GPU_GetDVCInfoEx(gpus[g], outId, &dvcInfo) == 0) {
-                int minL = dvcInfo.minLevel;
-                int maxL = dvcInfo.maxLevel;
-                int targetL = minL + static_cast<int>((static_cast<float>(vib) / 100.0f) * (maxL - minL));
+            for (unsigned int actualOutId : outputIds) {
+                NV_DISPLAY_DVC_INFO_EX dvcInfo = {0};
+                dvcInfo.version = NV_DISPLAY_DVC_INFO_EX_VER;
 
-                NV_DISPLAY_DVC_INFO_EX setInfo = {0};
-                setInfo.version = NV_DISPLAY_DVC_INFO_EX_VER;
-                setInfo.currentLevel = targetL;
+                if (s_NvAPI_GPU_GetDVCInfoEx && s_NvAPI_GPU_GetDVCInfoEx(gpus[g], actualOutId, &dvcInfo) == 0) {
+                    int minL = dvcInfo.minLevel;
+                    int maxL = dvcInfo.maxLevel;
+                    int targetL = minL + static_cast<int>((static_cast<float>(vib) / 100.0f) * (maxL - minL));
 
-                if (s_NvAPI_GPU_SetDVCLevelEx(gpus[g], outId, &setInfo) == 0) {
-                    anyGpuSuccess = true;
-                }
-            } else {
-                NV_DISPLAY_DVC_INFO_EX setInfo = {0};
-                setInfo.version = NV_DISPLAY_DVC_INFO_EX_VER;
-                setInfo.currentLevel = vib;
-                if (s_NvAPI_GPU_SetDVCLevelEx(gpus[g], outId, &setInfo) == 0) {
-                    anyGpuSuccess = true;
+                    NV_DISPLAY_DVC_INFO_EX setInfo = {0};
+                    setInfo.version = NV_DISPLAY_DVC_INFO_EX_VER;
+                    setInfo.currentLevel = targetL;
+
+                    if (s_NvAPI_GPU_SetDVCLevelEx(gpus[g], actualOutId, &setInfo) == 0) {
+                        anyGpuSuccess = true;
+                    }
+                } else {
+                    NV_DISPLAY_DVC_INFO_EX setInfo = {0};
+                    setInfo.version = NV_DISPLAY_DVC_INFO_EX_VER;
+                    setInfo.currentLevel = vib;
+                    if (s_NvAPI_GPU_SetDVCLevelEx(gpus[g], actualOutId, &setInfo) == 0) {
+                        anyGpuSuccess = true;
+                    }
                 }
             }
         }
@@ -434,23 +439,25 @@ bool GpuController::ApplyMagnificationEffect(const DisplaySettings& settings) {
     }
 
     // Standard Digital Vibrance (Color Saturation Matrix)
-    float sat = 1.0f + (static_cast<float>(settings.digitalVibrance) / 100.0f) * 1.8f;
+    float sat = 1.0f + (static_cast<float>(settings.digitalVibrance) / 100.0f) * 1.6f;
     float invSat = 1.0f - sat;
 
     // Rec. 709 Luminance weights: R: 0.2126, G: 0.7152, B: 0.0722
-    float rLum = 0.2126f * invSat;
-    float gLum = 0.7152f * invSat;
-    float bLum = 0.0722f * invSat;
+    float rL = 0.2126f * invSat;
+    float gL = 0.7152f * invSat;
+    float bL = 0.0722f * invSat;
 
     float c = settings.contrast;
     float bright = settings.brightnessOffset;
 
     MAGCOLOREFFECT effect = {
-        (rLum + sat) * settings.rgbRed * c,   gLum * settings.rgbGreen * c,         bLum * settings.rgbBlue * c,          0.0f, 0.0f,
-        rLum * settings.rgbRed * c,           (gLum + sat) * settings.rgbGreen * c, bLum * settings.rgbBlue * c,          0.0f, 0.0f,
-        rLum * settings.rgbRed * c,           gLum * settings.rgbGreen * c,         (bLum + sat) * settings.rgbBlue * c,  0.0f, 0.0f,
-        0.0f,                                 0.0f,                                 0.0f,                                 1.0f, 0.0f,
-        bright,                               bright,                               bright,                               0.0f, 1.0f
+        {
+            { (rL + sat) * settings.rgbRed * c, rL * settings.rgbGreen * c,         rL * settings.rgbBlue * c,         0.0f, 0.0f },
+            { gL * settings.rgbRed * c,         (gL + sat) * settings.rgbGreen * c, gL * settings.rgbBlue * c,         0.0f, 0.0f },
+            { bL * settings.rgbRed * c,         bL * settings.rgbGreen * c,         (bL + sat) * settings.rgbBlue * c, 0.0f, 0.0f },
+            { 0.0f,                             0.0f,                               0.0f,                              1.0f, 0.0f },
+            { bright,                           bright,                             bright,                            0.0f, 1.0f }
+        }
     };
 
     return (s_MagSetFullscreenColorEffect(&effect) != FALSE);

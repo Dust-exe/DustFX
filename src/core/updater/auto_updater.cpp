@@ -220,6 +220,10 @@ void AutoUpdater::BackgroundLoop() {
     }
 }
 
+#ifdef _WIN32
+#include <urlmon.h>
+#endif
+
 bool AutoUpdater::DownloadUpdate(const ReleaseInfo& info, const std::string& savePath) {
     if (info.downloadUrl.empty()) {
         std::cerr << "[AutoUpdater] Download URL is empty." << std::endl;
@@ -230,44 +234,26 @@ bool AutoUpdater::DownloadUpdate(const ReleaseInfo& info, const std::string& sav
     std::cout << "[AutoUpdater] Saving to: " << savePath << std::endl;
 
 #ifdef _WIN32
-    HINTERNET hInternet = InternetOpenA("DustFX-Updater/1.2", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-    if (!hInternet) {
-        std::cerr << "[AutoUpdater] InternetOpen failed." << std::endl;
-        return false;
+    // Delete any old temporary download file if present
+    DeleteFileA(savePath.c_str());
+
+    // URLDownloadToFile handles HTTP 302/301 redirects, SSL certificates, and chunking seamlessly
+    HRESULT hr = URLDownloadToFileA(NULL, info.downloadUrl.c_str(), savePath.c_str(), 0, NULL);
+    if (SUCCEEDED(hr)) {
+        // Verify file was downloaded and has size > 100KB
+        std::ifstream checkFile(savePath, std::ios::binary | std::ios::ate);
+        if (checkFile.is_open()) {
+            std::streamsize sz = checkFile.tellg();
+            checkFile.close();
+            if (sz > 100000) {
+                std::cout << "[AutoUpdater] Download successful (" << sz << " bytes)." << std::endl;
+                return true;
+            }
+        }
     }
-
-    DWORD flags = INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_SECURE;
-    HINTERNET hFile = InternetOpenUrlA(hInternet, info.downloadUrl.c_str(), NULL, 0, flags, 0);
-    if (!hFile) {
-        InternetCloseHandle(hInternet);
-        std::cerr << "[AutoUpdater] InternetOpenUrl failed for download." << std::endl;
-        return false;
-    }
-
-    std::ofstream outFile(savePath, std::ios::binary);
-    if (!outFile.is_open()) {
-        InternetCloseHandle(hFile);
-        InternetCloseHandle(hInternet);
-        std::cerr << "[AutoUpdater] Cannot open output file: " << savePath << std::endl;
-        return false;
-    }
-
-    char buffer[8192];
-    DWORD bytesRead = 0;
-    DWORD totalBytes = 0;
-    while (InternetReadFile(hFile, buffer, sizeof(buffer), &bytesRead) && bytesRead > 0) {
-        outFile.write(buffer, bytesRead);
-        totalBytes += bytesRead;
-    }
-
-    outFile.close();
-    InternetCloseHandle(hFile);
-    InternetCloseHandle(hInternet);
-
-    std::cout << "[AutoUpdater] Download complete: " << totalBytes << " bytes." << std::endl;
-    return (totalBytes > 0);
+    std::cerr << "[AutoUpdater] URLDownloadToFile failed with HRESULT: 0x" << std::hex << hr << std::endl;
+    return false;
 #else
-    // Linux/Mac fallback using curl CLI
     std::string cmd = "curl -L -o '" + savePath + "' '" + info.downloadUrl + "' 2>/dev/null";
     int ret = system(cmd.c_str());
     return (ret == 0);
@@ -281,15 +267,17 @@ bool AutoUpdater::ApplyUpdate(const std::string& downloadedExePath) {
         return false;
     }
 
-    std::cout << "[AutoUpdater] Launching update installer: " << downloadedExePath << std::endl;
+    std::cout << "[AutoUpdater] Scheduled update installer launch: " << downloadedExePath << std::endl;
 
-    // Safely launch the official setup installer
-    HINSTANCE hInst = ShellExecuteA(NULL, "open", downloadedExePath.c_str(), NULL, NULL, SW_SHOWNORMAL);
-    if ((uintptr_t)hInst > 32) {
+    // Launch installer on a detached thread after 800ms to allow HTTP response to flush cleanly to browser
+    std::thread([downloadedExePath]() {
+        std::this_thread::sleep_for(std::chrono::milliseconds(800));
+        ShellExecuteA(NULL, "open", downloadedExePath.c_str(), NULL, NULL, SW_SHOWNORMAL);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
         ExitProcess(0);
-        return true;
-    }
-    return false;
+    }).detach();
+
+    return true;
 #else
     std::cout << "[AutoUpdater] Auto-apply not supported on this platform. Downloaded to: " << downloadedExePath << std::endl;
     return false;
