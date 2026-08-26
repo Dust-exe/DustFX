@@ -1,0 +1,47 @@
+================================================================================
+                    DUSTFX SON KULLANICI LİSANS SÖZLEŞMESİ (EULA)
+================================================================================
+Sürüm: 1.2.0
+Yayımcı: Dust Studio (https://dust-studio.com)
+Son Güncelleme: 2026
+
+Lütfen DustFX ("Yazılım") uygulamasını kurmadan veya kullanmadan önce bu 
+Sözleşmeyi dikkatlice okuyunuz. Bu yazılımı kurarak veya kullanarak, aşağıdaki 
+şartları kabul etmiş sayılırsınız.
+
+1. LİSANS HAKKI VE KAPSAMI
+--------------------------
+Dust Studio, kullanıcıya DustFX yazılımını kişisel bilgisayarlarında ticari 
+olmayan amaçlarla, GPU ve ekran parametrelerini optimize etmek amacıyla 
+kullanması için kişisel, münhasır olmayan, devredilemez bir kullanım lisansı verir.
+
+2. GİZLİLİK VE VERİ GÜVENLİĞİ
+-----------------------------
+- DustFX, kullanıcıların kişisel bilgilerini, ekran görüntülerini, klavye 
+  girdilerini veya dosya içeriklerini ASLA toplamaz, kaydetmez veya üçüncü 
+  taraflarla paylaşmaz.
+- Yazılım yalnızca yeni sürüm kontrolü amacıyla GitHub Releases API'sine 
+  anonim HTTPS istekleri gönderir.
+
+3. SORUMLULUK REDDİ (DISCLAIMER)
+--------------------------------
+- DustFX, Windows DWM ve GPU donanım renk rampalarını (GammaRamp) ve donanım 
+  keskinleştirme filtrelerini kullanır.
+- Yazılım "OLDUĞU GİBİ" (AS IS) sağlanmaktadır. Donanım uyumsuzlukları veya 
+  ekran renk kalibrasyonlarından doğabilecek göz yorgunluğu ya da oyun 
+  deneyimindeki farklılıklardan ötürü Dust Studio sorumlu tutulamaz.
+- Kullanıcı dilediği an F10 tuşuna basarak ekran ayarlarını varsayılan Windows 
+  değerlerine döndürebilir.
+
+4. GÜNCELLEMELER VE DEĞİŞİKLİKLER
+---------------------------------
+Dust Studio, yazılımın kararlılığını, güvenliğini ve performansını artırmak 
+amacıyla güncellemeler yayınlama ve bu sözleşme koşullarını güncelleme 
+hakkını saklı tutar.
+
+5. İLETİŞİM VE DESTEK
+---------------------
+Geri bildirim, hata bildirimi ve destek için:
+Web: https://dust-studio.com
+GitHub: https://github.com/Dust-exe/DustFX
+================================================================================

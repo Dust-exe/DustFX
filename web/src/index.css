@@ -75,3 +75,28 @@ input[type="range"]::-webkit-slider-thumb:hover {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(168, 85, 247, 0.6);
 }
+
+/* Custom Title Bar — Replace Edge's native black bar */
+.app-titlebar-drag {
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+.app-titlebar-drag button,
+.app-titlebar-drag a,
+.app-titlebar-drag input,
+.app-titlebar-drag select,
+.app-titlebar-drag label {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}

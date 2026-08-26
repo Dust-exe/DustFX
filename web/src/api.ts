@@ -24,6 +24,8 @@ export const api = {
           rgbGreen: 1.0,
           rgbBlue: 1.0,
           sharpness: 0.0,
+          colorTemperature: 6500,
+          shadowDetail: 0.0,
           crosshairEnabled: false,
           crosshairStyle: 'cross',
           crosshairColor: '#00FF66',
@@ -102,7 +104,7 @@ export const api = {
           hotkey: 'F9',
           isBuiltin: true,
           autoApplyOnLaunch: true,
-          settings: { gamma: 2.0, digitalVibrance: 45, brightnessOffset: 0.12, contrast: 1.15, rgbRed: 1.0, rgbGreen: 1.0, rgbBlue: 1.0, sharpness: 0.5, crosshairEnabled: false, crosshairStyle: 'dot', crosshairColor: '#00FF66', crosshairSize: 6 }
+          settings: { gamma: 2.0, digitalVibrance: 45, brightnessOffset: 0.12, contrast: 1.15, rgbRed: 1.0, rgbGreen: 1.0, rgbBlue: 1.0, sharpness: 0.5, colorTemperature: 6500, shadowDetail: 0.3, crosshairEnabled: false, crosshairStyle: 'dot', crosshairColor: '#00FF66', crosshairSize: 6 }
         },
         {
           id: 'cave_boost',
@@ -113,7 +115,7 @@ export const api = {
           hotkey: 'F11',
           isBuiltin: true,
           autoApplyOnLaunch: true,
-          settings: { gamma: 2.5, digitalVibrance: 30, brightnessOffset: 0.25, contrast: 1.25, rgbRed: 1.05, rgbGreen: 1.0, rgbBlue: 1.0, sharpness: 0.4, crosshairEnabled: false, crosshairStyle: 'dot', crosshairColor: '#00FF66', crosshairSize: 6 }
+          settings: { gamma: 2.5, digitalVibrance: 30, brightnessOffset: 0.25, contrast: 1.25, rgbRed: 1.05, rgbGreen: 1.0, rgbBlue: 1.0, sharpness: 0.4, colorTemperature: 6500, shadowDetail: 0.6, crosshairEnabled: false, crosshairStyle: 'dot', crosshairColor: '#00FF66', crosshairSize: 6 }
         },
         {
           id: 'pvp_contrast',
@@ -124,7 +126,7 @@ export const api = {
           hotkey: 'F8',
           isBuiltin: true,
           autoApplyOnLaunch: true,
-          settings: { gamma: 1.35, digitalVibrance: 65, brightnessOffset: 0.05, contrast: 1.30, rgbRed: 1.0, rgbGreen: 1.0, rgbBlue: 1.0, sharpness: 0.85, crosshairEnabled: true, crosshairStyle: 'dot', crosshairColor: '#00FF66', crosshairSize: 6 }
+          settings: { gamma: 1.35, digitalVibrance: 65, brightnessOffset: 0.05, contrast: 1.30, rgbRed: 1.0, rgbGreen: 1.0, rgbBlue: 1.0, sharpness: 0.85, colorTemperature: 6500, shadowDetail: 0.1, crosshairEnabled: true, crosshairStyle: 'dot', crosshairColor: '#00FF66', crosshairSize: 6 }
         },
         {
           id: 'day_vivid',
@@ -135,7 +137,7 @@ export const api = {
           hotkey: 'F7',
           isBuiltin: true,
           autoApplyOnLaunch: true,
-          settings: { gamma: 1.10, digitalVibrance: 80, brightnessOffset: 0.0, contrast: 1.10, rgbRed: 1.0, rgbGreen: 1.0, rgbBlue: 1.0, sharpness: 0.3, crosshairEnabled: false, crosshairStyle: 'dot', crosshairColor: '#00FF66', crosshairSize: 6 }
+          settings: { gamma: 1.10, digitalVibrance: 80, brightnessOffset: 0.0, contrast: 1.10, rgbRed: 1.0, rgbGreen: 1.0, rgbBlue: 1.0, sharpness: 0.3, colorTemperature: 6500, shadowDetail: 0.0, crosshairEnabled: false, crosshairStyle: 'dot', crosshairColor: '#00FF66', crosshairSize: 6 }
         },
         {
           id: 'eye_care',
@@ -146,7 +148,7 @@ export const api = {
           hotkey: 'Alt+F8',
           isBuiltin: true,
           autoApplyOnLaunch: true,
-          settings: { gamma: 0.95, digitalVibrance: 0, brightnessOffset: -0.05, contrast: 0.95, rgbRed: 1.0, rgbGreen: 0.88, rgbBlue: 0.65, sharpness: 0.0, crosshairEnabled: false, crosshairStyle: 'dot', crosshairColor: '#00FF66', crosshairSize: 6 }
+          settings: { gamma: 0.95, digitalVibrance: 0, brightnessOffset: -0.05, contrast: 0.95, rgbRed: 1.0, rgbGreen: 0.88, rgbBlue: 0.65, sharpness: 0.0, colorTemperature: 4200, shadowDetail: 0.0, crosshairEnabled: false, crosshairStyle: 'dot', crosshairColor: '#00FF66', crosshairSize: 6 }
         }
       ];
     }
@@ -204,9 +206,31 @@ export const api = {
         tagName: 'v1.1.1',
         htmlUrl: 'https://github.com/Dust-exe/DustFX/releases',
         downloadUrl: '',
-        releaseNotes: '• Windows Şeffaf Click-Through Crosshair Overlay entegre edildi.\n• Detaylı nişangah çizgi, boyut, kalınlık, merkez nokta ve opaklık ayarları eklendi.\n• Topluluk Renk Profili & Crosshair Paylaşım Kodu Sistemi (DUST-COLOR & DUST-CROSS) getirildi.\n• CAS (Contrast Adaptive Sharpening) donanım algoritması aktifleştirildi.\n• Çoklu monitör seçimi düzeltildi.\n• F11/F12 tarayıcı kısayolları engellendi.',
+        releaseNotes: '• Windows Şeffaf Click-Through Crosshair Overlay entegre edildi.\n• Detaylı nişangah çizgi, boyut, kalınlık, merkez nokta ve opaklık ayarları eklendi.\n• CAS (Contrast Adaptive Sharpening) donanım algoritması aktifleştirildi.\n• Çoklu monitör seçimi düzeltildi.\n• F11/F12 tarayıcı kısayolları engellendi.',
         publishedAt: '2026-08-24'
       };
+    }
+  },
+
+  async openInDefaultBrowser(url: string): Promise<void> {
+    try {
+      await fetch(`${API_BASE}/open-url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+    } catch {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  },
+
+  async downloadAndApplyUpdate(): Promise<{ success: boolean; error?: string; version?: string }> {
+    try {
+      const res = await fetch(`${API_BASE}/updater/download-and-apply`, { method: 'POST' });
+      if (!res.ok) throw new Error('Download request failed');
+      return await res.json();
+    } catch {
+      return { success: false, error: 'Network error' };
     }
   },
 };

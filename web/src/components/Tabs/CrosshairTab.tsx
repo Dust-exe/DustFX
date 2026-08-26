@@ -489,53 +489,34 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
 
   return (
     <div className="flex flex-col gap-6 animate-fadeIn">
+      {/* Maintenance Banner */}
+      <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3 text-xs text-amber-200">
+        <span className="text-base leading-none">⚠️</span>
+        <div className="flex flex-col gap-1">
+          <strong className="text-amber-100 font-mono">Crosshair Overlay Altyapısı Bakımda & Geçici Olarak Askıya Alındı</strong>
+          <span className="text-amber-300/80 leading-relaxed">
+            Windows Defender uyumluluğu ve gecikmesiz DirectX/Vulkan donanım çizim motoru entegrasyonu nedeniyle ekran üzeri çizim ve kod paylaşımı geçici olarak durdurulmuştur. Aşağıdaki önizleme alanını tasarım ve renk testleri için kullanabilirsiniz.
+          </span>
+        </div>
+      </div>
+
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/5">
         <div>
           <h2 className="text-lg font-bold text-white font-mono flex items-center gap-2">
             <Target className="w-5 h-5 text-emerald-400" />
-            Özel PvP Nişangah — Crosshair Hub & Paylaşım
+            Özel PvP Nişangah — Tasarım & Önizleme
           </h2>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Ekranın tam merkezine kilitlenen, tüm oyunların üzerinde çalışan şeffaf neon nişangah. <strong className="text-white">Ekran filtresinden bağımsızdır.</strong>
+            Nişangah stilleri, renk paletleri ve merkezleme geometrisi laboratuvarı.
           </p>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <button
-            onClick={handleCopyShareCode}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-xs font-bold text-white transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] active:scale-95"
-          >
-            {copiedCode ? <CheckCircle className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-            <span>{copiedCode ? 'Kod Kopyalandı ✓' : 'Kodu Kopyala / Paylaş'}</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setImportCodeInput('');
-              setImportError('');
-              setShowImportModal(true);
-            }}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-zinc-200 border border-white/10 transition-all active:scale-95"
-          >
-            <Upload className="w-3.5 h-3.5" />
-            <span>Kod İçe Aktar</span>
-          </button>
-
-          {/* Master Toggle */}
-          <div className="flex items-center gap-2 pl-2 border-l border-white/10">
-            <span className="text-xs text-zinc-400 font-mono hidden md:inline">Alt+Z</span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.crosshairEnabled}
-                onChange={(e) => onChange({ crosshairEnabled: e.target.checked })}
-                className="sr-only peer"
-              />
-              <div className="w-12 h-6 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
-            </label>
-          </div>
+        <div className="flex items-center gap-2.5">
+          <span className="text-[11px] font-mono text-zinc-400 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
+            Önizleme Modu Aktif
+          </span>
         </div>
       </div>
 

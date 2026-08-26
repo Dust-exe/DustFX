@@ -7,6 +7,8 @@ export interface DisplaySettings {
   rgbGreen: number;
   rgbBlue: number;
   sharpness: number;
+  colorTemperature: number;  // 2700 - 10000 Kelvin
+  shadowDetail: number;      // 0.0 - 1.0
   crosshairEnabled: boolean;
   crosshairStyle: 'dot' | 'cross' | 'circle' | 'gap-cross' | 'x-cross' | 't-cross' | 'cross-dot' | 'square';
   crosshairColor: string;

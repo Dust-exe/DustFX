@@ -257,9 +257,10 @@ OverlayToast::~OverlayToast() {
 
 void OverlayToast::Initialize() {
 #ifdef _WIN32
-    CreateCrosshairWindow();
+    // Crosshair overlay suspended (v1.2) — CreateCrosshairWindow() devre dışı
+    // Defender tetikleyicisi olan transparent topmost overlay penceresi artık oluşturulmuyor
 #endif
-    std::cout << "[OverlayToast] In-game transparent crosshair overlay engine initialized." << std::endl;
+    std::cout << "[OverlayToast] Toast notification engine initialized. Crosshair overlay suspended." << std::endl;
 }
 
 #ifdef _WIN32

@@ -33,7 +33,7 @@ void LaunchStudioUI() {
         NULL,
         "open",
         "msedge.exe",
-        "--app=http://127.0.0.1:19840/ --window-size=1150,780 --disable-extensions --disable-features=DevTools,Fullscreen --disable-default-apps",
+        "--app=http://127.0.0.1:19840/ --window-size=1150,780 --window-controls-overlay --disable-extensions --disable-features=DevTools,Fullscreen --disable-default-apps",
         NULL,
         SW_SHOW
     );
@@ -44,7 +44,7 @@ void LaunchStudioUI() {
             NULL,
             "open",
             "chrome.exe",
-            "--app=http://127.0.0.1:19840/ --window-size=1150,780 --disable-extensions --disable-features=DevTools,Fullscreen --disable-default-apps",
+            "--app=http://127.0.0.1:19840/ --window-size=1150,780 --window-controls-overlay --disable-extensions --disable-features=DevTools,Fullscreen --disable-default-apps",
             NULL,
             SW_SHOW
         );
@@ -85,7 +85,7 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
             AddTrayIcon(hWnd);
             RegisterHotKey(hWnd, HK_ID_F11, 0, VK_F11);
             RegisterHotKey(hWnd, HK_ID_F10, 0, VK_F10);
-            RegisterHotKey(hWnd, HK_ID_ALT_Z, MOD_ALT, 'Z');
+            // Alt+Z crosshair hotkey suspended (overlay bakımda)
             RegisterHotKey(hWnd, HK_ID_ALT_X, MOD_ALT, 'X');
             break;
 
@@ -95,7 +95,7 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
                 dustfx::DustFxApp::Instance().QuickMaxGamma();
             } else if (id == HK_ID_F10) {
                 dustfx::DustFxApp::Instance().QuickReset();
-            } else if (id == HK_ID_ALT_Z) {
+            } else if (id == HK_ID_ALT_Z) { // suspended
                 dustfx::DustFxApp::Instance().ToggleCrosshair();
             }
             break;
@@ -134,7 +134,7 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
         case WM_DESTROY:
             UnregisterHotKey(hWnd, HK_ID_F11);
             UnregisterHotKey(hWnd, HK_ID_F10);
-            UnregisterHotKey(hWnd, HK_ID_ALT_Z);
+            // Alt+Z suspended
             UnregisterHotKey(hWnd, HK_ID_ALT_X);
             RemoveTrayIcon();
             PostQuitMessage(0);

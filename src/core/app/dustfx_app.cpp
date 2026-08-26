@@ -128,8 +128,7 @@ void DustFxApp::ToggleCrosshair() {
     DisplaySettings s = GpuController::Instance().GetCurrentSettings();
     s.crosshairEnabled = m_crosshairActive;
     SettingsManager::Instance().SetCurrentDisplaySettings(s);
-    OverlayToast::Instance().ToggleCrosshair(m_crosshairActive);
-    OverlayToast::Instance().ShowToast("🎯 NİŞANGAH (CROSSHAIR)", m_crosshairActive ? "AÇIK" : "KAPALI");
+    OverlayToast::Instance().ShowToast("🎯 NİŞANGAH (CROSSHAIR)", m_crosshairActive ? "BAKIMDA (Önizleme)" : "KAPALI");
 }
 
 void DustFxApp::HandleHotkey(HotkeyAction action, const std::string& param) {

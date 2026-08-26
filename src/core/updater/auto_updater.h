@@ -34,6 +34,10 @@ public:
     std::string GetCurrentVersion() const { return m_currentVersion; }
     static bool IsNewerVersion(const std::string& current, const std::string& remote);
 
+    // Real update: download and apply
+    bool DownloadUpdate(const ReleaseInfo& info, const std::string& savePath);
+    bool ApplyUpdate(const std::string& downloadedExePath);
+
 private:
     AutoUpdater();
     ~AutoUpdater();

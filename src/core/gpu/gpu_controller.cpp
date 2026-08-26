@@ -177,32 +177,105 @@ bool GpuController::ApplyGdiGammaRamp(const DisplaySettings& settings, int monit
     float contrast = std::max(0.1f, settings.contrast);
     float bright = settings.brightnessOffset;
     float sharpness = std::clamp(settings.sharpness, 0.0f, 1.0f);
+    float shadowDetail = std::clamp(settings.shadowDetail, 0.0f, 1.0f);
+
+    // Color Temperature: Kelvin to RGB multipliers (Tanner Helland algorithm)
+    float tempK = std::clamp(settings.colorTemperature, 2700.0f, 10000.0f);
+    float tempR = 1.0f, tempG = 1.0f, tempB = 1.0f;
+    {
+        float temp = tempK / 100.0f;
+        // Red
+        if (temp <= 66.0f) {
+            tempR = 1.0f;
+        } else {
+            tempR = 1.292936186f * std::pow(temp - 60.0f, -0.1332047592f);
+        }
+        // Green
+        if (temp <= 66.0f) {
+            tempG = 0.3900815788f * std::log(temp) - 0.6318414438f;
+        } else {
+            tempG = 1.129890861f * std::pow(temp - 60.0f, -0.0755148492f);
+        }
+        // Blue
+        if (temp >= 66.0f) {
+            tempB = 1.0f;
+        } else if (temp <= 19.0f) {
+            tempB = 0.0f;
+        } else {
+            tempB = 0.5432067891f * std::log(temp - 10.0f) - 1.19625408f;
+        }
+        tempR = std::clamp(tempR, 0.0f, 1.5f);
+        tempG = std::clamp(tempG, 0.0f, 1.5f);
+        tempB = std::clamp(tempB, 0.0f, 1.5f);
+
+        // Normalize so that 6500K = identity (no shift)
+        float norm6500R = 1.0f, norm6500G = 1.0f, norm6500B = 1.0f;
+        float t65 = 65.0f;
+        norm6500R = 1.0f;
+        norm6500G = 0.3900815788f * std::log(t65) - 0.6318414438f;
+        norm6500B = 0.5432067891f * std::log(t65 - 10.0f) - 1.19625408f;
+        tempR = tempR / std::max(0.001f, norm6500R);
+        tempG = tempG / std::max(0.001f, norm6500G);
+        tempB = tempB / std::max(0.001f, norm6500B);
+    }
 
     for (int i = 0; i < 256; ++i) {
         float normalized = static_cast<float>(i) / 255.0f;
 
-        // Mathematical Gamma curve
+        // 1. Mathematical Gamma curve
         float gVal = std::pow(normalized, 1.0f / gamma);
 
-        // True CAS / High-Pass Edge Clarity Thresholding
-        // Enhances transition band steepness around texture boundaries without shifting global midtone contrast
-        if (sharpness > 0.001f) {
-            float edgeDiff = std::sin(gVal * 6.2831853f) * (1.0f - std::abs(2.0f * gVal - 1.0f));
-            gVal = std::clamp(gVal + sharpness * 0.18f * edgeDiff, 0.0f, 1.0f);
+        // 2. Shadow Detail Recovery (Toe curve)
+        // Lifts shadow areas without affecting highlights
+        if (shadowDetail > 0.001f) {
+            float toePoint = 0.20f;
+            float liftAmount = shadowDetail * 0.25f;
+            if (gVal < toePoint) {
+                float t = gVal / toePoint;
+                // Quadratic lift: smooth shadow recovery
+                float lifted = gVal + liftAmount * (1.0f - t * t) * toePoint;
+                gVal = lifted;
+            } else if (gVal < toePoint * 2.0f) {
+                // Smooth blend zone
+                float blend = (gVal - toePoint) / toePoint;
+                float lifted = gVal + liftAmount * (1.0f - blend) * 0.3f * toePoint;
+                gVal = lifted;
+            }
         }
 
-        // Contrast & Brightness adjustment
+        // 3. Enhanced CAS (Contrast Adaptive Sharpening) — Unsharp Mask LUT
+        // Multi-band approach: enhances local contrast differently for shadows, mids, highlights
+        if (sharpness > 0.001f) {
+            // Frequency-separated edge enhancement
+            float midPoint = 0.5f;
+            float distFromMid = gVal - midPoint;
+            float absDistFromMid = std::abs(distFromMid);
+
+            // S-curve contrast enhancement (midtone punch)
+            float sCurveStrength = sharpness * 0.35f;
+            float sCurve = midPoint + distFromMid * (1.0f + sCurveStrength * (1.0f - absDistFromMid * 2.0f));
+
+            // High-frequency edge enhancement (Unsharp mask simulation via LUT)
+            float edgeEnhance = 0.0f;
+            float localGradient = std::sin(normalized * 3.14159265f); // transition probability
+            float bandPass = localGradient * (1.0f - absDistFromMid * 1.5f); // suppress in extremes
+            edgeEnhance = sharpness * 0.20f * bandPass;
+
+            gVal = std::clamp(sCurve + edgeEnhance, 0.0f, 1.0f);
+        }
+
+        // 4. Contrast & Brightness adjustment
         float cVal = (gVal - 0.5f) * contrast + 0.5f + bright;
 
-        // RGB Channel scales
-        float r = std::clamp(cVal * settings.rgbRed, 0.0f, 1.0f);
-        ramp[0][i] = static_cast<WORD>(r * 65535.0f);
+        // 5. RGB Channel scales + Color Temperature
+        float finalR = std::clamp(cVal * settings.rgbRed * tempR, 0.0f, 1.0f);
+        ramp[0][i] = static_cast<WORD>(finalR * 65535.0f);
 
-        float g = std::clamp(cVal * settings.rgbGreen, 0.0f, 1.0f);
-        ramp[1][i] = static_cast<WORD>(g * 65535.0f);
+        float finalG = std::clamp(cVal * settings.rgbGreen * tempG, 0.0f, 1.0f);
+        ramp[1][i] = static_cast<WORD>(finalG * 65535.0f);
 
-        float b = std::clamp(cVal * settings.rgbBlue, 0.0f, 1.0f);
-        ramp[2][i] = static_cast<WORD>(b * 65535.0f);
+        float finalB = std::clamp(cVal * settings.rgbBlue * tempB, 0.0f, 1.0f);
+        ramp[2][i] = static_cast<WORD>(finalB * 65535.0f);
     }
 
     bool anySuccess = false;

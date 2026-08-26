@@ -3,6 +3,7 @@
   "short_name": "DustFX",
   "start_url": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay"],
   "background_color": "#08060f",
   "theme_color": "#08060f",
   "icons": [

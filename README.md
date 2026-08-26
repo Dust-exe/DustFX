@@ -2,7 +2,7 @@
 
 > **Yüksek Performanslı GPU Ekran Filtreleme, DCCW Gama Boost, Digital Vibrance, PvP Özel Nişangah & GitHub Otomatik Güncelleme Takip Sistemi**
 
-[![Release](https://img.shields.io/badge/Release-v1.1.1-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
+[![Release](https://img.shields.io/badge/Release-v1.2.0-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
 [![Tech](https://img.shields.io/badge/C%2B%2B20-React%20%2F%20Tailwind-purple?style=for-the-badge)](https://dust-studio.com)
 [![Status](https://img.shields.io/badge/DirectX%20%2F%20NVAPI-Zero--Lag-fuchsia?style=for-the-badge)](https://dust-studio.com)
 
@@ -12,10 +12,11 @@
 
 ### 1. ⚡ Donanım Seviyesi GPU & DCCW Gama Kontrolü
 - **DCCW Gama Boost (0.5x - 3.0x):** Windows GDI GammaRamp ve donanım renk rampaları ile gecikmesiz gece aydınlatması.
-- **Digital Vibrance (%0 - %100):** NVIDIA NVAPI ve AMD ADL donanım seviyesinde renk canlılığı.
-- **Parlaklık Ofseti & Kontrast:** Zifiri karanlık yerlerde gölge detaylarını ortaya çıkaran eğri optimizasyonu.
+- **Gelişmiş CAS Keskinleştirme (Unsharp LUT):** Düşman silüetlerini ve uzaktaki hedefleri belirginleştiren çok bantlı keskinleştirme filtresi.
+- **Gölge Detay Kurtarma (Toe Curve):** Karanlık mağara ve tünellerde karanlık alan detaylarını açığa çıkarma.
+- **Kelvin Renk Sıcaklığı (2700K - 10000K):** Gece göz yorgunluğunu önleyen sıcak filtre veya rekabetçi soğuk mavi ayarı.
+- **Digital Vibrance (%0 - %100):** Donanım seviyesinde renk canlılığı.
 - **RGB Bağımsız Kanalları:** Kırmızı, Yeşil ve Mavi renk kanallarını ayrı ayrı kalibre edebilme.
-- **Düşman Netliği (CAS / RIS):** Uzaktaki hedefleri ve çalı/gölge arkasındaki oyuncuları belirginleştiren keskinleştirme filtresi.
 
 ### 2. 🎯 PvP Özel Nişangah (Crosshair Overlay)
 - Ekranın tam merkezine harici, saydam ve FPS düşürmeyen donanım nişangahı (`Alt + Z`).

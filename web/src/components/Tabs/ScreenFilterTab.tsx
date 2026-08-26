@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sun, Palette, Contrast, Eye, Sparkles, Layers, Sliders, RotateCcw } from 'lucide-react';
+import { Sun, Palette, Contrast, Eye, Sparkles, Layers, Sliders, Thermometer, ShieldCheck } from 'lucide-react';
 import { DisplaySettings } from '../../types';
 
 interface ScreenFilterTabProps {
@@ -18,7 +18,7 @@ export const ScreenFilterTab: React.FC<ScreenFilterTabProps> = ({ settings, onCh
             Ekran Görüntü Filtresi & Donanım Gama
           </h2>
           <p className="text-xs text-zinc-400 mt-0.5">
-            DWM ve GPU donanım renk dönüşüm matrisi ile sıfır gecikmeli parlaklık, gama ve canlılık kontrolü.
+            DWM ve GPU donanım renk dönüşüm matrisi ile sıfır gecikmeli parlaklık, gama, gölge detayı ve keskinlik kontrolü.
           </p>
         </div>
         <div className="flex items-center gap-2 font-mono text-xs">
@@ -33,7 +33,7 @@ export const ScreenFilterTab: React.FC<ScreenFilterTabProps> = ({ settings, onCh
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left Card: Core Lighting & Gamma */}
-        <div className="glass-card p-6 rounded-3xl border border-purple-500/15 flex flex-col gap-6 shadow-xl">
+        <div className="glass-card p-6 rounded-3xl border border-purple-500/15 flex flex-col gap-5 shadow-xl">
           <div className="text-xs font-bold text-zinc-200 uppercase tracking-wider font-mono flex items-center gap-2 pb-2 border-b border-white/5">
             <Sun className="w-4 h-4 text-amber-400" />
             Aydınlatma & Renk Canlılığı
@@ -92,7 +92,34 @@ export const ScreenFilterTab: React.FC<ScreenFilterTabProps> = ({ settings, onCh
             </div>
           </div>
 
-          {/* 3. Parlaklık Ofseti */}
+          {/* 3. Gölge Detay Kurtarma */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-zinc-200 flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                Gölge Detay Kurtarma (Toe Curve)
+              </span>
+              <span className="font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/30">
+                %{((settings.shadowDetail ?? 0) * 100).toFixed(0)}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0.0"
+              max="1.0"
+              step="0.05"
+              value={settings.shadowDetail ?? 0.0}
+              onChange={(e) => onChange({ shadowDetail: parseFloat(e.target.value) })}
+              className="w-full"
+            />
+            <div className="flex justify-between text-[10px] text-zinc-500 font-mono">
+              <span>%0 (Standart Gölge)</span>
+              <span>%50 (Karanlık Aydınlat)</span>
+              <span>%100 (Maksimum Detay)</span>
+            </div>
+          </div>
+
+          {/* 4. Parlaklık Ofseti */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-zinc-200 flex items-center gap-1.5">
@@ -114,7 +141,7 @@ export const ScreenFilterTab: React.FC<ScreenFilterTabProps> = ({ settings, onCh
             />
           </div>
 
-          {/* 4. Kontrast */}
+          {/* 5. Kontrast */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-zinc-200 flex items-center gap-1.5">
@@ -137,11 +164,38 @@ export const ScreenFilterTab: React.FC<ScreenFilterTabProps> = ({ settings, onCh
           </div>
         </div>
 
-        {/* Right Card: RGB Channels & CAS Sharpness */}
-        <div className="glass-card p-6 rounded-3xl border border-purple-500/15 flex flex-col gap-6 shadow-xl">
+        {/* Right Card: RGB Channels & CAS Sharpness & Color Temp */}
+        <div className="glass-card p-6 rounded-3xl border border-purple-500/15 flex flex-col gap-5 shadow-xl">
           <div className="text-xs font-bold text-zinc-200 uppercase tracking-wider font-mono flex items-center gap-2 pb-2 border-b border-white/5">
             <Sparkles className="w-4 h-4 text-indigo-400" />
-            RGB Renk Kanalları & Netlik
+            RGB Renk Kanalları & Sıcaklık & Netlik
+          </div>
+
+          {/* Renk Sıcaklığı (Kelvin) */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-amber-300 flex items-center gap-1.5">
+                <Thermometer className="w-4 h-4 text-amber-400" />
+                Renk Sıcaklığı (Kelvin)
+              </span>
+              <span className="font-mono font-bold text-amber-300 bg-amber-500/10 px-2.5 py-0.5 rounded-lg border border-amber-500/30">
+                {Math.round(settings.colorTemperature ?? 6500)}K {Math.round(settings.colorTemperature ?? 6500) < 6000 ? '(Sıcak)' : Math.round(settings.colorTemperature ?? 6500) > 7000 ? '(Soğuk)' : '(Nötr)'}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="2700"
+              max="10000"
+              step="100"
+              value={settings.colorTemperature ?? 6500}
+              onChange={(e) => onChange({ colorTemperature: parseFloat(e.target.value) })}
+              className="w-full"
+            />
+            <div className="flex justify-between text-[10px] text-zinc-500 font-mono">
+              <span>2700K (Gece Filtresi)</span>
+              <span>6500K (D65 Nötr)</span>
+              <span>10000K (Buz Mavi)</span>
+            </div>
           </div>
 
           {/* Red Channel */}
@@ -205,11 +259,11 @@ export const ScreenFilterTab: React.FC<ScreenFilterTabProps> = ({ settings, onCh
           </div>
 
           {/* CAS / RIS Sharpness */}
-          <div className="flex flex-col gap-2 pt-4 border-t border-white/5">
+          <div className="flex flex-col gap-2 pt-2 border-t border-white/5">
             <div className="flex items-center justify-between text-xs">
               <span className="text-zinc-100 font-semibold flex items-center gap-1.5">
                 <Eye className="w-4 h-4 text-fuchsia-400" />
-                Düşman Netliği & Kenar Keskinliği (CAS)
+                Gelişmiş CAS Keskinleştirme (Unsharp LUT)
               </span>
               <span className="font-mono font-bold text-fuchsia-400 bg-fuchsia-500/10 px-2.5 py-0.5 rounded-lg border border-fuchsia-500/30">
                 %{(settings.sharpness * 100).toFixed(0)}
@@ -224,6 +278,11 @@ export const ScreenFilterTab: React.FC<ScreenFilterTabProps> = ({ settings, onCh
               onChange={(e) => onChange({ sharpness: parseFloat(e.target.value) })}
               className="w-full"
             />
+            <div className="flex justify-between text-[10px] text-zinc-500 font-mono">
+              <span>%0 (Doğal)</span>
+              <span>%50 (Düşman Silüeti)</span>
+              <span>%100 (Maksimum CAS)</span>
+            </div>
           </div>
         </div>
       </div>

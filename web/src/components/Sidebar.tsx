@@ -22,7 +22,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, releas
   const tabs: Array<{ id: TabId; label: string; icon: React.ReactNode; badge?: string; hasAlert?: boolean }> = [
     { id: 'filter', label: 'Ekran Filtresi', icon: <Sliders className="w-4 h-4" /> },
     { id: 'profiles', label: 'Hazır Profiller', icon: <Bookmark className="w-4 h-4" />, badge: '5' },
-    { id: 'crosshair', label: 'PvP Nişangah', icon: <Target className="w-4 h-4" /> },
+    { id: 'crosshair', label: 'PvP Nişangah', icon: <Target className="w-4 h-4" />, badge: 'Bakımda' },
     { id: 'monitors', label: 'Monitör & Oyun', icon: <Monitor className="w-4 h-4" /> },
     { id: 'hotkeys', label: 'Kısayollar', icon: <Keyboard className="w-4 h-4" /> },
     {

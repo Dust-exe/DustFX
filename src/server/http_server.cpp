@@ -1,6 +1,8 @@
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <windows.h>
+#include <shellapi.h>
 typedef int socklen_t;
 #endif
 
@@ -127,6 +129,7 @@ void HttpServer::ServerLoop() {
 }
 
 void HttpServer::HandleClient(int clientSocket) {
+    std::string req;
     char buffer[8192];
     int bytesRead = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
     if (bytesRead <= 0) {
@@ -135,7 +138,30 @@ void HttpServer::HandleClient(int clientSocket) {
     }
 
     buffer[bytesRead] = '\0';
-    std::string req(buffer);
+    req.append(buffer, bytesRead);
+
+    // Check for Content-Length to read entire body
+    size_t headerEnd = req.find("\r\n\r\n");
+    if (headerEnd != std::string::npos) {
+        size_t clPos = req.find("Content-Length:");
+        if (clPos == std::string::npos) clPos = req.find("content-length:");
+        if (clPos != std::string::npos && clPos < headerEnd) {
+            size_t valStart = clPos + 15;
+            size_t valEnd = req.find("\r\n", valStart);
+            if (valEnd != std::string::npos) {
+                try {
+                    int contentLength = std::stoi(req.substr(valStart, valEnd - valStart));
+                    size_t bodyRead = req.length() - (headerEnd + 4);
+                    while (bodyRead < static_cast<size_t>(contentLength)) {
+                        int moreBytes = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
+                        if (moreBytes <= 0) break;
+                        req.append(buffer, moreBytes);
+                        bodyRead += moreBytes;
+                    }
+                } catch (...) {}
+            }
+        }
+    }
 
     std::istringstream stream(req);
     std::string method, path, protocol;
@@ -143,7 +169,7 @@ void HttpServer::HandleClient(int clientSocket) {
 
     // Extract body
     std::string body;
-    size_t headerEnd = req.find("\r\n\r\n");
+    headerEnd = req.find("\r\n\r\n");
     if (headerEnd != std::string::npos) {
         body = req.substr(headerEnd + 4);
     }
@@ -204,6 +230,8 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
                 {"rgbGreen", s.rgbGreen},
                 {"rgbBlue", s.rgbBlue},
                 {"sharpness", s.sharpness},
+                {"colorTemperature", s.colorTemperature},
+                {"shadowDetail", s.shadowDetail},
                 {"crosshairEnabled", s.crosshairEnabled},
                 {"crosshairStyle", s.crosshairStyle},
                 {"crosshairColor", s.crosshairColor},
@@ -233,6 +261,8 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
             if (j.contains("rgbGreen")) s.rgbGreen = j["rgbGreen"].get<float>();
             if (j.contains("rgbBlue")) s.rgbBlue = j["rgbBlue"].get<float>();
             if (j.contains("sharpness")) s.sharpness = j["sharpness"].get<float>();
+            if (j.contains("colorTemperature")) s.colorTemperature = j["colorTemperature"].get<float>();
+            if (j.contains("shadowDetail")) s.shadowDetail = j["shadowDetail"].get<float>();
             if (j.contains("crosshairEnabled")) s.crosshairEnabled = j["crosshairEnabled"].get<bool>();
             if (j.contains("crosshairStyle")) s.crosshairStyle = j["crosshairStyle"].get<std::string>();
             if (j.contains("crosshairColor")) s.crosshairColor = j["crosshairColor"].get<std::string>();
@@ -421,6 +451,54 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
             {"publishedAt", info.publishedAt}
         };
         return MakeHttpResponse(200, "OK", "application/json", res.dump());
+    }
+
+    // 7b. POST /api/updater/download-and-apply
+    if (path == "/api/updater/download-and-apply" && method == "POST") {
+        ReleaseInfo info;
+        bool hasUpdate = AutoUpdater::Instance().CheckForUpdate(info);
+        if (!hasUpdate || info.downloadUrl.empty()) {
+            return MakeHttpResponse(200, "OK", "application/json", "{\"success\":false,\"error\":\"No update available\"}");
+        }
+        std::string tempPath;
+#ifdef _WIN32
+        char tmpDir[MAX_PATH];
+        GetTempPathA(MAX_PATH, tmpDir);
+        tempPath = std::string(tmpDir) + "DustFX_Update.exe";
+#else
+        tempPath = "/tmp/DustFX_Update";
+#endif
+        bool downloaded = AutoUpdater::Instance().DownloadUpdate(info, tempPath);
+        if (!downloaded) {
+            return MakeHttpResponse(200, "OK", "application/json", "{\"success\":false,\"error\":\"Download failed\"}");
+        }
+        bool applied = AutoUpdater::Instance().ApplyUpdate(tempPath);
+        json res = {
+            {"success", applied},
+            {"downloadedTo", tempPath},
+            {"version", info.version}
+        };
+        return MakeHttpResponse(200, "OK", "application/json", res.dump());
+    }
+
+    // 8. POST /api/open-url — Open URL in default system browser
+    if (path == "/api/open-url" && method == "POST") {
+        try {
+            json j = json::parse(body);
+            std::string url = j.value("url", "");
+            if (!url.empty()) {
+#ifdef _WIN32
+                ShellExecuteA(NULL, "open", url.c_str(), NULL, NULL, SW_SHOW);
+#else
+                std::string cmd = "xdg-open '" + url + "' &";
+                system(cmd.c_str());
+#endif
+                return MakeHttpResponse(200, "OK", "application/json", "{\"success\":true}");
+            }
+            return MakeHttpResponse(400, "Bad Request", "application/json", "{\"error\":\"No URL provided\"}");
+        } catch (...) {
+            return MakeHttpResponse(400, "Bad Request", "application/json", "{\"error\":\"Invalid JSON\"}");
+        }
     }
 
     // 8. Static Web Files Serve

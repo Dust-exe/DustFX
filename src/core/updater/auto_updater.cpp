@@ -2,11 +2,13 @@
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <vector>
 
 #ifdef _WIN32
 #include <windows.h>
 #include <wininet.h>
+#include <shellapi.h>
 #else
 #include "curl_compat.h"
 #endif
@@ -216,6 +218,111 @@ void AutoUpdater::BackgroundLoop() {
             std::this_thread::sleep_for(std::chrono::seconds(5));
         }
     }
+}
+
+bool AutoUpdater::DownloadUpdate(const ReleaseInfo& info, const std::string& savePath) {
+    if (info.downloadUrl.empty()) {
+        std::cerr << "[AutoUpdater] Download URL is empty." << std::endl;
+        return false;
+    }
+
+    std::cout << "[AutoUpdater] Downloading update from: " << info.downloadUrl << std::endl;
+    std::cout << "[AutoUpdater] Saving to: " << savePath << std::endl;
+
+#ifdef _WIN32
+    HINTERNET hInternet = InternetOpenA("DustFX-Updater/1.2", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    if (!hInternet) {
+        std::cerr << "[AutoUpdater] InternetOpen failed." << std::endl;
+        return false;
+    }
+
+    DWORD flags = INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_SECURE;
+    HINTERNET hFile = InternetOpenUrlA(hInternet, info.downloadUrl.c_str(), NULL, 0, flags, 0);
+    if (!hFile) {
+        InternetCloseHandle(hInternet);
+        std::cerr << "[AutoUpdater] InternetOpenUrl failed for download." << std::endl;
+        return false;
+    }
+
+    std::ofstream outFile(savePath, std::ios::binary);
+    if (!outFile.is_open()) {
+        InternetCloseHandle(hFile);
+        InternetCloseHandle(hInternet);
+        std::cerr << "[AutoUpdater] Cannot open output file: " << savePath << std::endl;
+        return false;
+    }
+
+    char buffer[8192];
+    DWORD bytesRead = 0;
+    DWORD totalBytes = 0;
+    while (InternetReadFile(hFile, buffer, sizeof(buffer), &bytesRead) && bytesRead > 0) {
+        outFile.write(buffer, bytesRead);
+        totalBytes += bytesRead;
+    }
+
+    outFile.close();
+    InternetCloseHandle(hFile);
+    InternetCloseHandle(hInternet);
+
+    std::cout << "[AutoUpdater] Download complete: " << totalBytes << " bytes." << std::endl;
+    return (totalBytes > 0);
+#else
+    // Linux/Mac fallback using curl CLI
+    std::string cmd = "curl -L -o '" + savePath + "' '" + info.downloadUrl + "' 2>/dev/null";
+    int ret = system(cmd.c_str());
+    return (ret == 0);
+#endif
+}
+
+bool AutoUpdater::ApplyUpdate(const std::string& downloadedExePath) {
+#ifdef _WIN32
+    // Get current executable path
+    char currentExePath[MAX_PATH];
+    GetModuleFileNameA(NULL, currentExePath, MAX_PATH);
+
+    // Get temp directory for the update script
+    char tmpDir[MAX_PATH];
+    GetTempPathA(MAX_PATH, tmpDir);
+    std::string batPath = std::string(tmpDir) + "dustfx_update.bat";
+
+    // Create self-replacing batch script
+    std::ofstream bat(batPath);
+    if (!bat.is_open()) {
+        std::cerr << "[AutoUpdater] Cannot create update batch script." << std::endl;
+        return false;
+    }
+
+    bat << "@echo off\r\n";
+    bat << "echo DustFX Guncelleme baslatiliyor...\r\n";
+    bat << "echo Mevcut DustFX kapatiliyor...\r\n";
+    bat << "timeout /t 2 /nobreak >nul\r\n";
+    bat << "taskkill /F /IM DustFX.exe /T >nul 2>&1\r\n";
+    bat << "timeout /t 1 /nobreak >nul\r\n";
+    bat << "echo Eski dosyalar siliniyor...\r\n";
+    bat << "del /f /q \"" << currentExePath << "\" >nul 2>&1\r\n";
+    bat << "timeout /t 1 /nobreak >nul\r\n";
+    bat << "echo Yeni dosyalar kopyalaniyor...\r\n";
+    bat << "copy /y \"" << downloadedExePath << "\" \"" << currentExePath << "\" >nul\r\n";
+    bat << "echo Guncelleme tamamlandi! DustFX yeniden baslatiliyor...\r\n";
+    bat << "timeout /t 1 /nobreak >nul\r\n";
+    bat << "start \"\" \"" << currentExePath << "\"\r\n";
+    bat << "del /f /q \"" << downloadedExePath << "\" >nul 2>&1\r\n";
+    bat << "del /f /q \"%~f0\" >nul 2>&1\r\n";
+    bat.close();
+
+    std::cout << "[AutoUpdater] Update script created: " << batPath << std::endl;
+    std::cout << "[AutoUpdater] Launching updater and exiting current process..." << std::endl;
+
+    // Launch the batch script hidden
+    ShellExecuteA(NULL, "open", batPath.c_str(), NULL, NULL, SW_HIDE);
+
+    // Exit current process so files can be replaced
+    ExitProcess(0);
+    return true; // never reached
+#else
+    std::cout << "[AutoUpdater] Auto-apply not supported on this platform. Downloaded to: " << downloadedExePath << std::endl;
+    return false;
+#endif
 }
 
 } // namespace dustfx

@@ -7,12 +7,12 @@ InstallDir "$LOCALAPPDATA\DustFX"
 RequestExecutionLevel user
 SetCompressor lzma
 
-VIProductVersion "1.1.1.0"
+VIProductVersion "1.2.0.0"
 VIAddVersionKey "ProductName" "DustFX"
 VIAddVersionKey "CompanyName" "Dust Studio"
 VIAddVersionKey "LegalCopyright" "Copyright (C) 2026 Dust Studio. All rights reserved."
 VIAddVersionKey "FileDescription" "DustFX GPU & DCCW Gamma Optimizer Setup"
-VIAddVersionKey "FileVersion" "1.1.1"
+VIAddVersionKey "FileVersion" "1.2.0"
 VIAddVersionKey "OriginalFilename" "DustFX_Setup.exe"
 VIAddVersionKey "InternalName" "DustFX_Setup"
 
@@ -24,6 +24,7 @@ UninstallIcon "app.ico"
 
 ; Installer Pages
 !insertmacro MUI_PAGE_WELCOME
+!insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !define MUI_FINISHPAGE_RUN "$INSTDIR\DustFX.exe"
@@ -50,8 +51,12 @@ Section "MainSection" SEC01
   nsExec::Exec 'cmd /c taskkill /F /IM DustFX.exe /T >nul 2>&1'
   Sleep 400
 
+  ; Clean old web dist directory if updating from older broken version
+  RMDir /r "$INSTDIR\web\dist"
+
   File "DustFX.exe"
   File "app.ico"
+  File "LICENSE.txt"
 
   SetOutPath "$INSTDIR\web\dist"
   File /r "web\dist\*.*"
@@ -71,7 +76,7 @@ Section "MainSection" SEC01
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "DisplayName" "DustFX"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "UninstallString" '"$INSTDIR\Uninstall.exe"'
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "DisplayIcon" '"$INSTDIR\app.ico"'
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "DisplayVersion" "1.1.1"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "DisplayVersion" "1.2.0"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "Publisher" "Dust Studio"
 SectionEnd
 
@@ -88,6 +93,7 @@ Section "Uninstall"
   RMDir /r "$INSTDIR\web"
   Delete "$INSTDIR\DustFX.exe"
   Delete "$INSTDIR\app.ico"
+  Delete "$INSTDIR\LICENSE.txt"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir /r "$INSTDIR"
 

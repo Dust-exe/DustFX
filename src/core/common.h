@@ -31,6 +31,8 @@ struct DisplaySettings {
     float rgbGreen = 1.0f;            // 0.5x - 2.0x
     float rgbBlue = 1.0f;             // 0.5x - 2.0x
     float sharpness = 0.0f;           // 0.0 - 1.0 (CAS / RIS)
+    float colorTemperature = 6500.0f; // 2700K - 10000K (Renk Sıcaklığı)
+    float shadowDetail = 0.0f;        // 0.0 - 1.0 (Gölge Detay Kurtarma)
     
     // PvP Tools
     bool crosshairEnabled = false;
@@ -105,5 +107,5 @@ struct AppSettings {
 } // namespace dustfx
 
 #ifndef DUSTFX_VERSION_STRING
-#define DUSTFX_VERSION_STRING "1.1.1"
+#define DUSTFX_VERSION_STRING "1.2.0"
 #endif

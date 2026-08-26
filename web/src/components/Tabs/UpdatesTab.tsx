@@ -1,6 +1,7 @@
-import React from 'react';
-import { RefreshCw, Download, ExternalLink, CheckCircle, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { RefreshCw, Download, ExternalLink, CheckCircle, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { ReleaseInfo } from '../../types';
+import { api } from '../../api';
 
 interface UpdatesTabProps {
   releaseInfo: ReleaseInfo | null;
@@ -9,7 +10,31 @@ interface UpdatesTabProps {
 }
 
 export const UpdatesTab: React.FC<UpdatesTabProps> = ({ releaseInfo, onCheckAgain, onOpenExternal }) => {
+  const [updating, setUpdating] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<string>('');
+  const [updateError, setUpdateError] = useState<string>('');
+
   const hasUpdate = releaseInfo?.hasUpdate === true;
+
+  const handleDirectUpdate = async () => {
+    if (!releaseInfo?.downloadUrl) return;
+    setUpdating(true);
+    setUpdateError('');
+    setUpdateStatus('GitHub üzerinden yeni sürüm indiriliyor...');
+
+    try {
+      const res = await api.downloadAndApplyUpdate();
+      if (res.success) {
+        setUpdateStatus('İndirme tamamlandı! Eski dosyalar temizleniyor ve uygulama yeniden başlatılıyor...');
+      } else {
+        setUpdateError(res.error || 'Güncelleme uygulanamadı. Manuel indirmeyi deneyin.');
+        setUpdating(false);
+      }
+    } catch {
+      setUpdateError('Güncelleme sunucusuna ulaşılamadı. Lütfen bağlantınızı kontrol edin.');
+      setUpdating(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6 animate-fadeIn">
@@ -25,7 +50,8 @@ export const UpdatesTab: React.FC<UpdatesTabProps> = ({ releaseInfo, onCheckAgai
         </div>
         <button
           onClick={onCheckAgain}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-zinc-200 border border-white/10 transition-all active:scale-95"
+          disabled={updating}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-zinc-200 border border-white/10 transition-all active:scale-95 disabled:opacity-40"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           Şimdi Kontrol Et
@@ -42,10 +68,10 @@ export const UpdatesTab: React.FC<UpdatesTabProps> = ({ releaseInfo, onCheckAgai
             </div>
             <div>
               <h3 className="text-base font-bold text-white font-mono">
-                DustFX v{releaseInfo?.latestVersion || '1.1.1'}
+                DustFX v{releaseInfo?.latestVersion || '1.2.0'}
               </h3>
               <p className="text-xs text-zinc-400">
-                Yüklü: <span className="font-mono text-zinc-300 font-bold">v{releaseInfo?.currentVersion || '1.1.1'}</span>
+                Yüklü: <span className="font-mono text-zinc-300 font-bold">v{releaseInfo?.currentVersion || '1.2.0'}</span>
               </p>
             </div>
           </div>
@@ -71,6 +97,24 @@ export const UpdatesTab: React.FC<UpdatesTabProps> = ({ releaseInfo, onCheckAgai
           </pre>
         </div>
 
+        {/* Progress or status banner during update */}
+        {updating && (
+          <div className="p-4 rounded-2xl bg-purple-950/40 border border-purple-500/30 flex items-center gap-3">
+            <Loader2 className="w-5 h-5 text-fuchsia-400 animate-spin flex-shrink-0" />
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xs font-bold text-white font-mono">Otomatik Güncelleme Devam Ediyor</span>
+              <span className="text-[11px] text-zinc-300">{updateStatus}</span>
+            </div>
+          </div>
+        )}
+
+        {updateError && (
+          <div className="p-3.5 rounded-2xl bg-red-950/40 border border-red-500/30 flex items-center gap-2.5 text-xs text-red-300">
+            <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+            <span>{updateError}</span>
+          </div>
+        )}
+
         <div className="flex items-center justify-end gap-3 pt-1">
           <button
             onClick={() => onOpenExternal(releaseInfo?.htmlUrl || 'https://github.com/Dust-exe/DustFX/releases')}
@@ -82,11 +126,21 @@ export const UpdatesTab: React.FC<UpdatesTabProps> = ({ releaseInfo, onCheckAgai
 
           {hasUpdate && releaseInfo?.downloadUrl && (
             <button
-              onClick={() => onOpenExternal(releaseInfo.downloadUrl)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-xs font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all active:scale-95"
+              onClick={handleDirectUpdate}
+              disabled={updating}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-xs font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all active:scale-95 disabled:opacity-50"
             >
-              <Download className="w-4 h-4" />
-              Güncellemeyi İndir (.exe)
+              {updating ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Güncelleniyor...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  Şimdi Güncelle & Yeniden Başlat
+                </>
+              )}
             </button>
           )}
         </div>
