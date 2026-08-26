@@ -5,6 +5,7 @@
 #include <chrono>
 #include <mutex>
 #include <atomic>
+#include <thread>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -17,6 +18,7 @@ public:
     static OverlayToast& Instance();
 
     void Initialize();
+    void Shutdown();
     void ShowToast(const std::string& title, const std::string& subtitle = "", int durationSeconds = 3);
     void ToggleCrosshair(bool enabled);
     void UpdateCrosshair(const DisplaySettings& settings);
@@ -35,12 +37,15 @@ private:
     std::string m_subtitle;
     std::chrono::steady_clock::time_point m_expiresAt;
     
+    std::atomic<bool> m_running{false};
     std::atomic<bool> m_crosshairVisible{false};
     DisplaySettings m_crosshairSettings;
 
+    std::thread m_overlayThread;
+
 #ifdef _WIN32
     HWND m_hWnd = NULL;
-    void CreateCrosshairWindow();
+    void OverlayThreadProc();
 #endif
 };
 

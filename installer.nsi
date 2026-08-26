@@ -4,7 +4,7 @@
 Name "DustFX"
 OutFile "DustFX_Setup.exe"
 InstallDir "$LOCALAPPDATA\DustFX"
-RequestExecutionLevel user
+RequestExecutionLevel admin
 SetCompressor lzma
 
 VIProductVersion "1.2.1.0"

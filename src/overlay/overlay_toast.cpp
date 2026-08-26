@@ -2,17 +2,18 @@
 #include <iostream>
 #include <cmath>
 #include <algorithm>
-#include <sstream>
+#include <string>
+#include <thread>
 
 #ifdef _WIN32
 #include <windows.h>
 
+#define WM_USER_UPDATE_CROSSHAIR (WM_USER + 301)
+#define TRANSPARENT_COLOR_KEY RGB(255, 0, 255)
+
 static HWND g_hOverlayWnd = NULL;
 static dustfx::DisplaySettings g_crosshairSettings;
 static bool g_crosshairVisible = false;
-
-// Chroma Key Color: Magenta (255, 0, 255) for transparent layered window
-#define TRANSPARENT_COLOR_KEY RGB(255, 0, 255)
 
 // Helper: Parse hex color "#RRGGBB" to COLORREF
 static COLORREF HexToColorRef(const std::string& hex) {
@@ -22,29 +23,63 @@ static COLORREF HexToColorRef(const std::string& hex) {
     }
     if (cleanHex.length() < 6) return RGB(0, 255, 102);
 
-    unsigned int r = 0, g = 255, b = 102;
-    std::stringstream ss;
-    ss << std::hex << cleanHex.substr(0, 2);
-    ss >> r;
-    ss.clear();
-    ss << std::hex << cleanHex.substr(2, 2);
-    ss >> g;
-    ss.clear();
-    ss << std::hex << cleanHex.substr(4, 2);
-    ss >> b;
+    try {
+        unsigned long r = std::stoul(cleanHex.substr(0, 2), nullptr, 16);
+        unsigned long g = std::stoul(cleanHex.substr(2, 2), nullptr, 16);
+        unsigned long b = std::stoul(cleanHex.substr(4, 2), nullptr, 16);
 
-    // Guard against exact match with our transparency key
-    if (r == 255 && g == 0 && b == 255) {
-        r = 254; b = 254;
+        // Guard against matching transparency chroma key (255, 0, 255)
+        if (r == 255 && g == 0 && b == 255) {
+            r = 254; b = 254;
+        }
+        return RGB((BYTE)r, (BYTE)g, (BYTE)b);
+    } catch (...) {
+        return RGB(0, 255, 102);
     }
-    return RGB(r, g, b);
 }
 
 // Windows Overlay Window Procedure — Double-Buffered Zero-Flicker Renderer
 static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
+        case WM_USER_UPDATE_CROSSHAIR: {
+            if (g_crosshairVisible) {
+                int screenW = GetSystemMetrics(SM_CXSCREEN);
+                int screenH = GetSystemMetrics(SM_CYSCREEN);
+                int overlaySize = 200;
+                int x = (screenW - overlaySize) / 2;
+                int y = (screenH - overlaySize) / 2;
+
+                BYTE alpha = (BYTE)(std::clamp(g_crosshairSettings.crosshairOpacity, 0.1f, 1.0f) * 255.0f);
+                if (alpha < 255) {
+                    SetLayeredWindowAttributes(hWnd, TRANSPARENT_COLOR_KEY, alpha, LWA_COLORKEY | LWA_ALPHA);
+                } else {
+                    SetLayeredWindowAttributes(hWnd, TRANSPARENT_COLOR_KEY, 255, LWA_COLORKEY);
+                }
+
+                SetWindowPos(hWnd, HWND_TOPMOST, x, y, overlaySize, overlaySize, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+                InvalidateRect(hWnd, NULL, TRUE);
+                UpdateWindow(hWnd);
+            } else {
+                ShowWindow(hWnd, SW_HIDE);
+            }
+            return 0;
+        }
+
+        case WM_DISPLAYCHANGE: {
+            if (g_crosshairVisible) {
+                int screenW = GetSystemMetrics(SM_CXSCREEN);
+                int screenH = GetSystemMetrics(SM_CYSCREEN);
+                int overlaySize = 200;
+                int x = (screenW - overlaySize) / 2;
+                int y = (screenH - overlaySize) / 2;
+                SetWindowPos(hWnd, HWND_TOPMOST, x, y, overlaySize, overlaySize, SWP_NOACTIVATE);
+                InvalidateRect(hWnd, NULL, TRUE);
+            }
+            return 0;
+        }
+
         case WM_ERASEBKGND:
-            return 1; // Handled in WM_PAINT
+            return 1;
 
         case WM_PAINT: {
             PAINTSTRUCT ps;
@@ -57,12 +92,10 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
             int cx = w / 2;
             int cy = h / 2;
 
-            // Double buffering
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP memBmp = CreateCompatibleBitmap(hdc, w, h);
             HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
 
-            // Fill background with TRANSPARENT_COLOR_KEY
             HBRUSH transBrush = CreateSolidBrush(TRANSPARENT_COLOR_KEY);
             FillRect(memDC, &rc, transBrush);
             DeleteObject(transBrush);
@@ -80,20 +113,13 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                 HBRUSH colorBrush = CreateSolidBrush(color);
                 HPEN colorPen = CreatePen(PS_SOLID, thickness, color);
                 HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
-
-                // Outline tools (True Black)
                 HBRUSH outlineBrush = CreateSolidBrush(RGB(0, 0, 0));
-                HPEN outlinePen = CreatePen(PS_SOLID, thickness + outline * 2, RGB(0, 0, 0));
 
-                auto DrawOutlineRect = [&](int left, int top, int right, int bottom) {
+                auto DrawFilledRect = [&](int left, int top, int right, int bottom) {
                     if (outline > 0) {
                         RECT oRc = { left - outline, top - outline, right + outline, bottom + outline };
                         FillRect(memDC, &oRc, outlineBrush);
                     }
-                };
-
-                auto DrawFilledRect = [&](int left, int top, int right, int bottom) {
-                    DrawOutlineRect(left, top, right, bottom);
                     RECT fRc = { left, top, right, bottom };
                     FillRect(memDC, &fRc, colorBrush);
                 };
@@ -140,29 +166,24 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                 else if (style == "x-cross") {
                     int s = (int)(size * 0.707f);
                     int g = (int)(gap * 0.707f);
+                    HPEN outlinePen = CreatePen(PS_SOLID, thickness + outline * 2, RGB(0, 0, 0));
                     if (outline > 0) {
                         SelectObject(memDC, outlinePen);
-                        MoveToEx(memDC, cx - g - s, cy - g - s, NULL);
-                        LineTo(memDC, cx - g, cy - g);
-                        MoveToEx(memDC, cx + g, cy + g, NULL);
-                        LineTo(memDC, cx + g + s, cy + g + s);
-                        MoveToEx(memDC, cx + g + s, cy - g - s, NULL);
-                        LineTo(memDC, cx + g, cy - g);
-                        MoveToEx(memDC, cx - g, cy + g, NULL);
-                        LineTo(memDC, cx - g - s, cy + g + s);
+                        MoveToEx(memDC, cx - g - s, cy - g - s, NULL); LineTo(memDC, cx - g, cy - g);
+                        MoveToEx(memDC, cx + g, cy + g, NULL); LineTo(memDC, cx + g + s, cy + g + s);
+                        MoveToEx(memDC, cx + g + s, cy - g - s, NULL); LineTo(memDC, cx + g, cy - g);
+                        MoveToEx(memDC, cx - g, cy + g, NULL); LineTo(memDC, cx - g - s, cy + g + s);
                     }
                     SelectObject(memDC, colorPen);
-                    MoveToEx(memDC, cx - g - s, cy - g - s, NULL);
-                    LineTo(memDC, cx - g, cy - g);
-                    MoveToEx(memDC, cx + g, cy + g, NULL);
-                    LineTo(memDC, cx + g + s, cy + g + s);
-                    MoveToEx(memDC, cx + g + s, cy - g - s, NULL);
-                    LineTo(memDC, cx + g, cy - g);
-                    MoveToEx(memDC, cx - g, cy + g, NULL);
-                    LineTo(memDC, cx - g - s, cy + g + s);
+                    MoveToEx(memDC, cx - g - s, cy - g - s, NULL); LineTo(memDC, cx - g, cy - g);
+                    MoveToEx(memDC, cx + g, cy + g, NULL); LineTo(memDC, cx + g + s, cy + g + s);
+                    MoveToEx(memDC, cx + g + s, cy - g - s, NULL); LineTo(memDC, cx + g, cy - g);
+                    MoveToEx(memDC, cx - g, cy + g, NULL); LineTo(memDC, cx - g - s, cy + g + s);
+                    DeleteObject(outlinePen);
                 }
                 else if (style == "circle") {
                     int r = size + gap;
+                    HPEN outlinePen = CreatePen(PS_SOLID, thickness + outline * 2, RGB(0, 0, 0));
                     SelectObject(memDC, GetStockObject(NULL_BRUSH));
                     if (outline > 0) {
                         SelectObject(memDC, outlinePen);
@@ -170,13 +191,13 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                     }
                     SelectObject(memDC, colorPen);
                     Ellipse(memDC, cx - r, cy - r, cx + r, cy + r);
+                    DeleteObject(outlinePen);
                 }
                 else if (style == "cross-dot") {
                     DrawFilledRect(cx - gap - size, cy - halfThick, cx - gap, cy + tRem);
                     DrawFilledRect(cx + gap, cy - halfThick, cx + gap + size, cy + tRem);
                     DrawFilledRect(cx - halfThick, cy - gap - size, cx + tRem, cy - gap);
                     DrawFilledRect(cx - halfThick, cy + gap, cx + tRem, cy + gap + size);
-                    // Center dot
                     int d = std::max(2, dotSize > 0 ? dotSize : thickness);
                     if (outline > 0) {
                         SelectObject(memDC, outlineBrush);
@@ -197,7 +218,7 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                     FrameRect(memDC, &sRc, colorBrush);
                 }
 
-                // Explicit Center Dot
+                // Explicit Center Dot if enabled
                 if (dotSize > 0 && style != "dot" && style != "cross-dot") {
                     if (outline > 0) {
                         SelectObject(memDC, outlineBrush);
@@ -212,12 +233,9 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                 DeleteObject(colorBrush);
                 DeleteObject(colorPen);
                 DeleteObject(outlineBrush);
-                DeleteObject(outlinePen);
             }
 
-            // Transfer to layered window DC
             BitBlt(hdc, 0, 0, w, h, memDC, 0, 0, SRCCOPY);
-
             SelectObject(memDC, oldBmp);
             DeleteObject(memBmp);
             DeleteDC(memDC);
@@ -226,7 +244,7 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
         }
 
         case WM_DESTROY:
-            g_hOverlayWnd = NULL;
+            PostQuitMessage(0);
             return 0;
 
         default:
@@ -245,22 +263,38 @@ OverlayToast& OverlayToast::Instance() {
 OverlayToast::OverlayToast() = default;
 
 OverlayToast::~OverlayToast() {
-#ifdef _WIN32
-    if (m_hWnd) {
-        DestroyWindow(m_hWnd);
-        m_hWnd = NULL;
-    }
-#endif
+    Shutdown();
 }
 
 void OverlayToast::Initialize() {
+#ifdef _WIN32
+    if (!m_running.load()) {
+        m_running.store(true);
+        m_overlayThread = std::thread(&OverlayToast::OverlayThreadProc, this);
+    }
+#endif
     std::cout << "[OverlayToast] Modern zero-lag crosshair & OSD engine initialized." << std::endl;
 }
 
+void OverlayToast::Shutdown() {
+    if (m_running.load()) {
+        m_running.store(false);
 #ifdef _WIN32
-void OverlayToast::CreateCrosshairWindow() {
-    if (m_hWnd && IsWindow(m_hWnd)) return;
+        if (m_hWnd && IsWindow(m_hWnd)) {
+            PostMessage(m_hWnd, WM_CLOSE, 0, 0);
+        }
+#endif
+        if (m_overlayThread.joinable()) {
+            m_overlayThread.join();
+        }
+#ifdef _WIN32
+        m_hWnd = NULL;
+#endif
+    }
+}
 
+#ifdef _WIN32
+void OverlayToast::OverlayThreadProc() {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASSEXA wc = {0};
     wc.cbSize = sizeof(WNDCLASSEXA);
@@ -270,28 +304,31 @@ void OverlayToast::CreateCrosshairWindow() {
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     RegisterClassExA(&wc);
 
-    // Exact Pixel Center Alignment (200x200 centered box)
-    int screenW = GetSystemMetrics(SM_CXSCREEN);
-    int screenH = GetSystemMetrics(SM_CYSCREEN);
     int overlaySize = 200;
-    int x = (screenW - overlaySize) / 2;
-    int y = (screenH - overlaySize) / 2;
-
-    // Create Transparent, Click-through, Topmost, Non-activating Layered Window
     m_hWnd = CreateWindowExA(
         WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW,
         "DustFXCrosshairOverlayClass",
         "DustFXCrosshair",
         WS_POPUP,
-        x, y, overlaySize, overlaySize,
+        0, 0, overlaySize, overlaySize,
         NULL, NULL, hInstance, NULL
     );
 
     if (m_hWnd) {
         g_hOverlayWnd = m_hWnd;
-        BYTE alpha = (BYTE)(std::clamp(g_crosshairSettings.crosshairOpacity, 0.2f, 1.0f) * 255.0f);
-        SetLayeredWindowAttributes(m_hWnd, TRANSPARENT_COLOR_KEY, alpha, LWA_COLORKEY | LWA_ALPHA);
-        std::cout << "[OverlayToast] Created centered crosshair overlay at (" << x << ", " << y << ") size " << overlaySize << "x" << overlaySize << std::endl;
+        SetLayeredWindowAttributes(m_hWnd, TRANSPARENT_COLOR_KEY, 255, LWA_COLORKEY);
+        std::cout << "[OverlayToast] Dedicated crosshair overlay message pump active." << std::endl;
+    }
+
+    MSG msg;
+    while (m_running.load() && GetMessage(&msg, NULL, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    if (m_hWnd && IsWindow(m_hWnd)) {
+        DestroyWindow(m_hWnd);
+        m_hWnd = NULL;
     }
 }
 #endif
@@ -301,39 +338,22 @@ void OverlayToast::ShowToast(const std::string& title, const std::string& subtit
     m_title = title;
     m_subtitle = subtitle;
     m_expiresAt = std::chrono::steady_clock::now() + std::chrono::seconds(durationSeconds);
-
     std::cout << "[DustFX OSD] 🔔 " << title << (subtitle.empty() ? "" : " — " + subtitle) << std::endl;
-
 #ifdef _WIN32
     MessageBeep(MB_ICONASTERISK);
 #endif
 }
 
 void OverlayToast::ToggleCrosshair(bool enabled) {
+    std::lock_guard<std::mutex> lock(m_mutex);
     m_crosshairVisible.store(enabled);
+    m_crosshairSettings.crosshairEnabled = enabled;
 #ifdef _WIN32
     g_crosshairVisible = enabled;
-
-    if (enabled && (!m_hWnd || !IsWindow(m_hWnd))) {
-        CreateCrosshairWindow();
-    }
+    g_crosshairSettings = m_crosshairSettings;
 
     if (m_hWnd && IsWindow(m_hWnd)) {
-        if (enabled) {
-            int screenW = GetSystemMetrics(SM_CXSCREEN);
-            int screenH = GetSystemMetrics(SM_CYSCREEN);
-            int overlaySize = 200;
-            int x = (screenW - overlaySize) / 2;
-            int y = (screenH - overlaySize) / 2;
-
-            BYTE alpha = (BYTE)(std::clamp(g_crosshairSettings.crosshairOpacity, 0.2f, 1.0f) * 255.0f);
-            SetLayeredWindowAttributes(m_hWnd, TRANSPARENT_COLOR_KEY, alpha, LWA_COLORKEY | LWA_ALPHA);
-
-            SetWindowPos(m_hWnd, HWND_TOPMOST, x, y, overlaySize, overlaySize, SWP_NOACTIVATE | SWP_SHOWWINDOW);
-            RedrawWindow(m_hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ERASE);
-        } else {
-            ShowWindow(m_hWnd, SW_HIDE);
-        }
+        PostMessage(m_hWnd, WM_USER_UPDATE_CROSSHAIR, 0, 0);
     }
 #endif
     std::cout << "[OverlayToast] Crosshair overlay " << (enabled ? "ENABLED (ON SCREEN)" : "DISABLED") << std::endl;
@@ -348,26 +368,8 @@ void OverlayToast::UpdateCrosshair(const DisplaySettings& settings) {
     g_crosshairSettings = settings;
     g_crosshairVisible = settings.crosshairEnabled;
 
-    if (settings.crosshairEnabled && (!m_hWnd || !IsWindow(m_hWnd))) {
-        CreateCrosshairWindow();
-    }
-
     if (m_hWnd && IsWindow(m_hWnd)) {
-        if (settings.crosshairEnabled) {
-            int screenW = GetSystemMetrics(SM_CXSCREEN);
-            int screenH = GetSystemMetrics(SM_CYSCREEN);
-            int overlaySize = 200;
-            int x = (screenW - overlaySize) / 2;
-            int y = (screenH - overlaySize) / 2;
-
-            BYTE alpha = (BYTE)(std::clamp(settings.crosshairOpacity, 0.2f, 1.0f) * 255.0f);
-            SetLayeredWindowAttributes(m_hWnd, TRANSPARENT_COLOR_KEY, alpha, LWA_COLORKEY | LWA_ALPHA);
-
-            SetWindowPos(m_hWnd, HWND_TOPMOST, x, y, overlaySize, overlaySize, SWP_NOACTIVATE | SWP_SHOWWINDOW);
-            RedrawWindow(m_hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ERASE);
-        } else {
-            ShowWindow(m_hWnd, SW_HIDE);
-        }
+        PostMessage(m_hWnd, WM_USER_UPDATE_CROSSHAIR, 0, 0);
     }
 #endif
 }

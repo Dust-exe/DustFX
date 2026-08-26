@@ -85,6 +85,7 @@ void DustFxApp::Stop() {
         HotkeyManager::Instance().Stop();
         ProcessWatcher::Instance().Stop();
         AutoUpdater::Instance().StopBackgroundChecker();
+        OverlayToast::Instance().Shutdown();
         HttpServer::Instance().Stop();
         GpuController::Instance().Shutdown();
     }
