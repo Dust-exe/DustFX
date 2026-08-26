@@ -1,47 +1,63 @@
 ================================================================================
-                    DUSTFX SON KULLANICI LİSANS SÖZLEŞMESİ (EULA)
+               DUSTFX END-USER LICENSE AGREEMENT (EULA)
 ================================================================================
-Sürüm: 1.2.0
-Yayımcı: Dust Studio (https://dust-studio.com)
-Son Güncelleme: 2026
+Version: 1.2.1
+Publisher: Dust Studio (https://dust-studio.com)
+Repository: https://github.com/Dust-exe/DustFX
+Last Updated: 2026
 
-Lütfen DustFX ("Yazılım") uygulamasını kurmadan veya kullanmadan önce bu 
-Sözleşmeyi dikkatlice okuyunuz. Bu yazılımı kurarak veya kullanarak, aşağıdaki 
-şartları kabul etmiş sayılırsınız.
+Please read this End-User License Agreement ("Agreement") carefully before 
+installing or using DustFX ("Software"). By installing, copying, or using 
+this Software, you agree to be bound by the terms and conditions of this 
+Agreement.
 
-1. LİSANS HAKKI VE KAPSAMI
+1. LICENSE GRANT & SCOPE
+------------------------
+Dust Studio grants you a personal, non-exclusive, non-transferable, revocable 
+license to install and use DustFX on personal computing devices for non-commercial 
+purposes, specifically for display optimization, GPU gamma tuning, and gaming 
+visual enhancement.
+
+2. PRIVACY & DATA SECURITY
 --------------------------
-Dust Studio, kullanıcıya DustFX yazılımını kişisel bilgisayarlarında ticari 
-olmayan amaçlarla, GPU ve ekran parametrelerini optimize etmek amacıyla 
-kullanması için kişisel, münhasır olmayan, devredilemez bir kullanım lisansı verir.
+- DustFX NEVER collects, logs, monitors, stores, or transmits your personal 
+  data, keystrokes, screen captures, active window titles, or private files.
+- The Software only communicates via secure HTTPS requests with the official 
+  GitHub Releases API for automatic update checks.
 
-2. GİZLİLİK VE VERİ GÜVENLİĞİ
------------------------------
-- DustFX, kullanıcıların kişisel bilgilerini, ekran görüntülerini, klavye 
-  girdilerini veya dosya içeriklerini ASLA toplamaz, kaydetmez veya üçüncü 
-  taraflarla paylaşmaz.
-- Yazılım yalnızca yeni sürüm kontrolü amacıyla GitHub Releases API'sine 
-  anonim HTTPS istekleri gönderir.
+3. DISCLAIMER OF WARRANTIES & LIABILITY
+---------------------------------------
+- DustFX utilizes Windows DWM, GDI SetDeviceGammaRamp, and GPU hardware color 
+  matrices.
+- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+  IMPLIED. IN NO EVENT SHALL DUST STUDIO BE LIABLE FOR ANY CLAIM, DAMAGES, OR 
+  HARDWARE/DISPLAY INCOMPATIBILITIES.
+- Users may immediately reset all display settings back to standard Windows 
+  defaults at any time by pressing F10 or using the reset button in the UI.
 
-3. SORUMLULUK REDDİ (DISCLAIMER)
---------------------------------
-- DustFX, Windows DWM ve GPU donanım renk rampalarını (GammaRamp) ve donanım 
-  keskinleştirme filtrelerini kullanır.
-- Yazılım "OLDUĞU GİBİ" (AS IS) sağlanmaktadır. Donanım uyumsuzlukları veya 
-  ekran renk kalibrasyonlarından doğabilecek göz yorgunluğu ya da oyun 
-  deneyimindeki farklılıklardan ötürü Dust Studio sorumlu tutulamaz.
-- Kullanıcı dilediği an F10 tuşuna basarak ekran ayarlarını varsayılan Windows 
-  değerlerine döndürebilir.
+4. UPDATES & MODIFICATIONS
+--------------------------
+Dust Studio reserves the right to release updates, patches, and modifications 
+to improve stability, security, and feature performance.
 
-4. GÜNCELLEMELER VE DEĞİŞİKLİKLER
----------------------------------
-Dust Studio, yazılımın kararlılığını, güvenliğini ve performansını artırmak 
-amacıyla güncellemeler yayınlama ve bu sözleşme koşullarını güncelleme 
-hakkını saklı tutar.
-
-5. İLETİŞİM VE DESTEK
----------------------
-Geri bildirim, hata bildirimi ve destek için:
-Web: https://dust-studio.com
+5. CONTACT & SUPPORT
+--------------------
+For feedback, bug reports, and community profiles:
+Website: https://dust-studio.com
 GitHub: https://github.com/Dust-exe/DustFX
+
+================================================================================
+           TÜRKÇE SON KULLANICI LİSANS SÖZLEŞMESİ (EULA ÖZETİ)
+================================================================================
+Lütfen DustFX ("Yazılım") uygulamasını kullanmadan önce bu sözleşmeyi okuyunuz. 
+Yazılımı kurarak aşağıdaki koşulları kabul etmiş sayılırsınız:
+
+1. LİSANS: Dust Studio, kullanıcıya kişisel ve ticari olmayan kullanım için 
+   devredilemez bir kullanım lisansı verir.
+2. GİZLİLİK: DustFX kişisel verilerinizi, ekran görüntülerinizi veya klavye 
+   girdilerinizi ASLA toplamaz ve kaydetmez. Yalnızca güncelleme kontrolü 
+   amacıyla GitHub Releases API'sine anonim HTTPS isteği gönderir.
+3. SORUMLULUK REDDİ: Yazılım "OLDUĞU GİBİ" sağlanmaktadır. Dilediğiniz an F10 
+   tuşuna basarak tüm ekran ayarlarını varsayılan Windows ayarlarına döndürebilirsiniz.
+4. DESTEK: https://dust-studio.com | https://github.com/Dust-exe/DustFX
 ================================================================================

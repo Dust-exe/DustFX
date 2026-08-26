@@ -1,106 +1,145 @@
 # 🎮 DUSTFX — GPU Display & DCCW Gamma Optimizer
 
-> **Yüksek Performanslı GPU Ekran Filtreleme, DCCW Gama Boost, Digital Vibrance, PvP Özel Nişangah & GitHub Otomatik Güncelleme Takip Sistemi**
+> **High-Performance Hardware GPU Display Calibration, DCCW Gamma Boost, Digital Vibrance, PvP Crosshair Overlay Engine & Auto-Update System**
 
 [![Release](https://img.shields.io/badge/Release-v1.2.1-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
+[![License](https://img.shields.io/badge/License-MIT%20%2F%20Proprietary-blue?style=for-the-badge)](LICENSE.txt)
 [![Tech](https://img.shields.io/badge/C%2B%2B20-React%20%2F%20Tailwind-purple?style=for-the-badge)](https://dust-studio.com)
 [![Status](https://img.shields.io/badge/DirectX%20%2F%20NVAPI-Zero--Lag-fuchsia?style=for-the-badge)](https://dust-studio.com)
 
----
-
-## ✨ Temel Özellikler
-
-### 1. ⚡ Donanım Seviyesi GPU & DCCW Gama Kontrolü
-- **DCCW Gama Boost (0.5x - 3.0x):** Windows GDI GammaRamp ve donanım renk rampaları ile gecikmesiz gece aydınlatması.
-- **Gelişmiş CAS Keskinleştirme (Unsharp LUT):** Düşman silüetlerini ve uzaktaki hedefleri belirginleştiren çok bantlı keskinleştirme filtresi.
-- **Gölge Detay Kurtarma (Toe Curve):** Karanlık mağara ve tünellerde karanlık alan detaylarını açığa çıkarma.
-- **Kelvin Renk Sıcaklığı (2700K - 10000K):** Gece göz yorgunluğunu önleyen sıcak filtre veya rekabetçi soğuk mavi ayarı.
-- **Digital Vibrance (%0 - %100):** Donanım seviyesinde renk canlılığı.
-- **RGB Bağımsız Kanalları:** Kırmızı, Yeşil ve Mavi renk kanallarını ayrı ayrı kalibre edebilme.
-
-### 2. 🎯 PvP Özel Nişangah (Crosshair Overlay)
-- Ekranın tam merkezine harici, saydam ve FPS düşürmeyen donanım nişangahı (`Alt + Z`).
-- Nokta, Artı (+), Daire (O) ve Açık Artı stilleri.
-- 6 farklı neon renk seçeneği ve dinamik boyut ayarı.
-
-### 3. 🤖 Akıllı Oyun Algılama & Alt+Tab Sıfırlama
-- Rekabetçi oyunlar ve 3D uygulamalar açıldığında profilin otomatik devreye girmesi.
-- Masaüstüne dönüldüğünde (Alt+Tab) veya oyundan çıkıldığında ayarları otomatik olarak varsayılan Windows değerlerine çekme (göz yorgunluğunu önler).
-
-### 4. 🌙 Hazır Ekran Profilleri & Topluluk Paylaşımı
-- **🌙 Gece Görüşü Boost:** Karanlık haritalarda, gece operasyonlarında ve binaların içini aydınlatır.
-- **🕳️ Mağara Parlatıcı Modu:** Maksimum gama (2.5x) ve gölge detayı.
-- **🎯 PVP Netlik & Kontrast:** Rekabetçi oyunlar için düşman silüeti keskinleştirici.
-- **☀️ Gündüz Canlılık Modu:** Sinematik %80 renk doygunluğu.
-- **👁️ Göz Dinlendirme Modu:** Mavi ışık kıran sıcak gece filtresi.
-- **Topluluk İçe/Dışa Aktarma:** Tek tıkla JSON formatında profil paylaşma.
-
-### 5. 🔄 GitHub Otomatik Güncelleme Takibi
-- Arka planda GitHub Releases API (`Dust-exe/DustFX`) üzerinden otomatik versiyon kontrolü.
-- Yeni sürüm yayınlandığında arayüzde ve oyun içi OSD bildiriminde anında uyarı.
-- Tek tıkla doğrudan `.exe` indirme ve sürüm notlarını inceleme.
-
-### 6. 🖥️ Çoklu Monitör Bağımsız Yönetimi
-- Tüm monitörleri senkronize yönetme veya yalnızca ana oyun monitörüne uygulama seçeneği.
+[English](#-key-features) | [Türkçe](#-türkçe-kullanım-kılavuzu)
 
 ---
 
-## ⌨️ Tuş Atamaları (Default Hotkeys)
+## ✨ Key Features
 
-| Tuş | Eylem | Açıklama |
+### 1. ⚡ Hardware-Level GPU & DCCW Gamma Control
+- **DCCW Gamma Boost (0.5x - 3.0x):** Zero-latency night vision lighting powered by Windows GDI GammaRamp and direct hardware color ramps.
+- **Enhanced CAS Sharpness (Unsharp Mask LUT):** Frequency-separated multi-band sharpening that highlights enemy silhouettes and distant targets.
+- **Shadow Detail Recovery (Toe Curve):** Lifts dark shadows in tunnels, caves, and dark buildings without washing out highlight contrast (%0 - %100).
+- **Kelvin Color Temperature (2700K - 10000K):** Tanner Helland physical color temperature mapping for anti-fatigue warm night filters or icy competitive blue tints.
+- **Digital Vibrance (%0 - %100):** Hardware saturation matrix boosting vibrant game textures and enemy outlines.
+- **Independent RGB Calibration:** Fine-tune Red, Green, and Blue channels separately.
+
+### 2. 🎯 PvP Crosshair Overlay Engine
+- **Pixel-Perfect Center Lock:** Lightweight 200x200 transparent, click-through, topmost hardware overlay (`Alt + Z`).
+- **8 Distinct Shapes:** Dot, Cross (+), T-Cross, Gap-Cross, X-Cross, Circle (O), Cross-Dot, and Square.
+- **Full Customization:** Size (2-40px), thickness (1-10px), center gap (0-30px), center dot size, black outline, custom opacity, and RGB neon colors.
+
+### 3. 🤖 Intelligent Game Detection & Alt+Tab Auto-Reset
+- Automatically engages designated profiles when games launch.
+- Automatically resets screen colors back to standard Windows defaults on Alt+Tab or game exit to prevent eye strain.
+
+### 4. 🌙 Preset Library & Community Profiles
+- **🌙 Night Vision Boost:** Maximum visibility for nighttime tactical operations and dense shadows.
+- **🕳️ Cave Illuminator:** Ultra-high 2.5x gamma with deep shadow recovery.
+- **🎯 PvP Crisp & Contrast:** Sharp enemy silhouette clarity for competitive shooters (CS2, Valorant, Rust, Tarkov).
+- **☀️ Daylight Vivid:** Cinematic 80% saturation boost.
+- **👁️ Eye Care Mode:** Gentle warm night filter reducing blue light.
+- **Community Share Codes (DUST-COLOR):** One-click import/export of color profile configurations.
+
+### 5. 🔄 GitHub Direct Auto-Updater
+- Checks the official `Dust-exe/DustFX` GitHub Releases API in the background.
+- "Update Now & Restart" button seamlessly installs updates directly from GitHub.
+
+### 6. 🖥️ Multi-Monitor Management
+- Synchronize all displays or apply calibrations independently to your primary gaming monitor.
+
+---
+
+## ⌨️ Default Keyboard Shortcuts
+
+| Hotkey | Action | Description |
 |---|---|---|
-| **F11** | MAX DCCW GAMA | Anında 2.5x Gama Boost uygular / kapatır |
-| **F12** | Vibrance Toggle | %75 Canlılık açar / kapatır |
-| **F10** | Hızlı Sıfırla | Varsayılan Windows renk ayarlarına döner |
-| **Alt + Z** | Crosshair Toggle | PvP Nişangahını açar / kapatır |
-| **Alt + X** | DustFX HUD | Oyun içi OSD durum bildirimini gösterir |
+| **F11** | MAX DCCW GAMMA | Instantly toggles 2.5x Gamma Boost on/off |
+| **F12** | Vibrance Toggle | Instantly toggles 75% Digital Vibrance |
+| **F10** | Quick Reset | Resets all display settings to Windows defaults |
+| **Alt + Z** | Crosshair Toggle | Turns on-screen PvP crosshair overlay on/off |
+| **Alt + X** | DustFX HUD | Triggers in-game OSD toast notification |
 
 ---
 
-## 🏗️ Mimari & Proje Yapısı
+## 🏗️ Architecture & Project Structure
 
 ```
 DustFX/
-├── CMakeLists.txt              # C++20 Derleme Yapılandırması
+├── CMakeLists.txt              # C++20 Build Configuration
+├── LICENSE.txt                 # End-User License Agreement (English & Türkçe)
 ├── src/
-│   ├── main.cpp                # WinMain, System Tray & Edge App Host
+│   ├── main.cpp                # WinMain, Tray Icon, Hotkeys & Edge App Host
 │   ├── core/
-│   │   ├── common.h            # Veri modelleri & Tanımlar
-│   │   ├── app/                # DustFxApp ana yaşam döngüsü
-│   │   ├── gpu/                # Donanım GPU & GDI Gama kontrolcüsü
-│   │   ├── display/            # Monitör tarama & multi-display
-│   │   ├── profile/            # Profil yöneticisi & JSON sync
-│   │   ├── hotkey/             # Global asenkron hotkey dinleyicisi
-│   │   ├── process/            # Oyun algılama & foreground hook
-│   │   ├── config/             # Ayar dosyası yöneticisi
+│   │   ├── common.h            # Data structures & settings definitions
+│   │   ├── app/                # Main application lifecycle
+│   │   ├── gpu/                # Hardware GPU & GDI Gamma controller
+│   │   ├── display/            # Monitor enumeration & multi-display handling
+│   │   ├── profile/            # Game profile manager & JSON persistence
+│   │   ├── hotkey/             # Global async hotkey listener
+│   │   ├── process/            # Process watcher & foreground window detection
+│   │   ├── config/             # Configuration storage
 │   │   └── updater/            # GitHub Releases auto-updater
-│   ├── overlay/                # Oyun içi OSD & Toast bildirimleri
-│   └── server/                 # Gömülü HTTP UI Server (Port 19840)
-└── web/                        # React + TypeScript + Vite + Tailwind UI
+│   ├── overlay/                # Zero-lag crosshair & OSD toast engine
+│   └── server/                 # Embedded HTTP UI Server (127.0.0.1:19840)
     ├── src/
-    │   ├── App.tsx             # Ana Glassmorphism Panel
-    │   ├── api.ts              # Backend REST API istemcisi
-    │   └── components/         # Sliderlar, Profiller, Monitör, Hotkeys, Güncelleme
-    └── dist/                   # Derlenmiş üretim web varlıkları
+    │   ├── App.tsx             # Main Glassmorphism Dashboard
+    │   ├── api.ts              # Backend REST API client
+    │   └── components/         # Sliders, Profiles, Crosshair, Monitors, Updates
+    └── dist/                   # Bundled production web assets
 ```
 
 ---
 
-## 🚀 Derleme & Çalıştırma
+## 🚀 Building & Compilation
 
-### C++ Native Uygulama Derleme:
+### Build C++ Windows Executable (MinGW-w64):
 ```bash
-cmake -B build -S .
-cmake --build build --config Release
+x86_64-w64-mingw32-g++ -std=c++20 -O3 -mwindows \
+  -DDUSTFX_WIN32 -DWIN32_LEAN_AND_MEAN \
+  -DDUSTFX_VERSION_STRING='"1.2.1"' \
+  -I src -I include \
+  src/main.cpp src/core/gpu/gpu_controller.cpp \
+  src/core/display/monitor_manager.cpp src/core/profile/profile_manager.cpp \
+  src/core/hotkey/hotkey_manager.cpp src/core/process/process_watcher.cpp \
+  src/core/config/settings_manager.cpp src/core/updater/auto_updater.cpp \
+  src/core/app/dustfx_app.cpp src/overlay/overlay_toast.cpp \
+  src/server/http_server.cpp resources/dustfx_rc.o \
+  -lws2_32 -lgdi32 -luser32 -lshell32 -lole32 -lwininet -lpthread \
+  -static -static-libgcc -static-libstdc++ \
+  -Wl,--nxcompat -Wl,--dynamicbase -Wl,--high-entropy-va \
+  -o DustFX.exe
 ```
 
-### Web Arayüzü Geliştirme:
+### Build Web Frontend:
 ```bash
 cd web
 npm install
 npm run build
 ```
 
+### Build Windows NSIS Installer:
+```bash
+makensis installer.nsi
+```
+
 ---
+
+## 🇹🇷 Türkçe Kullanım Kılavuzu
+
+DustFX, Windows DWM ve ekran kartı renk rampalarını doğrudan kontrol ederek sıfır gecikmeli ekran kalibrasyonu, gece görüşü (DCCW Gama), renk doygunluğu (Digital Vibrance) ve şeffaf nişangah (Crosshair Overlay) sağlayan açık kaynaklı bir masaüstü aracıdır.
+
+### 🌟 Öne Çıkan Özellikler:
+1. **DCCW Gama & Gece Görüşü (`F11`)**: Tek tuşla anında 2.5x parlaklık artışı; zifiri karanlık yerlerde düşman silüetlerini görünür kılar.
+2. **Gelişmiş CAS Keskinleştirme (Unsharp LUT)**: Uzaktaki hedefleri ve çalı/gölge arkasındaki oyuncuları belirginleştirir.
+3. **Gölge Detay Kurtarma (%0 - %100)**: Karanlık alanları açarken gökyüzü ve tepe ışıklarını bozmaz.
+4. **Kelvin Renk Sıcaklığı (2700K - 10000K)**: Gece göz dinlendirici sıcak ton veya rekabetçi buz mavisi tonlama.
+5. **PvP Donanım Nişangahı (`Alt + Z`)**: Ekranın tam merkezine kilitlenen 8 farklı stil ve neon renk seçeneği.
+6. **Otomatik Güncelleme**: Uygulama içinden tek tıkla GitHub üzerinden doğrudan güncelleme.
+7. **Hızlı Sıfırlama (`F10`)**: Anında varsayılan Windows renk ayarlarına dönüş.
+
+---
+
+## 📄 License & Publisher
+- **Publisher**: [Dust Studio](https://dust-studio.com)
+- **Repository**: [Dust-exe/DustFX](https://github.com/Dust-exe/DustFX)
+- Licensed under the [EULA / Terms](LICENSE.txt). All rights reserved.
 
 <sub>Engineered by **dust.exe** • [dust-studio.com](https://dust-studio.com/)</sub>

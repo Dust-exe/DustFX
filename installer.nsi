@@ -28,14 +28,18 @@ UninstallIcon "app.ico"
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !define MUI_FINISHPAGE_RUN "$INSTDIR\DustFX.exe"
-!define MUI_FINISHPAGE_RUN_TEXT "DustFX'i Başlat"
+!define MUI_FINISHPAGE_RUN_TEXT "Launch DustFX"
 !insertmacro MUI_PAGE_FINISH
 
 ; Uninstaller Pages
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
 
+; Languages (English primary, Turkish option)
+!insertmacro MUI_LANGUAGE "English"
 !insertmacro MUI_LANGUAGE "Turkish"
+
+!insertmacro MUI_RESERVEFILE_LANGDLL
 
 Function .onInit
   ; Terminate any existing running DustFX process before installing
