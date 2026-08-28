@@ -75,6 +75,7 @@ export function App() {
   settingsRef.current = settings;
 
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Load initial data
   useEffect(() => {
@@ -112,7 +113,7 @@ export function App() {
     return () => clearInterval(updateInterval);
   }, []);
 
-  // Apply settings with 80ms debounce to prevent API flooding during fast slider drags
+  // Apply settings with 16ms debounce to prevent API flooding during fast slider drags
   const handleSettingsChange = useCallback((patch: Partial<DisplaySettings>) => {
     setSettings((prev) => {
       const next = { ...prev, ...patch };
@@ -122,8 +123,13 @@ export function App() {
         clearTimeout(debounceTimerRef.current);
       }
       debounceTimerRef.current = setTimeout(() => {
-        api.applySettings(next);
-      }, 80);
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+        api.applySettings(next, controller.signal).catch(() => {});
+      }, 16);
 
       return next;
     });
