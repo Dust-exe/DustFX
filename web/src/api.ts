@@ -224,13 +224,17 @@ export const api = {
     }
   },
 
-  async downloadAndApplyUpdate(): Promise<{ success: boolean; error?: string; version?: string }> {
+  async downloadAndApplyUpdate(releaseInfo?: { downloadUrl?: string; version?: string; tagName?: string; htmlUrl?: string }): Promise<{ success: boolean; error?: string; version?: string }> {
     try {
-      const res = await fetch(`${API_BASE}/updater/download-and-apply`, { method: 'POST' });
-      if (!res.ok) throw new Error('Download request failed');
+      const res = await fetch(`${API_BASE}/updater/download-and-apply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(releaseInfo ?? {}),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
-    } catch {
-      return { success: false, error: 'Network error' };
+    } catch (e) {
+      return { success: false, error: `Network error: ${e}` };
     }
   },
 

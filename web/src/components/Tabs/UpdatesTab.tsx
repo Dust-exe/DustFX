@@ -23,15 +23,20 @@ export const UpdatesTab: React.FC<UpdatesTabProps> = ({ releaseInfo, onCheckAgai
     setUpdateStatus('GitHub üzerinden yeni sürüm indiriliyor...');
 
     try {
-      const res = await api.downloadAndApplyUpdate();
+      const res = await api.downloadAndApplyUpdate({
+        downloadUrl: releaseInfo.downloadUrl,
+        version: releaseInfo.latestVersion,
+        tagName: releaseInfo.tagName,
+        htmlUrl: releaseInfo.htmlUrl,
+      });
       if (res.success) {
-        setUpdateStatus('İndirme tamamlandı! Eski dosyalar temizleniyor ve uygulama yeniden başlatılıyor...');
+        setUpdateStatus('✅ İndirme tamamlandı! Kurulum başlatılıyor ve uygulama yeniden başlatılıyor...');
       } else {
         setUpdateError(res.error || 'Güncelleme uygulanamadı. Manuel indirmeyi deneyin.');
         setUpdating(false);
       }
-    } catch {
-      setUpdateError('Güncelleme sunucusuna ulaşılamadı. Lütfen bağlantınızı kontrol edin.');
+    } catch (e) {
+      setUpdateError(`Güncelleme sunucusuna ulaşılamadı: ${e}`);
       setUpdating(false);
     }
   };

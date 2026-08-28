@@ -497,29 +497,51 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
     // 7b. POST /api/updater/download-and-apply
     if (path == "/api/updater/download-and-apply" && method == "POST") {
         ReleaseInfo info;
-        bool hasUpdate = AutoUpdater::Instance().CheckForUpdate(info);
-        if (!hasUpdate || info.downloadUrl.empty()) {
-            return MakeHttpResponse(200, "OK", "application/json", "{\"success\":false,\"error\":\"No update available\"}");
+
+        // Try to parse downloadUrl + version directly from the POST body (avoids double GitHub API call)
+        bool gotInfoFromBody = false;
+        try {
+            if (!body.empty()) {
+                json jbody = json::parse(body);
+                info.downloadUrl = jbody.value("downloadUrl", "");
+                info.version     = jbody.value("version", "");
+                info.tagName     = jbody.value("tagName", "");
+                info.htmlUrl     = jbody.value("htmlUrl", "");
+                if (!info.downloadUrl.empty()) gotInfoFromBody = true;
+            }
+        } catch (...) {}
+
+        // Fallback: do a fresh GitHub API check
+        if (!gotInfoFromBody) {
+            bool hasUpdate = AutoUpdater::Instance().CheckForUpdate(info);
+            if (!hasUpdate || info.downloadUrl.empty()) {
+                return MakeHttpResponse(200, "OK", "application/json", "{\"success\":false,\"error\":\"No update available or download URL missing\"}");
+            }
         }
+
+        if (info.downloadUrl.empty()) {
+            return MakeHttpResponse(200, "OK", "application/json", "{\"success\":false,\"error\":\"Download URL is empty\"}");
+        }
+
         std::string tempPath;
 #ifdef _WIN32
         char tmpDir[MAX_PATH];
         GetTempPathA(MAX_PATH, tmpDir);
-        tempPath = std::string(tmpDir) + "DustFX_Update.exe";
+        tempPath = std::string(tmpDir) + "DustFX_Setup.exe";
 #else
         tempPath = "/tmp/DustFX_Update";
 #endif
         bool downloaded = AutoUpdater::Instance().DownloadUpdate(info, tempPath);
         if (!downloaded) {
-            return MakeHttpResponse(200, "OK", "application/json", "{\"success\":false,\"error\":\"Download failed\"}");
+            return MakeHttpResponse(200, "OK", "application/json", "{\"success\":false,\"error\":\"Download failed — check internet connection\"}");
         }
         bool applied = AutoUpdater::Instance().ApplyUpdate(tempPath);
-        json res = {
+        json resObj = {
             {"success", applied},
             {"downloadedTo", tempPath},
             {"version", info.version}
         };
-        return MakeHttpResponse(200, "OK", "application/json", res.dump());
+        return MakeHttpResponse(200, "OK", "application/json", resObj.dump());
     }
 
     // 8. POST /api/open-url — Open URL in default system browser
