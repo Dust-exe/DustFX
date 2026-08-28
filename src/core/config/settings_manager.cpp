@@ -61,6 +61,7 @@ bool SettingsManager::LoadFromFile(const std::string& configPath) {
             m_settings.currentSettings.rgbBlue = s.value("rgbBlue", 1.0f);
             m_settings.currentSettings.sharpness = s.value("sharpness", 0.0f);
             m_settings.currentSettings.msaaStrength = s.value("msaaStrength", 0.0f);
+            m_settings.currentSettings.edgeEnhance = s.value("edgeEnhance", 0.0f);
             m_settings.currentSettings.crosshairEnabled = s.value("crosshairEnabled", false);
             m_settings.currentSettings.crosshairStyle = s.value("crosshairStyle", "cross");
             m_settings.currentSettings.crosshairColor = s.value("crosshairColor", "#00FF66");
@@ -117,6 +118,7 @@ bool SettingsManager::SaveToFile(const std::string& configPath) {
             {"rgbBlue", m_settings.currentSettings.rgbBlue},
             {"sharpness", m_settings.currentSettings.sharpness},
             {"msaaStrength", m_settings.currentSettings.msaaStrength},
+            {"edgeEnhance", m_settings.currentSettings.edgeEnhance},
             {"crosshairEnabled", m_settings.currentSettings.crosshairEnabled},
             {"crosshairStyle", m_settings.currentSettings.crosshairStyle},
             {"crosshairColor", m_settings.currentSettings.crosshairColor},
@@ -144,8 +146,11 @@ AppSettings SettingsManager::GetSettings() const {
 }
 
 void SettingsManager::SetSettings(const AppSettings& settings) {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    m_settings = settings;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_settings = settings;
+    }
+    SaveToFile();
 }
 
 DisplaySettings SettingsManager::GetCurrentDisplaySettings() const {
@@ -154,8 +159,11 @@ DisplaySettings SettingsManager::GetCurrentDisplaySettings() const {
 }
 
 void SettingsManager::SetCurrentDisplaySettings(const DisplaySettings& settings) {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    m_settings.currentSettings = settings;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_settings.currentSettings = settings;
+    }
+    SaveToFile();
 }
 
 HotkeyConfig SettingsManager::GetHotkeyConfig() const {
@@ -164,8 +172,11 @@ HotkeyConfig SettingsManager::GetHotkeyConfig() const {
 }
 
 void SettingsManager::SetHotkeyConfig(const HotkeyConfig& config) {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    m_settings.hotkeys = config;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_settings.hotkeys = config;
+    }
+    SaveToFile();
 }
 
 int SettingsManager::GetTargetMonitorIndex() const {
@@ -174,8 +185,11 @@ int SettingsManager::GetTargetMonitorIndex() const {
 }
 
 void SettingsManager::SetTargetMonitorIndex(int index) {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    m_settings.targetMonitorIndex = index;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_settings.targetMonitorIndex = index;
+    }
+    SaveToFile();
 }
 
 } // namespace dustfx

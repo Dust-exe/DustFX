@@ -34,6 +34,7 @@ struct DisplaySettings {
     float colorTemperature = 6500.0f; // 2700K - 10000K
     float shadowDetail = 0.0f;        // 0.0 - 1.0
     float msaaStrength = 0.0f;        // 0.0 - 1.0 (MSAA edge smoothing via DWM matrix)
+    float edgeEnhance = 0.0f;         // 0.0 - 1.0 (Edge contour & silhouette contrast boost)
     
     // PvP Tools
     bool crosshairEnabled = false;

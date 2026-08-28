@@ -265,16 +265,23 @@ bool GpuController::ApplyMagnificationEffect(const DisplaySettings& settings) {
     float bg = inv         * settings.rgbGreen * c;
     float bb = (inv + sat) * settings.rgbBlue  * c;
 
-    // ----- MSAA blend: lerp the matrix towards identity -----
-    // When msaaStrength > 0, off-diagonal elements (cross-channel leakage) are boosted
-    // slightly which softens hard edges in a way analogous to subpixel blending.
-    float msaa = std::clamp(settings.msaaStrength, 0.0f, 1.0f);
-    if (msaa > 0.001f) {
-        float blend = msaa * 0.18f; // subtle – too much looks blurry
-        // Diagonal stays, off-diagonals move toward each other (FXAA-like)
-        rr = rr * (1.0f - blend) + (rr + rg + rb) / 3.0f * blend;
-        gg = gg * (1.0f - blend) + (gr + gg + gb) / 3.0f * blend;
-        bb = bb * (1.0f - blend) + (br + bg + bb) / 3.0f * blend;
+    // ----- Edge & Silhouette Contour Contrast Boost (Outline Sharpness) -----
+    // Amplifies boundary separation between game models and backgrounds by sharpening
+    // diagonal chromatic divergence and suppressing cross-channel muddiness.
+    float edge = std::max(settings.edgeEnhance, settings.msaaStrength);
+    edge = std::clamp(edge, 0.0f, 1.0f);
+    if (edge > 0.001f) {
+        float edgeMultiplier = 1.0f + edge * 0.35f; // Sharpens diagonal distinction
+        float offSuppression = 1.0f - edge * 0.25f; // Reduces edge blending / haze
+        rr *= edgeMultiplier;
+        gg *= edgeMultiplier;
+        bb *= edgeMultiplier;
+        rg *= offSuppression;
+        rb *= offSuppression;
+        gr *= offSuppression;
+        gb *= offSuppression;
+        br *= offSuppression;
+        bg *= offSuppression;
     }
 
     MAGCOLOREFFECT eff = {};

@@ -57,6 +57,12 @@ bool DustFxApp::Initialize() {
     // 6. Overlay & OSD
     OverlayToast::Instance().Initialize();
 
+    // Restore and apply saved settings on startup (Gamma, Crosshair, Vibrance, etc.)
+    DisplaySettings savedSettings = SettingsManager::Instance().GetCurrentDisplaySettings();
+    int targetMon = SettingsManager::Instance().GetTargetMonitorIndex();
+    GpuController::Instance().ApplySettings(savedSettings, targetMon);
+    OverlayToast::Instance().UpdateCrosshair(savedSettings);
+
     // 7. Auto Updater (Watching Dust-exe/DustFX - every 10 minutes)
     AutoUpdater::Instance().Configure("Dust-exe", "DustFX", DUSTFX_VERSION_STRING);
     AutoUpdater::Instance().StartBackgroundChecker(

@@ -234,6 +234,7 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
                 {"colorTemperature", s.colorTemperature},
                 {"shadowDetail", s.shadowDetail},
                 {"msaaStrength", s.msaaStrength},
+                {"edgeEnhance", s.edgeEnhance},
                 {"crosshairEnabled", s.crosshairEnabled},
                 {"crosshairStyle", s.crosshairStyle},
                 {"crosshairColor", s.crosshairColor},
@@ -266,6 +267,7 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
             if (j.contains("colorTemperature")) s.colorTemperature = j["colorTemperature"].get<float>();
             if (j.contains("shadowDetail")) s.shadowDetail = j["shadowDetail"].get<float>();
             if (j.contains("msaaStrength")) s.msaaStrength = j["msaaStrength"].get<float>();
+            if (j.contains("edgeEnhance")) s.edgeEnhance = j["edgeEnhance"].get<float>();
             if (j.contains("crosshairEnabled")) s.crosshairEnabled = j["crosshairEnabled"].get<bool>();
             if (j.contains("crosshairStyle")) s.crosshairStyle = j["crosshairStyle"].get<std::string>();
             if (j.contains("crosshairColor")) s.crosshairColor = j["crosshairColor"].get<std::string>();

@@ -6,15 +6,34 @@ import { CrosshairTab } from './components/Tabs/CrosshairTab';
 import { MonitorsTab } from './components/Tabs/MonitorsTab';
 import { HotkeysTab } from './components/Tabs/HotkeysTab';
 import { UpdatesTab } from './components/Tabs/UpdatesTab';
+import { DustStudioTab } from './components/Tabs/DustStudioTab';
 import { UpdateModal } from './components/UpdateModal';
 import { api } from './api';
 import { AppStatus, DisplaySettings, GameProfile, ReleaseInfo, HotkeyConfig } from './types';
-import { Flame, RotateCcw, Download } from 'lucide-react';
+import { Flame, RotateCcw, Download, Globe } from 'lucide-react';
+import { translations, Language } from './translations';
 
-const CURRENT_VERSION = '1.2.2';
+const CURRENT_VERSION = '1.3.0';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<TabId>('filter');
+  const [lang, setLang] = useState<Language>(() => {
+    try {
+      const savedLang = localStorage.getItem('dustfx_lang');
+      if (savedLang === 'tr' || savedLang === 'en') return savedLang;
+    } catch {}
+    return 'en'; // Default English as requested
+  });
+
+  const t = translations[lang];
+
+  const handleLanguageChange = (newLang: Language) => {
+    setLang(newLang);
+    try {
+      localStorage.setItem('dustfx_lang', newLang);
+    } catch {}
+  };
+
   const [status, setStatus] = useState<AppStatus | null>(null);
   const [profiles, setProfiles] = useState<GameProfile[]>([]);
   const [hotkeys, setHotkeys] = useState<HotkeyConfig>({
@@ -35,6 +54,7 @@ export function App() {
     sharpness: 0.0,
     colorTemperature: 6500,
     shadowDetail: 0.0,
+    edgeEnhance: 0.0,
     crosshairEnabled: false,
     crosshairStyle: 'cross',
     crosshairColor: '#00FF66',
@@ -59,17 +79,23 @@ export function App() {
   // Load initial data
   useEffect(() => {
     async function loadData() {
-      const [st, profs, hk] = await Promise.all([
-        api.getStatus(),
-        api.getProfiles(),
-        api.getHotkeys(),
-      ]);
-      setStatus(st);
-      setProfiles(profs);
-      setHotkeys(hk);
-      setSettings(st.currentSettings);
-      setActiveProfileId(st.activeProfileId);
-      setSelectedMonitorIndex(st.targetMonitorIndex);
+      try {
+        const [st, profs, hk] = await Promise.all([
+          api.getStatus(),
+          api.getProfiles(),
+          api.getHotkeys(),
+        ]);
+        setStatus(st);
+        setProfiles(profs);
+        setHotkeys(hk);
+        if (st.currentSettings) {
+          setSettings(st.currentSettings);
+        }
+        setActiveProfileId(st.activeProfileId);
+        setSelectedMonitorIndex(st.targetMonitorIndex);
+      } catch (err) {
+        console.warn('Initial data load error:', err);
+      }
     }
     loadData();
 
@@ -169,6 +195,7 @@ export function App() {
       sharpness: 0.0,
       colorTemperature: 6500,
       shadowDetail: 0.0,
+      edgeEnhance: 0.0,
       crosshairEnabled: cur.crosshairEnabled,
       crosshairStyle: cur.crosshairStyle,
       crosshairColor: cur.crosshairColor,
@@ -219,7 +246,7 @@ export function App() {
         }}
       />
 
-      {/* Top App Header (With app-titlebar-drag for window move & controls overlay) */}
+      {/* Top App Header */}
       <header className="app-titlebar-drag flex items-center justify-between px-5 h-12 border-b border-purple-500/10 bg-[#08060f]/95 z-20 backdrop-blur-xl">
         {/* Left: Logo + App Name + GPU */}
         <div className="flex items-center gap-3">
@@ -239,31 +266,59 @@ export function App() {
           </span>
         </div>
 
-        {/* Right: Quick Action Controls */}
-        <div className="flex items-center gap-2">
+        {/* Right: Language Switcher + Quick Action Controls */}
+        <div className="flex items-center gap-2.5">
+          {/* EN / TR Language Switcher */}
+          <div className="flex items-center bg-white/5 p-0.5 rounded-xl border border-white/10 text-[11px] font-mono shadow-inner">
+            <button
+              onClick={() => handleLanguageChange('en')}
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                lang === 'en'
+                  ? 'bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white shadow-[0_0_8px_rgba(168,85,247,0.4)]'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+              title="Switch to English"
+            >
+              EN
+            </button>
+            <button
+              onClick={() => handleLanguageChange('tr')}
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                lang === 'tr'
+                  ? 'bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white shadow-[0_0_8px_rgba(168,85,247,0.4)]'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+              title="Türkçe'ye Geç"
+            >
+              TR
+            </button>
+          </div>
+
           <button
             onClick={handleMaxGamma}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white text-[11px] font-bold tracking-wide transition-all shadow-[0_0_12px_rgba(239,68,68,0.3)] active:scale-95"
-            title={`Anlık Maksimum Gama (${hotkeys.maxGammaKey})`}
+            title={`${t.maxGamma} (${hotkeys.maxGammaKey})`}
           >
             <Flame className="w-3 h-3 text-orange-200" />
-            MAX GAMA ({hotkeys.maxGammaKey})
+            {t.maxGamma} ({hotkeys.maxGammaKey})
           </button>
+
           <button
             onClick={handleReset}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 text-[11px] font-medium border border-white/10 transition-all active:scale-95"
-            title={`Varsayılan Renklere Dön (${hotkeys.quickResetKey})`}
+            title={`${t.reset} (${hotkeys.quickResetKey})`}
           >
             <RotateCcw className="w-3 h-3 text-zinc-400" />
-            Sıfırla ({hotkeys.quickResetKey})
+            {t.reset} ({hotkeys.quickResetKey})
           </button>
+
           {releaseInfo?.hasUpdate && (
             <button
               onClick={() => setShowUpdateModal(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.3)]"
             >
               <Download className="w-3 h-3" />
-              Güncelleme (v{releaseInfo.latestVersion})
+              {t.updateAvailable} (v{releaseInfo.latestVersion})
             </button>
           )}
         </div>
@@ -275,12 +330,13 @@ export function App() {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           releaseInfo={releaseInfo}
+          lang={lang}
         />
 
         <main className="flex-1 overflow-y-auto p-6 relative">
           <div className="max-w-5xl mx-auto flex flex-col gap-6">
             {activeTab === 'filter' && (
-              <ScreenFilterTab settings={settings} onChange={handleSettingsChange} />
+              <ScreenFilterTab settings={settings} onChange={handleSettingsChange} lang={lang} />
             )}
             {activeTab === 'profiles' && (
               <ProfilesTab
@@ -293,7 +349,7 @@ export function App() {
               />
             )}
             {activeTab === 'crosshair' && (
-              <CrosshairTab settings={settings} onChange={handleSettingsChange} />
+              <CrosshairTab settings={settings} onChange={handleSettingsChange} lang={lang} />
             )}
             {activeTab === 'monitors' && (
               <MonitorsTab
@@ -319,6 +375,9 @@ export function App() {
                 }}
                 onOpenExternal={openExternal}
               />
+            )}
+            {activeTab === 'dust_studio' && (
+              <DustStudioTab lang={lang} onOpenExternal={openExternal} />
             )}
           </div>
         </main>

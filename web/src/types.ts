@@ -9,7 +9,8 @@ export interface DisplaySettings {
   sharpness: number;
   colorTemperature: number;
   shadowDetail: number;
-  msaaStrength?: number;       // 0.0 - 1.0 (MSAA edge smoothing via DWM)
+  msaaStrength?: number;       // 0.0 - 1.0 (Legacy alias)
+  edgeEnhance?: number;        // 0.0 - 1.0 (Edge contour & silhouette sharpness boost)
   crosshairEnabled: boolean;
   crosshairStyle: 'dot' | 'cross' | 'circle' | 'gap-cross' | 'x-cross' | 't-cross' | 'cross-dot' | 'square';
   crosshairColor: string;
@@ -21,6 +22,20 @@ export interface DisplaySettings {
   crosshairOpacity?: number;
   sniperZoomEnabled?: boolean;
   sniperZoomFactor?: number;
+}
+
+export interface SavedCrosshairPreset {
+  id: string;
+  name: string;
+  createdAt: string;
+  style: 'dot' | 'cross' | 'circle' | 'gap-cross' | 'x-cross' | 't-cross' | 'cross-dot' | 'square';
+  color: string;
+  size: number;
+  thickness: number;
+  gap: number;
+  dotSize: number;
+  outline: number;
+  opacity: number;
 }
 
 export interface GameProfile {

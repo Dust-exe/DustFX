@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Target,
   Sliders,
@@ -13,14 +13,19 @@ import {
   Search,
   X,
   ShieldCheck,
+  Bookmark,
+  Trash2,
+  Save,
 } from 'lucide-react';
-import { DisplaySettings } from '../../types';
+import { DisplaySettings, SavedCrosshairPreset } from '../../types';
+import { translations, Language } from '../../translations';
 
 type CrosshairStyleType = 'dot' | 'cross' | 'circle' | 'gap-cross' | 'x-cross' | 't-cross' | 'cross-dot' | 'square';
 
 interface CrosshairTabProps {
   settings: DisplaySettings;
   onChange: (newSettings: Partial<DisplaySettings>) => void;
+  lang?: Language;
 }
 
 interface CommunityCrosshairPreset {
@@ -124,24 +129,10 @@ const communityCrosshairs: CommunityCrosshairPreset[] = [
     opacity: 1.0,
   },
   {
-    id: 'neon_gap',
-    name: 'Neon Gap Hollow Cross',
-    creator: 'Dust Pro',
-    tag: 'Clarity / Dynamic',
-    style: 'gap-cross',
-    color: '#FF00FF',
-    size: 9,
-    thickness: 2,
-    gap: 6,
-    dotSize: 0,
-    outline: 1,
-    opacity: 1.0,
-  },
-  {
-    id: 'tactical_circle',
-    name: 'Tactical Precision Circle',
-    creator: 'Apex Master',
-    tag: 'Apex Legends / Fast Tracking',
+    id: 'circle_aim',
+    name: 'Neon Circle Holo',
+    creator: 'Rust Combat',
+    tag: 'Close Quarters',
     style: 'circle',
     color: '#00FF66',
     size: 6,
@@ -172,7 +163,6 @@ function parseCrosshairCode(code: string): Partial<DisplaySettings> | null {
   try {
     const trimmed = code.trim();
 
-    // Format 1: DUST-CROSS:style:color:S..:T..:G..:D..:O..:A..
     if (trimmed.startsWith('DUST-CROSS:')) {
       const parts = trimmed.split(':');
       if (parts.length >= 3) {
@@ -214,7 +204,6 @@ function parseCrosshairCode(code: string): Partial<DisplaySettings> | null {
       }
     }
 
-    // Format 2: JSON format
     const parsed = JSON.parse(trimmed);
     return {
       crosshairEnabled: true,
@@ -383,12 +372,56 @@ export const CrosshairSvgRenderer: React.FC<{
   );
 };
 
-export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }) => {
+export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange, lang = 'en' }) => {
+  const t = translations[lang];
   const [copiedCode, setCopiedCode] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showSavePresetModal, setShowSavePresetModal] = useState(false);
+  const [newPresetName, setNewPresetName] = useState('');
   const [importCodeInput, setImportCodeInput] = useState('');
   const [importError, setImportError] = useState('');
   const [searchPreset, setSearchPreset] = useState('');
+
+  // Persistent Custom Saved Crosshairs
+  const [savedPresets, setSavedPresets] = useState<SavedCrosshairPreset[]>(() => {
+    try {
+      const stored = localStorage.getItem('dustfx_custom_crosshairs');
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return [];
+  });
+
+  const savePresetsToStorage = (list: SavedCrosshairPreset[]) => {
+    setSavedPresets(list);
+    try {
+      localStorage.setItem('dustfx_custom_crosshairs', JSON.stringify(list));
+    } catch {}
+  };
+
+  const handleSaveCustomPreset = () => {
+    const name = newPresetName.trim() || `Crosshair #${savedPresets.length + 1}`;
+    const newPreset: SavedCrosshairPreset = {
+      id: `custom_${Date.now()}`,
+      name,
+      createdAt: new Date().toLocaleDateString(),
+      style: (settings.crosshairStyle || 'cross') as CrosshairStyleType,
+      color: settings.crosshairColor || '#00FF66',
+      size: settings.crosshairSize ?? 10,
+      thickness: settings.crosshairThickness ?? 2,
+      gap: settings.crosshairGap ?? 4,
+      dotSize: settings.crosshairDotSize ?? 0,
+      outline: settings.crosshairOutline ?? 1,
+      opacity: settings.crosshairOpacity ?? 1.0,
+    };
+
+    savePresetsToStorage([newPreset, ...savedPresets]);
+    setNewPresetName('');
+    setShowSavePresetModal(false);
+  };
+
+  const handleDeleteCustomPreset = (id: string) => {
+    savePresetsToStorage(savedPresets.filter((p) => p.id !== id));
+  };
 
   const colors = [
     '#00FF66', // Toxic Green
@@ -402,14 +435,14 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
   ];
 
   const styles: Array<{ id: CrosshairStyleType; label: string }> = [
-    { id: 'cross', label: 'Artı (+)' },
-    { id: 'dot', label: 'Nokta' },
-    { id: 't-cross', label: 'T Nişan' },
-    { id: 'gap-cross', label: 'Açık Artı' },
-    { id: 'x-cross', label: 'X Çarpı' },
-    { id: 'circle', label: 'Daire' },
-    { id: 'cross-dot', label: 'Artı + Nokta' },
-    { id: 'square', label: 'Kare' },
+    { id: 'cross', label: lang === 'tr' ? 'Artı (+)' : 'Cross (+)' },
+    { id: 'dot', label: lang === 'tr' ? 'Nokta' : 'Dot' },
+    { id: 't-cross', label: lang === 'tr' ? 'T Nişan' : 'T-Cross' },
+    { id: 'gap-cross', label: lang === 'tr' ? 'Açık Artı' : 'Gap Cross' },
+    { id: 'x-cross', label: lang === 'tr' ? 'X Çarpı' : 'X-Cross' },
+    { id: 'circle', label: lang === 'tr' ? 'Daire' : 'Circle' },
+    { id: 'cross-dot', label: lang === 'tr' ? 'Artı + Nokta' : 'Cross + Dot' },
+    { id: 'square', label: lang === 'tr' ? 'Kare' : 'Square' },
   ];
 
   const currentStyle = (settings.crosshairStyle || 'cross') as CrosshairStyleType;
@@ -452,7 +485,7 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
 
     const parsed = parseCrosshairCode(importCodeInput);
     if (!parsed) {
-      setImportError('Geçersiz veya bozuk crosshair kodu! Lütfen DUST-CROSS kodunu kontrol edin.');
+      setImportError(lang === 'tr' ? 'Geçersiz veya bozuk crosshair kodu!' : 'Invalid or corrupt crosshair code!');
       return;
     }
 
@@ -461,7 +494,7 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
     setImportCodeInput('');
   };
 
-  const handleApplyPreset = (preset: CommunityCrosshairPreset) => {
+  const handleApplyPreset = (preset: CommunityCrosshairPreset | SavedCrosshairPreset) => {
     onChange({
       crosshairEnabled: true,
       crosshairStyle: preset.style,
@@ -475,7 +508,6 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
     });
   };
 
-  // Filtered community presets
   const filteredCommunityPresets = useMemo(() => {
     const q = searchPreset.toLowerCase().trim();
     if (!q) return communityCrosshairs;
@@ -488,25 +520,58 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
   }, [searchPreset]);
 
   return (
-    <div className="flex flex-col gap-6 animate-fadeIn">
+    <div className="flex flex-col gap-6 animate-fadeIn select-none">
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/5">
         <div>
           <h2 className="text-lg font-bold text-white font-mono flex items-center gap-2">
             <Target className="w-5 h-5 text-emerald-400" />
-            Özel PvP Nişangah — Donanım Overlay Motoru
+            {t.crosshairTitle}
           </h2>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Ekranın tam merkezine kilitlenen, tüm oyunların üzerinde çalışan sıfır gecikmeli donanım nişangahı (<strong className="text-white">Alt+Z</strong>).
+            {t.crosshairSubtitle}
           </p>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-mono text-zinc-400 hidden sm:inline">Kısayol: <strong className="text-emerald-400">Alt+Z</strong></span>
-          <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-2xl bg-white/5 border border-white/10">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={handleCopyShareCode}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 text-xs font-semibold border border-white/10 transition-all active:scale-95"
+            title={t.copyShareCode}
+          >
+            {copiedCode ? (
+              <>
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-emerald-300">{lang === 'tr' ? 'Kopyalandı!' : 'Copied!'}</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5 text-zinc-400" />
+                <span>{t.copyShareCode}</span>
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 text-xs font-semibold border border-white/10 transition-all active:scale-95"
+          >
+            <Upload className="w-3.5 h-3.5 text-cyan-400" />
+            <span>{t.importShareCode}</span>
+          </button>
+
+          <button
+            onClick={() => setShowSavePresetModal(true)}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white text-xs font-bold shadow-[0_0_12px_rgba(168,85,247,0.4)] transition-all active:scale-95"
+          >
+            <Save className="w-3.5 h-3.5" />
+            <span>{t.savePresetBtn}</span>
+          </button>
+
+          <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-white/5 border border-white/10">
             <span className={`text-xs font-mono font-bold ${settings.crosshairEnabled ? 'text-emerald-400' : 'text-zinc-400'}`}>
-              {settings.crosshairEnabled ? 'NİŞANGAH AÇIK' : 'NİŞANGAH KAPALI'}
+              {settings.crosshairEnabled ? t.crosshairActive : t.crosshairInactive}
             </span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -528,15 +593,15 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
           <div className="glass-card p-5 rounded-3xl border border-purple-500/15 flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider font-mono">
-                Nişangah Deseni:
+                {t.stylesTitle}:
               </span>
               <button
                 onClick={handleResetCrosshair}
                 className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-zinc-200 transition-colors"
-                title="Nişangahı Varsayılana Sıfırla"
+                title={lang === 'tr' ? 'Varsayılana Sıfırla' : 'Reset Crosshair'}
               >
                 <RotateCcw className="w-3 h-3" />
-                Sıfırla
+                {t.reset}
               </button>
             </div>
             <div className="grid grid-cols-4 gap-2">
@@ -572,13 +637,13 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
           <div className="glass-card p-5 rounded-3xl border border-purple-500/15 flex flex-col gap-4">
             <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider font-mono flex items-center gap-2">
               <Sliders className="w-3.5 h-3.5 text-fuchsia-400" />
-              Detaylı Çizgi & Boyut Ayarları:
+              {lang === 'tr' ? 'Detaylı Çizgi & Boyut Ayarları:' : 'Tuning Sliders & Geometry:'}
             </span>
 
             {/* 1. Length / Size */}
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-zinc-300 font-medium">Uzunluk (Çizgi Boyu):</span>
+                <span className="text-zinc-300 font-medium">{t.size}:</span>
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => handleStep('crosshairSize', -1, 2, 40)}
@@ -608,7 +673,7 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
             {/* 2. Thickness */}
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-zinc-300 font-medium">Kalınlık (Genişlik):</span>
+                <span className="text-zinc-300 font-medium">{t.thickness}:</span>
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => handleStep('crosshairThickness', -1, 1, 10)}
@@ -638,7 +703,7 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
             {/* 3. Gap */}
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-zinc-300 font-medium">Merkez Boşluğu (Gap):</span>
+                <span className="text-zinc-300 font-medium">{t.gap}:</span>
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => handleStep('crosshairGap', -1, 0, 30)}
@@ -668,7 +733,7 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
             {/* 4. Center Dot */}
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-zinc-300 font-medium">Merkez Noktası:</span>
+                <span className="text-zinc-300 font-medium">{t.dotSize}:</span>
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => handleStep('crosshairDotSize', -1, 0, 10)}
@@ -677,7 +742,7 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
                     <Minus className="w-3 h-3" />
                   </button>
                   <span className="font-mono font-bold text-emerald-400 w-10 text-center">
-                    {dotSize === 0 ? 'Kapalı' : `${dotSize}px`}
+                    {dotSize === 0 ? (lang === 'tr' ? 'Kapalı' : 'Off') : `${dotSize}px`}
                   </span>
                   <button
                     onClick={() => handleStep('crosshairDotSize', 1, 0, 10)}
@@ -701,9 +766,9 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
             <div className="grid grid-cols-2 gap-4 pt-2 border-t border-white/5">
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-zinc-300 font-medium">Siyah Dış Hat:</span>
+                  <span className="text-zinc-300 font-medium">{t.outline}:</span>
                   <span className="font-mono font-bold text-emerald-400">
-                    {outline === 0 ? 'Yok' : `${outline}px`}
+                    {outline === 0 ? (lang === 'tr' ? 'Yok' : 'None') : `${outline}px`}
                   </span>
                 </div>
                 <input
@@ -718,7 +783,7 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
 
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-zinc-300 font-medium">Opaklık / Netlik:</span>
+                  <span className="text-zinc-300 font-medium">{t.opacity}:</span>
                   <span className="font-mono font-bold text-emerald-400">
                     %{(opacity * 100).toFixed(0)}
                   </span>
@@ -735,6 +800,87 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
               </div>
             </div>
           </div>
+
+          {/* User's Saved Named Crosshairs Section */}
+          <div className="glass-card p-5 rounded-3xl border border-purple-500/20 bg-[#0e0a1a]/60 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
+                <Bookmark className="w-3.5 h-3.5 text-fuchsia-400" />
+                {t.savedPresetsHeader} ({savedPresets.length})
+              </span>
+              <button
+                onClick={() => setShowSavePresetModal(true)}
+                className="text-[11px] font-bold text-fuchsia-400 hover:text-fuchsia-300 flex items-center gap-1 transition-colors"
+              >
+                <Plus className="w-3 h-3" />
+                {lang === 'tr' ? 'Yeni Ekle' : 'Save Current'}
+              </button>
+            </div>
+
+            {savedPresets.length === 0 ? (
+              <p className="text-xs text-zinc-500 italic py-2">
+                {t.noSavedPresets}
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[200px] overflow-y-auto pr-1">
+                {savedPresets.map((preset) => (
+                  <div
+                    key={preset.id}
+                    onClick={() => handleApplyPreset(preset)}
+                    className="p-2.5 rounded-2xl bg-white/[0.04] hover:bg-purple-950/40 border border-white/5 hover:border-purple-500/40 cursor-pointer flex items-center justify-between gap-2.5 transition-all group"
+                  >
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                      <div className="w-8 h-8 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center p-0.5 flex-shrink-0">
+                        <CrosshairSvgRenderer
+                          style={preset.style}
+                          color={preset.color}
+                          size={preset.size}
+                          thickness={preset.thickness}
+                          gap={preset.gap}
+                          dotSize={preset.dotSize}
+                          outline={preset.outline}
+                          opacity={preset.opacity}
+                          width={28}
+                          height={28}
+                        />
+                      </div>
+                      <div className="truncate">
+                        <div className="text-xs font-bold text-white group-hover:text-fuchsia-300 transition-colors truncate">
+                          {preset.name}
+                        </div>
+                        <div className="text-[10px] text-zinc-500 font-mono">
+                          {preset.style} • {preset.createdAt}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleApplyPreset(preset);
+                        }}
+                        className="px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/20"
+                        title={t.applyPreset}
+                      >
+                        {t.applyPreset}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteCustomPreset(preset.id);
+                        }}
+                        className="p-1 rounded-lg bg-white/5 hover:bg-red-500/20 text-zinc-500 hover:text-red-400 transition-colors"
+                        title={t.deletePreset}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right Column: Live Interactive Canvas + Community Presets (5 cols) */}
@@ -742,7 +888,7 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
           {/* Color Palette */}
           <div className="glass-card p-5 rounded-3xl border border-purple-500/15 flex flex-col gap-3">
             <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider font-mono">
-              Neon Renk:
+              {t.colorsTitle}:
             </span>
             <div className="flex items-center gap-2.5 flex-wrap">
               {colors.map((c) => (
@@ -775,14 +921,14 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider font-mono flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                Canlı Önizleme:
+                {t.previewTitle}:
               </span>
               <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
                 settings.crosshairEnabled
                   ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                   : 'bg-zinc-800 text-zinc-500'
               }`}>
-                {settings.crosshairEnabled ? '● Ekranda Açık' : '○ Kapalı'}
+                {settings.crosshairEnabled ? `● ${t.crosshairActive}` : `○ ${t.crosshairInactive}`}
               </span>
             </div>
 
@@ -817,7 +963,7 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider font-mono flex items-center gap-1.5">
                 <Target className="w-3.5 h-3.5 text-cyan-400" />
-                Popüler Oyuncu Nişangahları:
+                {t.communityHeader}:
               </span>
             </div>
 
@@ -828,7 +974,7 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
                 type="text"
                 value={searchPreset}
                 onChange={(e) => setSearchPreset(e.target.value)}
-                placeholder="Oyuncu veya stil ara (TenZ, Scream, CS2...)"
+                placeholder={t.searchPresetsPlaceholder}
                 className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-black/40 border border-white/10 text-[11px] text-white outline-none focus:border-cyan-500 placeholder:text-zinc-500"
               />
             </div>
@@ -873,7 +1019,7 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
                     }}
                     className="px-2.5 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/30 text-cyan-300 text-[10px] font-bold border border-cyan-500/20"
                   >
-                    Uygula
+                    {t.applyPreset}
                   </button>
                 </div>
               ))}
@@ -881,6 +1027,72 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
           </div>
         </div>
       </div>
+
+      {/* Save Custom Preset Modal */}
+      {showSavePresetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="w-full max-w-md glass-panel p-6 rounded-3xl border border-purple-500/30 flex flex-col gap-4 shadow-2xl animate-fadeIn relative">
+            <button
+              onClick={() => setShowSavePresetModal(false)}
+              className="absolute top-5 right-5 w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <h3 className="text-base font-bold text-white font-mono flex items-center gap-2">
+              <Bookmark className="w-5 h-5 text-fuchsia-400" />
+              {t.savePresetModalTitle}
+            </h3>
+
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-black/50 border border-white/10">
+              <CrosshairSvgRenderer
+                style={currentStyle}
+                color={settings.crosshairColor}
+                size={size}
+                thickness={thickness}
+                gap={gap}
+                dotSize={dotSize}
+                outline={outline}
+                opacity={opacity}
+                width={40}
+                height={40}
+              />
+              <div className="text-xs text-zinc-300 font-mono">
+                {currentStyle} • {settings.crosshairColor} • {size}px
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-zinc-300 font-mono">
+                {lang === 'tr' ? 'Nişangah İsmi:' : 'Preset Name:'}
+              </label>
+              <input
+                type="text"
+                value={newPresetName}
+                onChange={(e) => setNewPresetName(e.target.value)}
+                placeholder={t.presetNamePlaceholder}
+                autoFocus
+                className="w-full p-3 rounded-2xl bg-black/50 border border-white/15 text-xs text-white outline-none focus:border-fuchsia-500"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-white/5">
+              <button
+                onClick={() => setShowSavePresetModal(false)}
+                className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs text-zinc-300"
+              >
+                {t.cancel}
+              </button>
+              <button
+                onClick={handleSaveCustomPreset}
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-xs font-bold text-white shadow-lg active:scale-95"
+              >
+                {t.savePresetBtn}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Import Modal */}
       {showImportModal && (
@@ -895,17 +1107,17 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
 
             <h3 className="text-base font-bold text-white font-mono flex items-center gap-2">
               <Upload className="w-5 h-5 text-emerald-400" />
-              Crosshair Kodunu İçe Aktar
+              {t.importModalTitle}
             </h3>
             <p className="text-xs text-zinc-400">
-              Diğer oyunculardan aldığınız <strong className="text-white">DUST-CROSS</strong> kodunu buraya yapıştırın.
+              {t.importModalDesc}
             </p>
 
             <textarea
               rows={3}
               value={importCodeInput}
               onChange={(e) => setImportCodeInput(e.target.value)}
-              placeholder="Örn: DUST-CROSS:cross:#00FF66:S10:T2:G4:D0:O1:A100"
+              placeholder="e.g. DUST-CROSS:cross:#00FF66:S10:T2:G4:D0:O1:A100"
               className="w-full p-3 rounded-2xl bg-black/50 border border-white/10 text-xs font-mono text-zinc-200 outline-none focus:border-emerald-500 resize-none"
             />
 
@@ -917,7 +1129,7 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
 
             <div className="flex items-center gap-2 text-[10px] text-zinc-400 bg-emerald-950/20 p-2.5 rounded-xl border border-emerald-500/20 font-mono">
               <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-              <span>Güvenlik Doğrulaması: Kod parametreleri otomatik olarak güvenli aralıklara sınırlandırılır.</span>
+              <span>{lang === 'tr' ? 'Güvenlik Doğrulaması: Kod parametreleri otomatik olarak güvenli aralıklara sınırlandırılır.' : 'Security Verified: Code parameters are safely clamped to hardware limits.'}</span>
             </div>
 
             <div className="flex justify-end gap-2.5 pt-2 border-t border-white/5">
@@ -925,14 +1137,14 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange }
                 onClick={() => setShowImportModal(false)}
                 className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs text-zinc-300"
               >
-                İptal
+                {t.cancel}
               </button>
               <button
                 onClick={handleConfirmImport}
                 disabled={!importCodeInput.trim()}
                 className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-xs font-bold text-white shadow-lg disabled:opacity-40"
               >
-                İçe Aktar & Ekrana Yansıt
+                {t.importBtn}
               </button>
             </div>
           </div>
