@@ -1,10 +1,11 @@
 !include "MUI2.nsh"
 !include "FileFunc.nsh"
+!include "LogicLib.nsh"
 
 Name "DustFX"
 OutFile "DustFX_Setup.exe"
 InstallDir "$LOCALAPPDATA\DustFX"
-RequestExecutionLevel admin
+RequestExecutionLevel user
 SetCompressor lzma
 
 VIProductVersion "1.5.0.0"
@@ -40,6 +41,12 @@ UninstallIcon "app.ico"
 !insertmacro MUI_LANGUAGE "Turkish"
 
 !insertmacro MUI_RESERVEFILE_LANGDLL
+
+Function .onInstSuccess
+  ${If} ${Silent}
+    Exec '"$INSTDIR\DustFX.exe"'
+  ${EndIf}
+FunctionEnd
 
 Function KillDustFXProcesses
   ; Forcefully kill all instances of DustFX via multiple fallback mechanisms

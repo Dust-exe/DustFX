@@ -336,7 +336,14 @@ bool AutoUpdater::ApplyUpdate(const std::string& downloadedExePath) {
     // Launch installer on a detached thread after 1000ms to allow HTTP response to flush cleanly to browser
     std::thread([downloadedExePath]() {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        ShellExecuteA(NULL, "open", downloadedExePath.c_str(), NULL, NULL, SW_SHOWNORMAL);
+        
+        // Execute installer with /S (Silent mode) so it terminates old process, extracts files, and relaunches DustFX
+        HINSTANCE hInst = ShellExecuteA(NULL, "open", downloadedExePath.c_str(), "/S", NULL, SW_SHOWNORMAL);
+        if ((INT_PTR)hInst <= 32) {
+            // Fallback to normal execution if /S failed
+            ShellExecuteA(NULL, "open", downloadedExePath.c_str(), NULL, NULL, SW_SHOWNORMAL);
+        }
+        
         std::this_thread::sleep_for(std::chrono::milliseconds(1500));
         ExitProcess(0);
     }).detach();

@@ -23,9 +23,37 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ releaseInfo, onClose, 
     setUpdateStatus('GitHub üzerinden yeni sürüm indiriliyor...');
 
     try {
-      const res = await api.downloadAndApplyUpdate();
+      const res = await api.downloadAndApplyUpdate({
+        downloadUrl: releaseInfo.downloadUrl,
+        version: releaseInfo.latestVersion,
+        tagName: releaseInfo.tagName,
+        htmlUrl: releaseInfo.htmlUrl,
+      });
       if (res.success) {
-        setUpdateStatus('İndirme tamamlandı! Eski dosyalar temizleniyor ve uygulama yeniden başlatılıyor...');
+        setUpdateStatus('✅ İndirme tamamlandı! Kurulum yapılıyor ve uygulama yeniden başlatılıyor...');
+
+        // Start polling for new version to come online
+        let attempts = 0;
+        const checkRebootInterval = setInterval(async () => {
+          attempts++;
+          try {
+            const status = await api.getStatus();
+            if (status && status.status === 'online') {
+              clearInterval(checkRebootInterval);
+              setUpdateStatus('🎉 Yeni sürüm başarıyla yüklendi! Sayfa yenileniyor...');
+              setTimeout(() => {
+                window.location.reload();
+              }, 1200);
+            }
+          } catch {
+            // Server is restarting, continue waiting
+            if (attempts > 30) {
+              clearInterval(checkRebootInterval);
+              setUpdateStatus('⚠️ Güncelleme arka planda tamamlandı. Sayfayı yenileyerek yeni sürüme geçebilirsiniz.');
+              setUpdating(false);
+            }
+          }
+        }, 1500);
       } else {
         setUpdateError(res.error || 'Güncelleme uygulanamadı. Manuel indirmeyi deneyin.');
         setUpdating(false);
