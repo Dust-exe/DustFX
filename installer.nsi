@@ -41,21 +41,28 @@ UninstallIcon "app.ico"
 
 !insertmacro MUI_RESERVEFILE_LANGDLL
 
+Function KillDustFXProcesses
+  ; Forcefully kill all instances of DustFX via multiple fallback mechanisms
+  nsExec::Exec 'cmd.exe /c taskkill.exe /F /IM DustFX.exe /T >nul 2>&1'
+  nsExec::Exec '"$SYSDIR\taskkill.exe" /F /IM DustFX.exe /T'
+  nsExec::Exec '"$WINDIR\SysNative\taskkill.exe" /F /IM DustFX.exe /T'
+  nsExec::Exec 'powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Get-Process -Name DustFX -ErrorAction SilentlyContinue | Stop-Process -Force"'
+  Sleep 1000
+FunctionEnd
+
 Function .onInit
-  ; Terminate any existing running DustFX process before installing
-  nsExec::Exec 'cmd /c taskkill /F /IM DustFX.exe /T >nul 2>&1'
-  Sleep 600
+  ; Terminate any existing running DustFX process before showing installer UI
+  Call KillDustFXProcesses
 FunctionEnd
 
 Section "MainSection" SEC01
   SetOutPath "$INSTDIR"
   SetOverwrite on
 
-  ; Terminate again right before copying files to avoid file-in-use errors
-  nsExec::Exec 'cmd /c taskkill /F /IM DustFX.exe /T >nul 2>&1'
-  Sleep 400
+  ; Terminate again right before copying files to guarantee no file locks
+  Call KillDustFXProcesses
 
-  ; Clean old web dist directory if updating from older broken version
+  ; Clean old web dist directory if updating from older version
   RMDir /r "$INSTDIR\web\dist"
 
   File "DustFX.exe"
@@ -86,8 +93,10 @@ SectionEnd
 
 Section "Uninstall"
   ; Terminate running DustFX before uninstalling
-  nsExec::Exec 'cmd /c taskkill /F /IM DustFX.exe /T >nul 2>&1'
-  Sleep 500
+  nsExec::Exec 'cmd.exe /c taskkill.exe /F /IM DustFX.exe /T >nul 2>&1'
+  nsExec::Exec '"$SYSDIR\taskkill.exe" /F /IM DustFX.exe /T'
+  nsExec::Exec 'powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Get-Process -Name DustFX -ErrorAction SilentlyContinue | Stop-Process -Force"'
+  Sleep 800
 
   Delete "$DESKTOP\DustFX.lnk"
   Delete "$SMPROGRAMS\DustFX\DustFX.lnk"
