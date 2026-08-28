@@ -2,7 +2,7 @@
 
 > **High-Performance Hardware GPU Display Calibration, DCCW Gamma Boost, Digital Vibrance, PvP Crosshair Overlay Engine & Auto-Update System**
 
-[![Release](https://img.shields.io/badge/Release-v1.4.0-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
+[![Release](https://img.shields.io/badge/Release-v1.4.1-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
 [![License](https://img.shields.io/badge/License-MIT%20%2F%20Proprietary-blue?style=for-the-badge)](LICENSE.txt)
 [![Tech](https://img.shields.io/badge/C%2B%2B20-React%20%2F%20Tailwind-purple?style=for-the-badge)](https://dust-studio.com)
 [![Status](https://img.shields.io/badge/DirectX%20%2F%20NVAPI-Zero--Lag-fuchsia?style=for-the-badge)](https://dust-studio.com)
@@ -11,7 +11,7 @@
 
 ---
 
-## ✨ Key Features (v1.4.0)
+## ✨ Key Features (v1.4.1)
 
 ### 1. ⚡ Hardware-Level GPU & DCCW Gamma Control
 - **DCCW Gamma Boost (0.5x - 3.0x):** Zero-latency night vision lighting powered by Windows GDI GammaRamp and direct hardware color ramps.
