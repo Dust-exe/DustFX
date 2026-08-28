@@ -33,8 +33,22 @@ at the Windows Desktop Window Manager (DWM) level, Microsoft Windows GDI
 - DustFX DOES NOT inject code, DLLs, or hooks into any third-party game or process.
 - DustFX DOES NOT read, modify, or scan third-party game memory.
 - DustFX DOES NOT modify game files, executables, or network traffic.
+Because of its external and non-invasive nature, DustFX does not trigger anti-cheat 
+systems under standard operation.
 
-2. DISCLAIMER OF WARRANTY (SORUMLULUK REDDİ)
+2. EXPLICIT ANTI-CHEAT & ACCOUNT LIABILITY DISCLAIMER (SORUMLULUK REDDİ)
+While DustFX does not interact with game binaries or memory, third-party game 
+publishers, platform operators, and anti-cheat systems (such as Vanguard, BattlEye, 
+Easy Anti-Cheat, VAC, Ricochet, etc.) enforce their own proprietary, automated, 
+or evolving policies.
+- In the unlikely event that any third-party anti-cheat or game publisher takes 
+  any punitive action (including but not limited to account warnings, suspensions, 
+  temporary bans, permanent bans, or hardware bans), Dust Studio and Dust-exe 
+  HOLD ABSOLUTELY ZERO LIABILITY.
+- All users utilize this utility entirely at their own discretion and assume 100% 
+  of any and all associated risks.
+
+3. GENERAL DISCLAIMER OF WARRANTY
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -43,30 +57,33 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 DEALINGS IN THE SOFTWARE.
 
-3. LIMITATION OF LIABILITY (HUKUKİ VE TEKNİK MUAFİYET)
+4. LIMITATION OF TECHNICAL & HARDWARE LIABILITY
 Under no circumstances shall the author or Dust Studio be held responsible for:
 - Any hardware damage, display panel degradation, monitor malfunction, or GPU issues.
-- Any game account actions, suspensions, bans, or penalties issued by third-party 
-  game publishers, anti-cheat providers, or online services.
+- Any game account actions, suspensions, bans, or penalties.
 - Any data loss, system instability, or software conflicts arising from the use 
   of this software.
-Users utilize this utility entirely at their own discretion and risk.
 
-4. TRADEMARK & BRANDING RIGHTS
+5. TRADEMARK & BRANDING RIGHTS
 The names "Dust Studio", "DustFX", "Dust-vpn", "DustReplay", and all official 
 associated logos and graphics are the exclusive intellectual property and 
 trademarks of the original author. This license grants no permission to use 
 such trademarks for commercial endorsement without prior written consent.
 
 ==============================================================================
-TÜRKÇE YASAL BİLGİLENDİRME VE KULLANIM ŞARTLARI
+TÜRKÇE YASAL BİLGİLENDİRME VE ANTICHEAT SORUMLULUK REDDİ
 ==============================================================================
 
 1. DUSTFX, doğrudan Windows Masaüstü Yöneticisi (DWM) ve GDI GammaRamp API'leri 
-   üzerinden çalışan harici bir ekran kalibrasyon yazılımıdır.
-2. Hiçbir oyunun veya uygulamanın belleğine müdahale etmez, kod enjekte etmez ve 
-   oyun dosyalarını değiştirmez.
-3. Yazılım "olduğu gibi" (AS-IS) sağlanmakta olup; donanım, monitör, yazılım 
-   veya üçüncü taraf oyun hesaplarında oluşabilecek herhangi bir durumdan 
-   geliştirici (Dust Studio / Dust-exe) sorumlu tutulamaz.
-4. Yazılımı kullanan herkes bu şartları peşinen kabul etmiş sayılır.
+   üzerinden çalışan harici bir ekran kalibrasyon yazılımıdır. Oyunların içine 
+   DLL enjekte etmez, oyun belleğini (RAM) okumaz veya oyun dosyalarını değiştirmez.
+2. Bu nedenle teknik olarak Anti-Cheat sistemleri (Vanguard, EAC, BattlEye, VAC, 
+   Ricochet vb.) tarafından tespit edilecek bir oyun müdahalesi bulunmaz ve 
+   standart kullanımda ban riski taşımaz.
+3. ANCAK; üçüncü taraf oyun yapımcıları veya anticheat yazılımları tarafından 
+   herhangi bir sebeple uygulanabilecek olası hesap uyarısı, askıya alma, geçici/kalıcı 
+   ban veya donanım kısıtlaması durumlarında BÜTÜN SORUMLULUK TAMAMEN KULLANICIYA AİTTİR. 
+   Geliştirici (Dust Studio / Dust-exe) hiçbir hukuki, cezai veya maddi sorumluluk 
+   kabul etmez.
+4. Yazılım "olduğu gibi" (AS-IS) sunulur. Yazılımı indirip kullanan herkes bu 
+   şartları ve sorumluluk muafiyetini peşinen ve gayrikabili rücu kabul etmiş sayılır.

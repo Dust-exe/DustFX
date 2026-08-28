@@ -117,8 +117,8 @@ DustFX, doğrudan Windows donanım kompozitörü (DWM), GDI GammaRamp ve NVIDIA 
 
 ## Legal & Anti-Cheat Compliance Notice
 
-- **Non-Invasive Operation:** DustFX operates entirely external to games via standard Microsoft Windows Desktop Window Manager (DWM) and GDI Gamma APIs. It does not inject DLLs, modify memory, or tamper with third-party game files.
-- **Warranty Disclaimer:** The software is provided "AS IS", without warranty of any kind. The author (Dust Studio / Dust-exe) shall not be held liable for any hardware, software, or account penalties.
+- **Non-Invasive Architecture:** DustFX operates strictly external to games via standard Microsoft Windows Desktop Window Manager (DWM) and GDI Gamma APIs. It does not inject DLLs, modify memory, or tamper with third-party game files.
+- **Anti-Cheat & Account Liability Disclaimer:** While DustFX is technically non-invasive and does not trigger anti-cheat bans under normal conditions, all users acknowledge that third-party game publishers and anti-cheat systems (Vanguard, EAC, BattlEye, VAC, Ricochet, etc.) enforce independent policies. In the unlikely event of any account penalty or ban, Dust Studio (Dust-exe) holds **zero liability**; all usage is at the user's sole risk.
 
 ---
 
