@@ -60,6 +60,7 @@ bool SettingsManager::LoadFromFile(const std::string& configPath) {
             m_settings.currentSettings.rgbGreen = s.value("rgbGreen", 1.0f);
             m_settings.currentSettings.rgbBlue = s.value("rgbBlue", 1.0f);
             m_settings.currentSettings.sharpness = s.value("sharpness", 0.0f);
+            m_settings.currentSettings.msaaStrength = s.value("msaaStrength", 0.0f);
             m_settings.currentSettings.crosshairEnabled = s.value("crosshairEnabled", false);
             m_settings.currentSettings.crosshairStyle = s.value("crosshairStyle", "cross");
             m_settings.currentSettings.crosshairColor = s.value("crosshairColor", "#00FF66");
@@ -115,6 +116,7 @@ bool SettingsManager::SaveToFile(const std::string& configPath) {
             {"rgbGreen", m_settings.currentSettings.rgbGreen},
             {"rgbBlue", m_settings.currentSettings.rgbBlue},
             {"sharpness", m_settings.currentSettings.sharpness},
+            {"msaaStrength", m_settings.currentSettings.msaaStrength},
             {"crosshairEnabled", m_settings.currentSettings.crosshairEnabled},
             {"crosshairStyle", m_settings.currentSettings.crosshairStyle},
             {"crosshairColor", m_settings.currentSettings.crosshairColor},

@@ -2,6 +2,7 @@ import React from 'react';
 import { Sun, Palette, Contrast, Eye, Sparkles, Layers, Sliders, Thermometer, ShieldCheck } from 'lucide-react';
 import { DisplaySettings } from '../../types';
 
+
 interface ScreenFilterTabProps {
   settings: DisplaySettings;
   onChange: (newSettings: Partial<DisplaySettings>) => void;
@@ -284,8 +285,42 @@ export const ScreenFilterTab: React.FC<ScreenFilterTabProps> = ({ settings, onCh
               <span>%100 (Maksimum CAS)</span>
             </div>
           </div>
+
+          {/* MSAA Edge Smoothing */}
+          <div className="flex flex-col gap-2 pt-2 border-t border-white/5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-zinc-100 font-semibold flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-cyan-400" />
+                MSAA Kenar Yumuşatma (Anti-Aliasing Filtresi)
+              </span>
+              <span className="font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2.5 py-0.5 rounded-lg border border-cyan-500/30">
+                {settings.msaaStrength !== undefined && settings.msaaStrength > 0
+                  ? `${['2x', '4x', '8x'][Math.min(2, Math.round(settings.msaaStrength * 3) - 1)]} MSAA`
+                  : 'Kapalı'}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0.0"
+              max="1.0"
+              step="0.05"
+              value={settings.msaaStrength ?? 0}
+              onChange={(e) => onChange({ msaaStrength: parseFloat(e.target.value) })}
+              className="w-full"
+            />
+            <div className="flex justify-between text-[10px] text-zinc-500 font-mono">
+              <span>Kapalı</span>
+              <span>4x MSAA</span>
+              <span>8x MSAA</span>
+            </div>
+            <p className="text-[10px] text-zinc-500 leading-relaxed">
+              Kenar pürüzlülüğünü (jagged / aliasing) DWM renk matris filtresi üzerinden azaltır.
+              CAS ile birlikte kullanmak optimum görsel kalite sağlar.
+            </p>
+          </div>
         </div>
       </div>
     </div>
   );
 };
+

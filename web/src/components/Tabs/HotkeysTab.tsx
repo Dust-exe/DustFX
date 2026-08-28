@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Keyboard, Edit3, Check, X, Sparkles } from 'lucide-react';
+import { Keyboard, Edit3, Check, X, Sparkles, Trash2 } from 'lucide-react';
 import { api } from '../../api';
 import { HotkeyConfig, GameProfile } from '../../types';
 
@@ -148,6 +148,29 @@ export const HotkeysTab: React.FC<HotkeysTabProps> = ({
     setPressedKey('');
   };
 
+  const clearHotkey = async (id: string) => {
+    if (id.startsWith('profile:')) {
+      const profId = id.replace('profile:', '');
+      const prof = profiles.find((p) => p.id === profId);
+      if (prof) {
+        const updatedProf: GameProfile = { ...prof, hotkey: '' };
+        await api.saveProfile(updatedProf);
+        if (onProfilesChange) {
+          onProfilesChange(profiles.map((p) => (p.id === profId ? updatedProf : p)));
+        }
+        setSaveStatus(`🗑️ ${prof.name} kısayolu kaldırıldı.`);
+        setTimeout(() => setSaveStatus(null), 2500);
+      }
+    } else {
+      const nextConfig: HotkeyConfig = { ...currentHotkeys, [id]: '' };
+      setCurrentHotkeys(nextConfig);
+      if (onHotkeysChange) onHotkeysChange(nextConfig);
+      await api.saveHotkeys(nextConfig);
+      setSaveStatus('🗑️ Kısayol kaldırıldı.');
+      setTimeout(() => setSaveStatus(null), 2500);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 animate-fadeIn">
       {/* Header */}
@@ -222,8 +245,10 @@ export const HotkeysTab: React.FC<HotkeysTabProps> = ({
                   </>
                 ) : (
                   <>
-                    <span className="font-mono text-sm px-3.5 py-1.5 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold shadow-md whitespace-nowrap">
-                      {h.key}
+                    <span className={`font-mono text-sm px-3.5 py-1.5 rounded-xl font-bold shadow-md whitespace-nowrap ${
+                      h.key ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' : 'bg-zinc-800/60 text-zinc-500 border border-white/5 italic'
+                    }`}>
+                      {h.key || 'Yok'}
                     </span>
                     <button
                       onClick={() => startListening(h.id)}
@@ -232,6 +257,15 @@ export const HotkeysTab: React.FC<HotkeysTabProps> = ({
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                     </button>
+                    {h.key && (
+                      <button
+                        onClick={() => clearHotkey(h.id)}
+                        className="w-8 h-8 flex items-center justify-center rounded-xl bg-red-900/30 hover:bg-red-900/60 text-red-400 hover:text-red-300 transition-all border border-red-500/20"
+                        title="Kısayolu Kaldır"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </>
                 )}
               </div>
@@ -294,7 +328,9 @@ export const HotkeysTab: React.FC<HotkeysTabProps> = ({
                     </>
                   ) : (
                     <>
-                      <span className="font-mono text-xs px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold whitespace-nowrap">
+                      <span className={`font-mono text-xs px-2.5 py-1 rounded-lg font-bold whitespace-nowrap ${
+                        p.hotkey ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-zinc-800/60 text-zinc-500 border border-white/5 italic'
+                      }`}>
                         {p.hotkey || 'Yok'}
                       </span>
                       <button
@@ -304,6 +340,15 @@ export const HotkeysTab: React.FC<HotkeysTabProps> = ({
                       >
                         <Edit3 className="w-3 h-3" />
                       </button>
+                      {p.hotkey && (
+                        <button
+                          onClick={() => clearHotkey(listenId)}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-900/30 hover:bg-red-900/60 text-red-400 hover:text-red-300 border border-red-500/20"
+                          title="Kısayolu Kaldır"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
                     </>
                   )}
                 </div>

@@ -31,21 +31,22 @@ struct DisplaySettings {
     float rgbGreen = 1.0f;            // 0.5x - 2.0x
     float rgbBlue = 1.0f;             // 0.5x - 2.0x
     float sharpness = 0.0f;           // 0.0 - 1.0 (CAS / RIS)
-    float colorTemperature = 6500.0f; // 2700K - 10000K (Renk Sıcaklığı)
-    float shadowDetail = 0.0f;        // 0.0 - 1.0 (Gölge Detay Kurtarma)
+    float colorTemperature = 6500.0f; // 2700K - 10000K
+    float shadowDetail = 0.0f;        // 0.0 - 1.0
+    float msaaStrength = 0.0f;        // 0.0 - 1.0 (MSAA edge smoothing via DWM matrix)
     
     // PvP Tools
     bool crosshairEnabled = false;
-    std::string crosshairStyle = "cross"; // "dot", "cross", "x-cross", "t-cross", "gap-cross", "circle", "cross-dot", "square"
+    std::string crosshairStyle = "cross";
     std::string crosshairColor = "#00FF66";
-    int crosshairSize = 10;            // Length / Uzunluk (2 - 40)
-    int crosshairThickness = 2;       // Thickness / Kalınlık (1 - 10)
-    int crosshairGap = 4;             // Center Gap / Boşluk (0 - 30)
-    int crosshairDotSize = 0;         // Center Dot / Nokta Boyutu (0 = kapalı)
-    int crosshairOutline = 1;         // Black Outline / Dış Kenarlık (0 - 3)
-    float crosshairOpacity = 1.0f;    // Opacity / Opaklık (0.2 - 1.0)
+    int crosshairSize = 10;
+    int crosshairThickness = 2;
+    int crosshairGap = 4;
+    int crosshairDotSize = 0;
+    int crosshairOutline = 1;
+    float crosshairOpacity = 1.0f;
     bool sniperZoomEnabled = false;
-    float sniperZoomFactor = 1.5f;     // 1.2x - 2.5x
+    float sniperZoomFactor = 1.5f;
 };
 
 struct GameProfile {
@@ -107,5 +108,6 @@ struct AppSettings {
 } // namespace dustfx
 
 #ifndef DUSTFX_VERSION_STRING
-#define DUSTFX_VERSION_STRING "1.2.1"
+#define DUSTFX_VERSION_STRING "1.3.0"
 #endif
+

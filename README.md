@@ -2,7 +2,7 @@
 
 > **High-Performance Hardware GPU Display Calibration, DCCW Gamma Boost, Digital Vibrance, PvP Crosshair Overlay Engine & Auto-Update System**
 
-[![Release](https://img.shields.io/badge/Release-v1.2.1-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
+[![Release](https://img.shields.io/badge/Release-v1.3.0-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
 [![License](https://img.shields.io/badge/License-MIT%20%2F%20Proprietary-blue?style=for-the-badge)](LICENSE.txt)
 [![Tech](https://img.shields.io/badge/C%2B%2B20-React%20%2F%20Tailwind-purple?style=for-the-badge)](https://dust-studio.com)
 [![Status](https://img.shields.io/badge/DirectX%20%2F%20NVAPI-Zero--Lag-fuchsia?style=for-the-badge)](https://dust-studio.com)
@@ -11,15 +11,17 @@
 
 ---
 
-## ✨ Key Features
+## ✨ Key Features (v1.3.0)
 
 ### 1. ⚡ Hardware-Level GPU & DCCW Gamma Control
 - **DCCW Gamma Boost (0.5x - 3.0x):** Zero-latency night vision lighting powered by Windows GDI GammaRamp and direct hardware color ramps.
+- **Dedicated Digital Vibrance (%0 - %100):** Real-time hardware saturation engine with dedicated background DWM message pump & NVAPI hardware acceleration.
+- **MSAA Edge-Smoothing (Anti-Aliasing Filter):** Subpixel diagonal matrix smoothing to soften jagged edges (2x, 4x, 8x MSAA simulation) without GPU overhead.
 - **Enhanced CAS Sharpness (Unsharp Mask LUT):** Frequency-separated multi-band sharpening that highlights enemy silhouettes and distant targets.
 - **Shadow Detail Recovery (Toe Curve):** Lifts dark shadows in tunnels, caves, and dark buildings without washing out highlight contrast (%0 - %100).
 - **Kelvin Color Temperature (2700K - 10000K):** Tanner Helland physical color temperature mapping for anti-fatigue warm night filters or icy competitive blue tints.
-- **Digital Vibrance (%0 - %100):** Hardware saturation matrix boosting vibrant game textures and enemy outlines.
 - **Independent RGB Calibration:** Fine-tune Red, Green, and Blue channels separately.
+- **Hotkey Management:** Full custom key bindings with instant reset and one-click key removal (🗑️) support.
 
 ### 2. 🎯 PvP Crosshair Overlay Engine
 - **Pixel-Perfect Center Lock:** Lightweight 200x200 transparent, click-through, topmost hardware overlay (`Alt + Z`).

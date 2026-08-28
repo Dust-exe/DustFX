@@ -95,6 +95,7 @@ void HotkeyManager::BindProfileHotkey(const std::string& keyName, const std::str
 }
 
 std::string HotkeyManager::BuildKeyComboString(int vkCode, bool isAlt, bool isCtrl, bool isShift) {
+#ifdef _WIN32
     std::string combo = "";
     if (isCtrl) combo += "CTRL+";
     if (isAlt) combo += "ALT+";
@@ -116,6 +117,10 @@ std::string HotkeyManager::BuildKeyComboString(int vkCode, bool isAlt, bool isCt
 
     if (keyPart.empty()) return "";
     return combo + keyPart;
+#else
+    (void)vkCode; (void)isAlt; (void)isCtrl; (void)isShift;
+    return "";
+#endif
 }
 
 void HotkeyManager::HandleKeyEvent(int vkCode, bool isAlt, bool isCtrl, bool isShift) {

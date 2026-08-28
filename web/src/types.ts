@@ -7,17 +7,18 @@ export interface DisplaySettings {
   rgbGreen: number;
   rgbBlue: number;
   sharpness: number;
-  colorTemperature: number;  // 2700 - 10000 Kelvin
-  shadowDetail: number;      // 0.0 - 1.0
+  colorTemperature: number;
+  shadowDetail: number;
+  msaaStrength?: number;       // 0.0 - 1.0 (MSAA edge smoothing via DWM)
   crosshairEnabled: boolean;
   crosshairStyle: 'dot' | 'cross' | 'circle' | 'gap-cross' | 'x-cross' | 't-cross' | 'cross-dot' | 'square';
   crosshairColor: string;
-  crosshairSize: number;            // Uzunluk (Length)
-  crosshairThickness?: number;      // Kalınlık (Thickness)
-  crosshairGap?: number;            // Boşluk (Gap)
-  crosshairDotSize?: number;        // Nokta boyutu (Dot size)
-  crosshairOutline?: number;        // Dış çizgi kalınlığı (Outline)
-  crosshairOpacity?: number;        // Opaklık (0.2 - 1.0)
+  crosshairSize: number;
+  crosshairThickness?: number;
+  crosshairGap?: number;
+  crosshairDotSize?: number;
+  crosshairOutline?: number;
+  crosshairOpacity?: number;
   sniperZoomEnabled?: boolean;
   sniperZoomFactor?: number;
 }
