@@ -6,15 +6,10 @@ import {
   Shield,
   Monitor,
   Video,
-  Code,
-  Flame,
   Globe,
   Layers,
-  Terminal,
-  Server,
-  Database,
-  Cpu,
   Boxes,
+  CheckCircle2,
 } from 'lucide-react';
 import { translations, Language } from '../../translations';
 
@@ -49,90 +44,83 @@ export const DustStudioTab: React.FC<DustStudioTabProps> = ({ lang, onOpenExtern
 
   return (
     <div className="flex flex-col gap-6 animate-fadeIn select-none">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-white/5">
-        <div>
-          <h2 className="text-lg font-bold text-white font-mono flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-fuchsia-400" />
-            {t.dustStudioTitle}
-          </h2>
-          <p className="text-xs text-zinc-400 mt-0.5">
-            {t.dustStudioSubtitle}
-          </p>
-        </div>
+      {/* Symmetrical Hero Header Banner */}
+      <div className="relative overflow-hidden rounded-3xl border border-purple-500/25 bg-gradient-to-b from-[#130d29]/90 to-[#0a0717]/95 p-7 shadow-2xl backdrop-blur-xl">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-72 h-72 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-72 h-72 bg-fuchsia-600/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => onOpenExternal('https://dust-studio.com/')}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 text-xs font-mono font-bold transition-all active:scale-95 shadow-[0_0_12px_rgba(168,85,247,0.25)]"
-          >
-            <Globe className="w-3.5 h-3.5 text-purple-400" />
-            {t.visitWebsiteBtn}
-          </button>
-        </div>
-      </div>
-
-      {/* Hero Developer Banner with GitHub Star CTA */}
-      <div className="relative overflow-hidden rounded-3xl border border-purple-500/30 bg-gradient-to-br from-purple-950/60 via-[#0e0a1e]/90 to-fuchsia-950/50 p-7 shadow-2xl">
-        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-fuchsia-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-64 h-64 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 via-fuchsia-500 to-cyan-400 p-[2px] shadow-[0_0_25px_rgba(168,85,247,0.5)] flex-shrink-0">
-              <div className="w-full h-full bg-[#090614] rounded-[14px] flex items-center justify-center p-2">
-                <img src="/logo.png" alt="Dust Studio Logo" className="w-full h-full object-contain" />
-              </div>
-            </div>
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <h3 className="text-xl font-extrabold text-white font-mono tracking-wide">
+        {/* Top Row: Pure Logo & Studio Info on Left, Symmetric Buttons on Right */}
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          {/* Left: Pure Logo + Studio Title */}
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <img
+              src="/logo.png"
+              alt="Dust Studio Logo"
+              className="w-14 h-14 object-contain drop-shadow-[0_0_16px_rgba(168,85,247,0.5)] flex-shrink-0"
+            />
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2.5">
+                <h3 className="text-xl font-bold text-white font-mono tracking-wider">
                   DUST STUDIO
                 </h3>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold">
                   {t.developerBadge}
                 </span>
               </div>
-              <p className="text-xs text-fuchsia-300 font-medium font-mono">
+              <a
+                href="https://dust-studio.com"
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onOpenExternal('https://dust-studio.com');
+                }}
+                className="text-xs text-fuchsia-400/90 font-mono hover:text-fuchsia-300 transition-colors mt-0.5 flex items-center gap-1 w-fit"
+              >
+                <Globe className="w-3 h-3 text-fuchsia-400" />
                 https://dust-studio.com
-              </p>
+              </a>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          {/* Right: Symmetrical Action Buttons */}
+          <div className="flex items-center gap-3 w-full md:w-auto justify-start md:justify-end">
             <button
               onClick={handleStarClick}
-              className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-extrabold text-xs font-mono shadow-[0_0_25px_rgba(245,158,11,0.5)] transition-all active:scale-95 group"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-bold text-xs font-mono shadow-[0_0_18px_rgba(245,158,11,0.35)] transition-all active:scale-95"
             >
-              <Star className={`w-4 h-4 text-black fill-black ${starredLocally ? 'animate-bounce' : 'group-hover:rotate-12'} transition-transform`} />
-              {starredLocally ? '⭐ Starred on GitHub!' : t.starButton}
+              <Star className="w-3.5 h-3.5 fill-black" />
+              {starredLocally ? (lang === 'tr' ? 'Yıldızlandı!' : 'Starred!') : t.starButton}
             </button>
 
             <button
               onClick={() => onOpenExternal('https://github.com/Dust-exe')}
-              className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-semibold text-xs border border-white/15 transition-all active:scale-95 font-mono"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium text-xs border border-white/10 transition-all active:scale-95 font-mono"
             >
-              <ExternalLink className="w-3.5 h-3.5 text-zinc-300" />
+              <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
               GitHub: Dust-exe
             </button>
           </div>
         </div>
 
-        {/* Bio Description */}
-        <div className="mt-6 pt-5 border-t border-white/10 flex flex-col gap-3">
-          <p className="text-xs text-zinc-300 leading-relaxed max-w-4xl font-light">
+        {/* Divider */}
+        <div className="my-5 border-t border-white/5" />
+
+        {/* Bio & Star Text */}
+        <div className="relative z-10 flex flex-col gap-3">
+          <p className="text-xs text-zinc-300 leading-relaxed font-light">
             {t.developerBio}
           </p>
-          <div className="flex items-center gap-2 text-xs text-amber-300/90 font-mono">
-            <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />
+          <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
+            <CheckCircle2 className="w-3.5 h-3.5 text-fuchsia-400 flex-shrink-0" />
             <span>{t.starDesc}</span>
           </div>
         </div>
       </div>
 
       {/* Tech Stack Bar */}
-      <div className="glass-card p-5 rounded-3xl border border-white/10 bg-[#0e0a1a]/70 flex flex-col gap-3 shadow-xl">
-        <span className="text-xs font-bold text-zinc-300 font-mono uppercase tracking-wider flex items-center gap-2">
+      <div className="glass-card p-5 rounded-3xl border border-white/5 bg-[#0d0a1a]/70 flex flex-col gap-3 shadow-xl">
+        <span className="text-xs font-bold text-zinc-400 font-mono uppercase tracking-wider flex items-center gap-2">
           <Boxes className="w-4 h-4 text-purple-400" />
           {t.techStackHeader}
         </span>
@@ -140,7 +128,7 @@ export const DustStudioTab: React.FC<DustStudioTabProps> = ({ lang, onOpenExtern
           {techStack.map((tech) => (
             <span
               key={tech.name}
-              className={`text-xs font-mono font-semibold px-3 py-1.5 rounded-xl border ${tech.color} shadow-sm transition-transform hover:scale-105`}
+              className={`text-xs font-mono font-medium px-3 py-1.5 rounded-xl border ${tech.color} shadow-sm transition-transform hover:scale-105`}
             >
               {tech.name}
             </span>
@@ -149,8 +137,8 @@ export const DustStudioTab: React.FC<DustStudioTabProps> = ({ lang, onOpenExtern
       </div>
 
       {/* Selected Projects Header */}
-      <div className="flex flex-col gap-1 pt-2">
-        <h3 className="text-base font-extrabold text-white font-mono flex items-center gap-2">
+      <div className="flex flex-col gap-1 pt-1">
+        <h3 className="text-base font-bold text-white font-mono flex items-center gap-2">
           <Layers className="w-5 h-5 text-fuchsia-400" />
           {t.selectedProjectsHeader}
         </h3>
@@ -168,13 +156,13 @@ export const DustStudioTab: React.FC<DustStudioTabProps> = ({ lang, onOpenExtern
               <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
                 <Shield className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20">
+              <span className="text-[10px] font-mono font-semibold px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20">
                 {t.dustVpnCategory}
               </span>
             </div>
 
             <div>
-              <h4 className="text-base font-extrabold text-white font-mono group-hover:text-blue-300 transition-colors">
+              <h4 className="text-base font-bold text-white font-mono group-hover:text-blue-300 transition-colors">
                 {t.dustVpnTitle}
               </h4>
               <div className="flex gap-1.5 mt-1.5 flex-wrap">
@@ -201,7 +189,7 @@ export const DustStudioTab: React.FC<DustStudioTabProps> = ({ lang, onOpenExtern
 
           <button
             onClick={() => onOpenExternal('https://github.com/Dust-exe/Dust-vpn')}
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 text-xs font-mono font-bold border border-blue-500/20 transition-all active:scale-95"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 text-xs font-mono font-semibold border border-blue-500/20 transition-all active:scale-95"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             {t.viewSource}
@@ -217,13 +205,13 @@ export const DustStudioTab: React.FC<DustStudioTabProps> = ({ lang, onOpenExtern
               <div className="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
                 <Monitor className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                v1.4.0 Active
+              <span className="text-[10px] font-mono font-semibold px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                v1.4.2 Active
               </span>
             </div>
 
             <div>
-              <h4 className="text-base font-extrabold text-white font-mono group-hover:text-purple-300 transition-colors">
+              <h4 className="text-base font-bold text-white font-mono group-hover:text-purple-300 transition-colors">
                 {t.dustFxTitle}
               </h4>
               <div className="flex gap-1.5 mt-1.5 flex-wrap">
@@ -264,13 +252,13 @@ export const DustStudioTab: React.FC<DustStudioTabProps> = ({ lang, onOpenExtern
               <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                 <Video className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+              <span className="text-[10px] font-mono font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
                 {t.dustReplayCategory}
               </span>
             </div>
 
             <div>
-              <h4 className="text-base font-extrabold text-white font-mono group-hover:text-emerald-300 transition-colors">
+              <h4 className="text-base font-bold text-white font-mono group-hover:text-emerald-300 transition-colors">
                 {t.dustReplayTitle}
               </h4>
               <div className="flex gap-1.5 mt-1.5 flex-wrap">
@@ -297,7 +285,7 @@ export const DustStudioTab: React.FC<DustStudioTabProps> = ({ lang, onOpenExtern
 
           <button
             onClick={() => onOpenExternal('https://dust-studio.com/')}
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-mono font-bold border border-emerald-500/20 transition-all active:scale-95"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-mono font-semibold border border-emerald-500/20 transition-all active:scale-95"
           >
             <Globe className="w-3.5 h-3.5" />
             {t.visitWebsiteBtn}

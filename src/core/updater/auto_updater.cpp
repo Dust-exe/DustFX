@@ -119,15 +119,28 @@ bool AutoUpdater::CheckForUpdate(ReleaseInfo& outInfo) {
         }
 
         if (j.contains("assets") && j["assets"].is_array()) {
+            // First priority: look specifically for "DustFX_Setup.exe" or "Setup.exe"
             for (const auto& asset : j["assets"]) {
                 std::string name = asset.value("name", "");
-                if (name.find(".exe") != std::string::npos ||
-                    name.find("DustFX") != std::string::npos ||
-                    name.find("Dust") != std::string::npos) {
+                if (name.find("Setup.exe") != std::string::npos ||
+                    name.find("setup.exe") != std::string::npos ||
+                    name.find("Setup") != std::string::npos ||
+                    name.find("Installer") != std::string::npos) {
                     outInfo.downloadUrl = asset.value("browser_download_url", "");
                     break;
                 }
             }
+            // Second priority: look for any .exe
+            if (outInfo.downloadUrl.empty()) {
+                for (const auto& asset : j["assets"]) {
+                    std::string name = asset.value("name", "");
+                    if (name.find(".exe") != std::string::npos) {
+                        outInfo.downloadUrl = asset.value("browser_download_url", "");
+                        break;
+                    }
+                }
+            }
+            // Fallback: first asset
             if (outInfo.downloadUrl.empty() && !j["assets"].empty()) {
                 outInfo.downloadUrl = j["assets"][0].value("browser_download_url", "");
             }
@@ -234,27 +247,78 @@ bool AutoUpdater::DownloadUpdate(const ReleaseInfo& info, const std::string& sav
     std::cout << "[AutoUpdater] Saving to: " << savePath << std::endl;
 
 #ifdef _WIN32
-    // Delete any old temporary download file if present
     DeleteFileA(savePath.c_str());
 
-    // URLDownloadToFile handles HTTP 302/301 redirects, SSL certificates, and chunking seamlessly
-    HRESULT hr = URLDownloadToFileA(NULL, info.downloadUrl.c_str(), savePath.c_str(), 0, NULL);
-    if (SUCCEEDED(hr)) {
-        // Verify file was downloaded and has size > 100KB
-        std::ifstream checkFile(savePath, std::ios::binary | std::ios::ate);
+    auto checkValidFile = [](const std::string& path) -> bool {
+        std::ifstream checkFile(path, std::ios::binary | std::ios::ate);
         if (checkFile.is_open()) {
             std::streamsize sz = checkFile.tellg();
             checkFile.close();
-            if (sz > 100000) {
-                std::cout << "[AutoUpdater] Download successful (" << sz << " bytes)." << std::endl;
-                return true;
+            return (sz > 50000); // Greater than 50KB
+        }
+        return false;
+    };
+
+    // Tier 1: WinINet Stream with modern redirect & SSL flags
+    {
+        HINTERNET hInternet = InternetOpenA("DustFX-Updater/1.4", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+        if (hInternet) {
+            DWORD flags = INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_SECURE |
+                          INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTPS | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTP;
+            HINTERNET hFile = InternetOpenUrlA(hInternet, info.downloadUrl.c_str(), NULL, 0, flags, 0);
+            if (hFile) {
+                std::ofstream out(savePath, std::ios::binary);
+                if (out.is_open()) {
+                    char buffer[16384];
+                    DWORD bytesRead = 0;
+                    while (InternetReadFile(hFile, buffer, sizeof(buffer), &bytesRead) && bytesRead > 0) {
+                        out.write(buffer, bytesRead);
+                    }
+                    out.close();
+                }
+                InternetCloseHandle(hFile);
             }
+            InternetCloseHandle(hInternet);
+        }
+        if (checkValidFile(savePath)) {
+            std::cout << "[AutoUpdater] Download successful via WinINet." << std::endl;
+            return true;
         }
     }
-    std::cerr << "[AutoUpdater] URLDownloadToFile failed with HRESULT: 0x" << std::hex << hr << std::endl;
+
+    // Tier 2: Windows 10/11 built-in curl.exe
+    {
+        std::string curlCmd = "curl.exe -f -s -S -L --connect-timeout 15 -o \"" + savePath + "\" \"" + info.downloadUrl + "\"";
+        int ret = system(curlCmd.c_str());
+        if (ret == 0 && checkValidFile(savePath)) {
+            std::cout << "[AutoUpdater] Download successful via curl.exe." << std::endl;
+            return true;
+        }
+    }
+
+    // Tier 3: PowerShell WebClient with TLS 1.2
+    {
+        std::string psCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object Net.WebClient).DownloadFile('" + info.downloadUrl + "', '" + savePath + "')\"";
+        int ret = system(psCmd.c_str());
+        if (ret == 0 && checkValidFile(savePath)) {
+            std::cout << "[AutoUpdater] Download successful via PowerShell." << std::endl;
+            return true;
+        }
+    }
+
+    // Tier 4: URLDownloadToFile fallback
+    {
+        HRESULT hr = URLDownloadToFileA(NULL, info.downloadUrl.c_str(), savePath.c_str(), 0, NULL);
+        if (SUCCEEDED(hr) && checkValidFile(savePath)) {
+            std::cout << "[AutoUpdater] Download successful via URLDownloadToFile." << std::endl;
+            return true;
+        }
+    }
+
+    std::cerr << "[AutoUpdater] All download tiers failed." << std::endl;
     return false;
 #else
-    std::string cmd = "curl -L -o '" + savePath + "' '" + info.downloadUrl + "' 2>/dev/null";
+    std::string cmd = "curl -f -L -o '" + savePath + "' '" + info.downloadUrl + "' 2>/dev/null";
     int ret = system(cmd.c_str());
     return (ret == 0);
 #endif
@@ -269,11 +333,11 @@ bool AutoUpdater::ApplyUpdate(const std::string& downloadedExePath) {
 
     std::cout << "[AutoUpdater] Scheduled update installer launch: " << downloadedExePath << std::endl;
 
-    // Launch installer on a detached thread after 800ms to allow HTTP response to flush cleanly to browser
+    // Launch installer on a detached thread after 1000ms to allow HTTP response to flush cleanly to browser
     std::thread([downloadedExePath]() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(800));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         ShellExecuteA(NULL, "open", downloadedExePath.c_str(), NULL, NULL, SW_SHOWNORMAL);
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1500));
         ExitProcess(0);
     }).detach();
 
