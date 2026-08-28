@@ -8,6 +8,10 @@
 #ifdef _WIN32
 #include <windows.h>
 
+#ifndef WDA_EXCLUDEFROMCAPTURE
+#define WDA_EXCLUDEFROMCAPTURE 0x00000011
+#endif
+
 #define WM_USER_UPDATE_CROSSHAIR     (WM_USER + 301)
 #define WM_USER_APPLY_MAGNIFICATION  (WM_USER + 302)
 #define WM_USER_UPDATE_SNIPER_ZOOM   (WM_USER + 303)
@@ -429,6 +433,7 @@ void OverlayToast::OverlayThreadProc() {
     if (m_hWnd) {
         g_hOverlayWnd = m_hWnd;
         SetLayeredWindowAttributes(m_hWnd, TRANSPARENT_COLOR_KEY, 255, LWA_COLORKEY);
+        SetWindowDisplayAffinity(m_hWnd, WDA_EXCLUDEFROMCAPTURE);
         std::cout << "[OverlayToast] Dedicated crosshair overlay message pump active." << std::endl;
     }
 
