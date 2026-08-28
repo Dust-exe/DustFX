@@ -23,6 +23,11 @@ public:
     void ToggleSniperZoom();
 
     void HandleHotkey(HotkeyAction action, const std::string& param);
+
+private:
+    DustFxApp();
+    ~DustFxApp();
+
     void HandleProcessEvent(const std::string& processName, bool isForeground);
     void OnUpdateDetected(bool available, const ReleaseInfo& info);
 
