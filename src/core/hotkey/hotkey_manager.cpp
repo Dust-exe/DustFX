@@ -40,16 +40,28 @@ static LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lPara
             bool isShift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
 
             int vkCode = 0;
+            bool isKeyDown = false;
+
             if (wParam == WM_MBUTTONDOWN || wParam == WM_NCMBUTTONDOWN) {
                 vkCode = VK_MBUTTON; // MOUSE3
+                isKeyDown = true;
+            } else if (wParam == WM_MBUTTONUP || wParam == WM_NCMBUTTONUP) {
+                vkCode = VK_MBUTTON;
+                isKeyDown = false;
             } else if (wParam == WM_XBUTTONDOWN || wParam == WM_NCXBUTTONDOWN) {
                 DWORD button = HIWORD(pMouse->mouseData);
                 if (button == XBUTTON1) vkCode = VK_XBUTTON1; // MOUSE4
                 else if (button == XBUTTON2) vkCode = VK_XBUTTON2; // MOUSE5
+                isKeyDown = true;
+            } else if (wParam == WM_XBUTTONUP || wParam == WM_NCXBUTTONUP) {
+                DWORD button = HIWORD(pMouse->mouseData);
+                if (button == XBUTTON1) vkCode = VK_XBUTTON1;
+                else if (button == XBUTTON2) vkCode = VK_XBUTTON2;
+                isKeyDown = false;
             }
 
             if (vkCode != 0) {
-                dustfx::HotkeyManager::Instance().HandleKeyEvent(vkCode, isAlt, isCtrl, isShift);
+                dustfx::HotkeyManager::Instance().HandleKeyEvent(vkCode, isAlt, isCtrl, isShift, isKeyDown);
             }
         }
     }
