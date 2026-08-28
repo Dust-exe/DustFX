@@ -70,7 +70,7 @@ export const DustStudioTab: React.FC<DustStudioTabProps> = ({ lang, onOpenExtern
                   DUST STUDIO
                 </h3>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/10 text-zinc-300 border border-white/10 font-bold">
-                  v1.3.0
+                  v1.4.0
                 </span>
               </div>
               <p className="text-xs text-fuchsia-300 font-medium">
