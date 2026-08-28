@@ -3,7 +3,7 @@
 > High-Performance Hardware GPU Display Calibration, DCCW Gamma Boost, Digital Vibrance, PvP Crosshair Overlay Engine & Auto-Update System
 
 [![Release](https://img.shields.io/badge/Release-v1.4.2-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE.txt)
+[![License](https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge)](LICENSE.txt)
 [![Tech](https://img.shields.io/badge/C%2B%2B20-React%20%2F%20Tailwind-purple?style=for-the-badge)](https://dust-studio.com)
 [![Status](https://img.shields.io/badge/DirectX%20%2F%20NVAPI-Zero--Lag-fuchsia?style=for-the-badge)](https://dust-studio.com)
 
@@ -115,6 +115,13 @@ DustFX, doğrudan Windows donanım kompozitörü (DWM), GDI GammaRamp ve NVIDIA 
 
 ---
 
+## Legal & Anti-Cheat Compliance Notice
+
+- **Non-Invasive Operation:** DustFX operates entirely external to games via standard Microsoft Windows Desktop Window Manager (DWM) and GDI Gamma APIs. It does not inject DLLs, modify memory, or tamper with third-party game files.
+- **Warranty Disclaimer:** The software is provided "AS IS", without warranty of any kind. The author (Dust Studio / Dust-exe) shall not be held liable for any hardware, software, or account penalties.
+
+---
+
 ## License
 
-Copyright (C) 2026 Dust Studio. All rights reserved. Distributed under the terms of the MIT License.
+Copyright (C) 2026 Dust Studio (Dust-exe). All rights reserved. Distributed under the terms of the GNU General Public License v3.0 (GPL-3.0). See [LICENSE.txt](LICENSE.txt) for full legal terms.

@@ -1,63 +1,72 @@
-================================================================================
-               DUSTFX END-USER LICENSE AGREEMENT (EULA)
-================================================================================
-Version: 1.2.1
-Publisher: Dust Studio (https://dust-studio.com)
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (C) 2026 Dust Studio (Dust-exe). All rights reserved.
+Official Ecosystem Website: https://dust-studio.com/
 Repository: https://github.com/Dust-exe/DustFX
-Last Updated: 2026
 
-Please read this End-User License Agreement ("Agreement") carefully before 
-installing or using DustFX ("Software"). By installing, copying, or using 
-this Software, you agree to be bound by the terms and conditions of this 
-Agreement.
+==============================================================================
+DUSTFX — OPEN SOURCE LICENSE & LEGAL DISCLAIMER
+==============================================================================
 
-1. LICENSE GRANT & SCOPE
-------------------------
-Dust Studio grants you a personal, non-exclusive, non-transferable, revocable 
-license to install and use DustFX on personal computing devices for non-commercial 
-purposes, specifically for display optimization, GPU gamma tuning, and gaming 
-visual enhancement.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-2. PRIVACY & DATA SECURITY
---------------------------
-- DustFX NEVER collects, logs, monitors, stores, or transmits your personal 
-  data, keystrokes, screen captures, active window titles, or private files.
-- The Software only communicates via secure HTTPS requests with the official 
-  GitHub Releases API for automatic update checks.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
 
-3. DISCLAIMER OF WARRANTIES & LIABILITY
----------------------------------------
-- DustFX utilizes Windows DWM, GDI SetDeviceGammaRamp, and GPU hardware color 
-  matrices.
-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-  IMPLIED. IN NO EVENT SHALL DUST STUDIO BE LIABLE FOR ANY CLAIM, DAMAGES, OR 
-  HARDWARE/DISPLAY INCOMPATIBILITIES.
-- Users may immediately reset all display settings back to standard Windows 
-  defaults at any time by pressing F10 or using the reset button in the UI.
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-4. UPDATES & MODIFICATIONS
---------------------------
-Dust Studio reserves the right to release updates, patches, and modifications 
-to improve stability, security, and feature performance.
+==============================================================================
+ADDITIONAL TERMS, DISCLAIMERS & LIMITATION OF LIABILITY
+==============================================================================
 
-5. CONTACT & SUPPORT
---------------------
-For feedback, bug reports, and community profiles:
-Website: https://dust-studio.com
-GitHub: https://github.com/Dust-exe/DustFX
+1. NON-INVASIVE ARCHITECTURE & ANTI-CHEAT COMPLIANCE
+DustFX is an external desktop display calibration utility. It operates strictly 
+at the Windows Desktop Window Manager (DWM) level, Microsoft Windows GDI 
+(SetDeviceGammaRamp), and standard GPU hardware display driver interfaces.
+- DustFX DOES NOT inject code, DLLs, or hooks into any third-party game or process.
+- DustFX DOES NOT read, modify, or scan third-party game memory.
+- DustFX DOES NOT modify game files, executables, or network traffic.
 
-================================================================================
-           TÜRKÇE SON KULLANICI LİSANS SÖZLEŞMESİ (EULA ÖZETİ)
-================================================================================
-Lütfen DustFX ("Yazılım") uygulamasını kullanmadan önce bu sözleşmeyi okuyunuz. 
-Yazılımı kurarak aşağıdaki koşulları kabul etmiş sayılırsınız:
+2. DISCLAIMER OF WARRANTY (SORUMLULUK REDDİ)
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS (DUST STUDIO / DUST-EXE) BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+DEALINGS IN THE SOFTWARE.
 
-1. LİSANS: Dust Studio, kullanıcıya kişisel ve ticari olmayan kullanım için 
-   devredilemez bir kullanım lisansı verir.
-2. GİZLİLİK: DustFX kişisel verilerinizi, ekran görüntülerinizi veya klavye 
-   girdilerinizi ASLA toplamaz ve kaydetmez. Yalnızca güncelleme kontrolü 
-   amacıyla GitHub Releases API'sine anonim HTTPS isteği gönderir.
-3. SORUMLULUK REDDİ: Yazılım "OLDUĞU GİBİ" sağlanmaktadır. Dilediğiniz an F10 
-   tuşuna basarak tüm ekran ayarlarını varsayılan Windows ayarlarına döndürebilirsiniz.
-4. DESTEK: https://dust-studio.com | https://github.com/Dust-exe/DustFX
-================================================================================
+3. LIMITATION OF LIABILITY (HUKUKİ VE TEKNİK MUAFİYET)
+Under no circumstances shall the author or Dust Studio be held responsible for:
+- Any hardware damage, display panel degradation, monitor malfunction, or GPU issues.
+- Any game account actions, suspensions, bans, or penalties issued by third-party 
+  game publishers, anti-cheat providers, or online services.
+- Any data loss, system instability, or software conflicts arising from the use 
+  of this software.
+Users utilize this utility entirely at their own discretion and risk.
+
+4. TRADEMARK & BRANDING RIGHTS
+The names "Dust Studio", "DustFX", "Dust-vpn", "DustReplay", and all official 
+associated logos and graphics are the exclusive intellectual property and 
+trademarks of the original author. This license grants no permission to use 
+such trademarks for commercial endorsement without prior written consent.
+
+==============================================================================
+TÜRKÇE YASAL BİLGİLENDİRME VE KULLANIM ŞARTLARI
+==============================================================================
+
+1. DUSTFX, doğrudan Windows Masaüstü Yöneticisi (DWM) ve GDI GammaRamp API'leri 
+   üzerinden çalışan harici bir ekran kalibrasyon yazılımıdır.
+2. Hiçbir oyunun veya uygulamanın belleğine müdahale etmez, kod enjekte etmez ve 
+   oyun dosyalarını değiştirmez.
+3. Yazılım "olduğu gibi" (AS-IS) sağlanmakta olup; donanım, monitör, yazılım 
+   veya üçüncü taraf oyun hesaplarında oluşabilecek herhangi bir durumdan 
+   geliştirici (Dust Studio / Dust-exe) sorumlu tutulamaz.
+4. Yazılımı kullanan herkes bu şartları peşinen kabul etmiş sayılır.
