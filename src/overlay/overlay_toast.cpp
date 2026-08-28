@@ -490,9 +490,6 @@ void OverlayToast::ShowToast(const std::string& title, const std::string& subtit
     m_subtitle = subtitle;
     m_expiresAt = std::chrono::steady_clock::now() + std::chrono::seconds(durationSeconds);
     std::cout << "[DustFX OSD] 🔔 " << title << (subtitle.empty() ? "" : " — " + subtitle) << std::endl;
-#ifdef _WIN32
-    MessageBeep(MB_ICONASTERISK);
-#endif
 }
 
 void OverlayToast::ToggleCrosshair(bool enabled) {

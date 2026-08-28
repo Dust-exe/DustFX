@@ -10,19 +10,20 @@ static HHOOK g_hMouseHook = NULL;
 static DWORD g_hookThreadId = 0;
 
 static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
-    if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
+    if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN || wParam == WM_KEYUP || wParam == WM_SYSKEYUP)) {
         KBDLLHOOKSTRUCT* pKey = reinterpret_cast<KBDLLHOOKSTRUCT*>(lParam);
         if (pKey) {
             bool isAlt = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
             bool isCtrl = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
             bool isShift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+            bool isKeyDown = (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN);
 
             // Don't trigger on modifier key presses alone
             if (pKey->vkCode != VK_MENU && pKey->vkCode != VK_LMENU && pKey->vkCode != VK_RMENU &&
                 pKey->vkCode != VK_CONTROL && pKey->vkCode != VK_LCONTROL && pKey->vkCode != VK_RCONTROL &&
                 pKey->vkCode != VK_SHIFT && pKey->vkCode != VK_LSHIFT && pKey->vkCode != VK_RSHIFT) {
                 
-                dustfx::HotkeyManager::Instance().HandleKeyEvent(pKey->vkCode, isAlt, isCtrl, isShift);
+                dustfx::HotkeyManager::Instance().HandleKeyEvent(pKey->vkCode, isAlt, isCtrl, isShift, isKeyDown);
             }
         }
     }
@@ -186,7 +187,7 @@ std::string HotkeyManager::BuildKeyComboString(int vkCode, bool isAlt, bool isCt
 #endif
 }
 
-void HotkeyManager::HandleKeyEvent(int vkCode, bool isAlt, bool isCtrl, bool isShift) {
+void HotkeyManager::HandleKeyEvent(int vkCode, bool isAlt, bool isCtrl, bool isShift, bool isKeyDown) {
     std::string pressedCombo = BuildKeyComboString(vkCode, isAlt, isCtrl, isShift);
     if (pressedCombo.empty()) return;
 
@@ -210,21 +211,21 @@ void HotkeyManager::HandleKeyEvent(int vkCode, bool isAlt, bool isCtrl, bool isS
     std::string upperCombo = ToUpperStr(pressedCombo);
 
     if (upperCombo == ToUpperStr(cfg.maxGammaKey)) {
-        cb(HotkeyAction::MAX_GAMMA_TOGGLE, "");
+        cb(HotkeyAction::MAX_GAMMA_TOGGLE, "", isKeyDown);
     } else if (upperCombo == ToUpperStr(cfg.vibranceKey)) {
-        cb(HotkeyAction::VIBRANCE_TOGGLE, "");
+        cb(HotkeyAction::VIBRANCE_TOGGLE, "", isKeyDown);
     } else if (upperCombo == ToUpperStr(cfg.quickResetKey)) {
-        cb(HotkeyAction::QUICK_RESET, "");
+        cb(HotkeyAction::QUICK_RESET, "", isKeyDown);
     } else if (upperCombo == ToUpperStr(cfg.toggleCrosshairKey)) {
-        cb(HotkeyAction::TOGGLE_CROSSHAIR, "");
+        cb(HotkeyAction::TOGGLE_CROSSHAIR, "", isKeyDown);
     } else if (upperCombo == ToUpperStr(cfg.sniperZoomKey)) {
-        cb(HotkeyAction::SNIPER_ZOOM_HOLD, "");
+        cb(HotkeyAction::SNIPER_ZOOM_HOLD, "", isKeyDown);
     } else if (upperCombo == ToUpperStr(cfg.toggleOverlayKey)) {
-        cb(HotkeyAction::TOGGLE_OVERLAY, "");
+        cb(HotkeyAction::TOGGLE_OVERLAY, "", isKeyDown);
     } else {
         auto it = profHotkeys.find(upperCombo);
         if (it != profHotkeys.end()) {
-            cb(HotkeyAction::CUSTOM_PROFILE_TRIGGER, it->second);
+            cb(HotkeyAction::CUSTOM_PROFILE_TRIGGER, it->second, isKeyDown);
         }
     }
 }

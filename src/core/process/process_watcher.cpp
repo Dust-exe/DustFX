@@ -48,9 +48,24 @@ std::string ProcessWatcher::DetectForegroundProcess() {
     HWND hwnd = GetForegroundWindow();
     if (!hwnd || !IsWindow(hwnd)) return "";
 
-    char title[256] = {0};
-    if (GetWindowTextA(hwnd, title, sizeof(title)) > 0) {
-        return std::string(title);
+    DWORD processId = 0;
+    GetWindowThreadProcessId(hwnd, &processId);
+    if (processId == 0) return "";
+
+    HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
+    if (hProcess) {
+        char exePath[MAX_PATH] = {0};
+        DWORD size = MAX_PATH;
+        if (QueryFullProcessImageNameA(hProcess, 0, exePath, &size)) {
+            CloseHandle(hProcess);
+            std::string path(exePath);
+            size_t lastSlash = path.find_last_of("\\/");
+            if (lastSlash != std::string::npos) {
+                return path.substr(lastSlash + 1);
+            }
+            return path;
+        }
+        CloseHandle(hProcess);
     }
 #endif
     return "";

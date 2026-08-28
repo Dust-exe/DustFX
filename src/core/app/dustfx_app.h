@@ -22,7 +22,7 @@ public:
     void ToggleVibrance();
     void ToggleSniperZoom();
 
-    void HandleHotkey(HotkeyAction action, const std::string& param);
+    void HandleHotkey(HotkeyAction action, const std::string& param, bool isKeyDown = true);
 
 private:
     DustFxApp();

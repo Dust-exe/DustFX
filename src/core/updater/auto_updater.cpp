@@ -344,7 +344,7 @@ bool AutoUpdater::ApplyUpdate(const std::string& downloadedExePath) {
             ShellExecuteA(NULL, "open", downloadedExePath.c_str(), NULL, NULL, SW_SHOWNORMAL);
         }
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+        // Terminate immediately so the installer can overwrite the current executable cleanly
         ExitProcess(0);
     }).detach();
 

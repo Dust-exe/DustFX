@@ -44,12 +44,13 @@ export const api = {
     }
   },
 
-  async applySettings(settings: Partial<DisplaySettings>): Promise<boolean> {
+  async applySettings(settings: Partial<DisplaySettings>, signal?: AbortSignal): Promise<boolean> {
     try {
       const res = await fetch(`${API_BASE}/apply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
+        signal,
       });
       return res.ok;
     } catch {

@@ -37,68 +37,8 @@ void OpenInDefaultBrowser(const char* url) {
 }
 
 void LaunchStudioUI() {
-    char localAppData[MAX_PATH] = {0};
-    GetEnvironmentVariableA("LOCALAPPDATA", localAppData, MAX_PATH);
-    std::string profileArg = "--user-data-dir=\"" + std::string(localAppData) + "\\DustFX\\app_profile\"";
-    
-    // Standalone desktop app mode without browser bars / tabs
-    std::string browserArgs = "--app=http://127.0.0.1:19840/ " + profileArg + 
-        " --window-size=1200,820 --window-name=\"DustFX\" --class=\"DustFX\"" +
-        " --disable-gpu-vsync --disable-backgrounding-occluded-windows --enable-low-res-tiling " +
-        " --enable-gpu-rasterization --enable-zero-copy --disable-software-rasterizer " +
-        " --disable-extensions --disable-features=Translate,OptimizationHints,MediaRouter,DevTools,Fullscreen --disable-default-apps";
-
-    // Try Edge in standalone app mode
-    HINSTANCE hRes = ShellExecuteA(
-        NULL,
-        "open",
-        "msedge.exe",
-        browserArgs.c_str(),
-        NULL,
-        SW_SHOW
-    );
-
-    // Fallback: try chrome in app mode
-    if ((intptr_t)hRes <= 32) {
-        hRes = ShellExecuteA(
-            NULL,
-            "open",
-            "chrome.exe",
-            browserArgs.c_str(),
-            NULL,
-            SW_SHOW
-        );
-    }
-
-    // Final fallback: default browser
-    if ((intptr_t)hRes <= 32) {
-        ShellExecuteA(NULL, "open", "http://127.0.0.1:19840/", NULL, NULL, SW_SHOW);
-    }
-
-    // Spawn window icon setter thread to replace Edge icon on taskbar with DustFX purple logo
-    std::thread([]() {
-        HICON hIconBig = (HICON)LoadImageA(GetModuleHandle(NULL), MAKEINTRESOURCE(1), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
-        HICON hIconSmall = (HICON)LoadImageA(GetModuleHandle(NULL), MAKEINTRESOURCE(1), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-        if (!hIconBig) hIconBig = LoadIconA(NULL, IDI_APPLICATION);
-        if (!hIconSmall) hIconSmall = hIconBig;
-
-        for (int i = 0; i < 40; ++i) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(250));
-            HWND hWnd = FindWindowA("Chrome_WidgetWin_1", NULL);
-            if (!hWnd) hWnd = FindWindowA(NULL, "DustFX");
-
-            if (hWnd) {
-                char title[256] = {0};
-                GetWindowTextA(hWnd, title, sizeof(title));
-                if (strstr(title, "DustFX") || strstr(title, "127.0.0.1:19840") || strstr(title, "localhost")) {
-                    SendMessageA(hWnd, WM_SETICON, ICON_BIG, (LPARAM)hIconBig);
-                    SendMessageA(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIconSmall);
-                    SetWindowTextA(hWnd, "DustFX - GPU Display & Gamma Optimizer");
-                    break;
-                }
-            }
-        }
-    }).detach();
+    // Open directly in the user's default browser to prevent Microsoft Edge / Chrome pinning issues on the taskbar.
+    OpenInDefaultBrowser("http://127.0.0.1:19840/");
 }
 
 void AddTrayIcon(HWND hWnd) {
@@ -116,7 +56,7 @@ void AddTrayIcon(HWND hWnd) {
     if (!g_nid.hIcon) {
         g_nid.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     }
-    lstrcpyA(g_nid.szTip, "DustFX v1.5.3 — GPU Display & Gamma Optimizer");
+    lstrcpyA(g_nid.szTip, "DustFX v1.6.0 — GPU Display & Gamma Optimizer");
     Shell_NotifyIconA(NIM_ADD, &g_nid);
 }
 
