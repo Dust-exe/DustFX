@@ -12,17 +12,26 @@
 #include <shellapi.h>
 #include <objbase.h>
 
-#define ID_TRAY_ICON       1001
-#define WM_TRAYICON        (WM_USER + 1)
-#define IDM_TRAY_OPEN      2001
-#define IDM_TRAY_MAXGAMMA  2002
-#define IDM_TRAY_RESET     2003
-#define IDM_TRAY_EXIT      2004
+#define ID_TRAY_ICON          1001
+#define WM_TRAYICON           (WM_USER + 1)
+#define IDM_TRAY_TITLE        2000
+#define IDM_TRAY_OPEN         2001
+#define IDM_TRAY_MAXGAMMA     2002
+#define IDM_TRAY_VIBRANCE     2003
+#define IDM_TRAY_CROSSHAIR    2004
+#define IDM_TRAY_SNIPERZOOM   2005
+#define IDM_TRAY_RESET        2006
+#define IDM_TRAY_CHECKUPDATE  2007
+#define IDM_TRAY_PROF_CS2     2010
+#define IDM_TRAY_PROF_WARZONE 2011
+#define IDM_TRAY_PROF_RUST    2012
+#define IDM_TRAY_PROF_CYBER   2013
+#define IDM_TRAY_EXIT         2099
 
 static NOTIFYICONDATA g_nid = {0};
 static HWND g_hHiddenWnd = NULL;
 
-// Open in default system browser (NOT Edge forced)
+// Open in default system browser
 void OpenInDefaultBrowser(const char* url) {
     ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOW);
 }
@@ -32,9 +41,9 @@ void LaunchStudioUI() {
     GetEnvironmentVariableA("LOCALAPPDATA", localAppData, MAX_PATH);
     std::string profileArg = "--user-data-dir=\"" + std::string(localAppData) + "\\DustFX\\app_profile\"";
     
-    // Highly optimized flags: 0% GPU load when idle, standalone desktop app mode
+    // Standalone desktop app mode without browser bars / tabs
     std::string browserArgs = "--app=http://127.0.0.1:19840/ " + profileArg + 
-        " --window-size=1180,800 --window-controls-overlay " +
+        " --window-size=1200,820 --window-name=\"DustFX\" --class=\"DustFX\"" +
         " --disable-gpu-vsync --disable-backgrounding-occluded-windows --enable-low-res-tiling " +
         " --enable-gpu-rasterization --enable-zero-copy --disable-software-rasterizer " +
         " --disable-extensions --disable-features=Translate,OptimizationHints,MediaRouter,DevTools,Fullscreen --disable-default-apps";
@@ -84,7 +93,7 @@ void LaunchStudioUI() {
                 if (strstr(title, "DustFX") || strstr(title, "127.0.0.1:19840") || strstr(title, "localhost")) {
                     SendMessageA(hWnd, WM_SETICON, ICON_BIG, (LPARAM)hIconBig);
                     SendMessageA(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIconSmall);
-                    SetWindowTextA(hWnd, "DustFX");
+                    SetWindowTextA(hWnd, "DustFX - GPU Display & Gamma Optimizer");
                     break;
                 }
             }
@@ -98,11 +107,16 @@ void AddTrayIcon(HWND hWnd) {
     g_nid.uID = ID_TRAY_ICON;
     g_nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     g_nid.uCallbackMessage = WM_TRAYICON;
-    g_nid.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(1));
+    
+    // Load authentic embedded icon resource
+    g_nid.hIcon = (HICON)LoadImageA(GetModuleHandle(NULL), MAKEINTRESOURCE(1), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR);
+    if (!g_nid.hIcon) {
+        g_nid.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(1));
+    }
     if (!g_nid.hIcon) {
         g_nid.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     }
-    lstrcpyA(g_nid.szTip, "DustFX - GPU Display & Gamma Optimizer");
+    lstrcpyA(g_nid.szTip, "DustFX v1.5.3 — GPU Display & Gamma Optimizer");
     Shell_NotifyIconA(NIM_ADD, &g_nid);
 }
 
@@ -117,28 +131,65 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
             break;
 
         case WM_TRAYICON: {
-            if (lParam == WM_RBUTTONUP || lParam == WM_LBUTTONUP) {
+            if (lParam == WM_LBUTTONDBLCLK || lParam == WM_LBUTTONUP) {
+                LaunchStudioUI();
+            } else if (lParam == WM_RBUTTONUP) {
                 POINT pt;
                 GetCursorPos(&pt);
                 HMENU hMenu = CreatePopupMenu();
+                HMENU hProfileSubmenu = CreatePopupMenu();
 
-                // Use ASCII-safe strings to avoid encoding issues
-                InsertMenuA(hMenu, 0, MF_BYPOSITION | MF_STRING, IDM_TRAY_OPEN,      "DustFX Paneli Ac");
-                InsertMenuA(hMenu, 1, MF_BYPOSITION | MF_STRING, IDM_TRAY_MAXGAMMA,  "MAX DCCW Gama Toggle");
-                InsertMenuA(hMenu, 2, MF_BYPOSITION | MF_STRING, IDM_TRAY_RESET,     "Ayarlari Sifirla");
-                InsertMenuA(hMenu, 3, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
-                InsertMenuA(hMenu, 4, MF_BYPOSITION | MF_STRING, IDM_TRAY_EXIT,      "Cikis (Exit)");
+                // Profiles Submenu
+                InsertMenuA(hProfileSubmenu, 0, MF_BYPOSITION | MF_STRING, IDM_TRAY_PROF_CS2,     "CS2 / Valorant Focus");
+                InsertMenuA(hProfileSubmenu, 1, MF_BYPOSITION | MF_STRING, IDM_TRAY_PROF_WARZONE, "Warzone / Apex Crisp");
+                InsertMenuA(hProfileSubmenu, 2, MF_BYPOSITION | MF_STRING, IDM_TRAY_PROF_RUST,    "Rust / Tarkov Night");
+                InsertMenuA(hProfileSubmenu, 3, MF_BYPOSITION | MF_STRING, IDM_TRAY_PROF_CYBER,   "Cyberpunk Story Rich");
+
+                // Main Tray Menu
+                InsertMenuA(hMenu, 0, MF_BYPOSITION | MF_STRING, IDM_TRAY_OPEN,         "DustFX Studio Paneli Ac");
+                InsertMenuA(hMenu, 1, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
+                InsertMenuA(hMenu, 2, MF_BYPOSITION | MF_STRING, IDM_TRAY_MAXGAMMA,     "MAX DCCW Gama (2.5x) Toggle");
+                InsertMenuA(hMenu, 3, MF_BYPOSITION | MF_STRING, IDM_TRAY_VIBRANCE,     "Digital Vibrance (%75) Toggle");
+                InsertMenuA(hMenu, 4, MF_BYPOSITION | MF_STRING, IDM_TRAY_CROSSHAIR,    "Ozel Nisangah (Crosshair)");
+                InsertMenuA(hMenu, 5, MF_BYPOSITION | MF_STRING, IDM_TRAY_SNIPERZOOM,   "Sniper Zoom Lens Toggle");
+                InsertMenuA(hMenu, 6, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
+                InsertMenuA(hMenu, 7, MF_BYPOSITION | MF_POPUP, (UINT_PTR)hProfileSubmenu, "Hizli Oyun Profilleri");
+                InsertMenuA(hMenu, 8, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
+                InsertMenuA(hMenu, 9, MF_BYPOSITION | MF_STRING, IDM_TRAY_RESET,        "Ayarlari Sifirla (Windows Default)");
+                InsertMenuA(hMenu, 10, MF_BYPOSITION | MF_STRING, IDM_TRAY_CHECKUPDATE, "Guncellemeleri Kontrol Et");
+                InsertMenuA(hMenu, 11, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
+                InsertMenuA(hMenu, 12, MF_BYPOSITION | MF_STRING, IDM_TRAY_EXIT,        "Cikis (Exit)");
+
+                // Make Dashboard Open default bold
+                SetMenuDefaultItem(hMenu, IDM_TRAY_OPEN, FALSE);
 
                 SetForegroundWindow(hWnd);
                 int cmd = TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_NONOTIFY, pt.x, pt.y, 0, hWnd, NULL);
+                DestroyMenu(hProfileSubmenu);
                 DestroyMenu(hMenu);
 
                 if (cmd == IDM_TRAY_OPEN) {
                     LaunchStudioUI();
                 } else if (cmd == IDM_TRAY_MAXGAMMA) {
                     dustfx::DustFxApp::Instance().QuickMaxGamma();
+                } else if (cmd == IDM_TRAY_VIBRANCE) {
+                    dustfx::DustFxApp::Instance().ToggleVibrance();
+                } else if (cmd == IDM_TRAY_CROSSHAIR) {
+                    dustfx::DustFxApp::Instance().ToggleCrosshair();
+                } else if (cmd == IDM_TRAY_SNIPERZOOM) {
+                    dustfx::DustFxApp::Instance().ToggleSniperZoom();
+                } else if (cmd == IDM_TRAY_PROF_CS2) {
+                    dustfx::DustFxApp::Instance().ApplyProfile("cs2");
+                } else if (cmd == IDM_TRAY_PROF_WARZONE) {
+                    dustfx::DustFxApp::Instance().ApplyProfile("warzone");
+                } else if (cmd == IDM_TRAY_PROF_RUST) {
+                    dustfx::DustFxApp::Instance().ApplyProfile("rust");
+                } else if (cmd == IDM_TRAY_PROF_CYBER) {
+                    dustfx::DustFxApp::Instance().ApplyProfile("cyberpunk");
                 } else if (cmd == IDM_TRAY_RESET) {
                     dustfx::DustFxApp::Instance().QuickReset();
+                } else if (cmd == IDM_TRAY_CHECKUPDATE) {
+                    LaunchStudioUI();
                 } else if (cmd == IDM_TRAY_EXIT) {
                     PostQuitMessage(0);
                 }

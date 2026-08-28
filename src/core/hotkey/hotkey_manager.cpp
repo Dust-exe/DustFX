@@ -6,6 +6,7 @@
 #include <windows.h>
 
 static HHOOK g_hKeyboardHook = NULL;
+static HHOOK g_hMouseHook = NULL;
 static DWORD g_hookThreadId = 0;
 
 static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
@@ -28,6 +29,31 @@ static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lP
     // ALWAYS call CallNextHookEx — PASSTHROUGH guarantees keys are NEVER locked!
     return CallNextHookEx(g_hKeyboardHook, nCode, wParam, lParam);
 }
+
+static LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
+    if (nCode == HC_ACTION) {
+        MSLLHOOKSTRUCT* pMouse = reinterpret_cast<MSLLHOOKSTRUCT*>(lParam);
+        if (pMouse) {
+            bool isAlt = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+            bool isCtrl = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
+            bool isShift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+
+            int vkCode = 0;
+            if (wParam == WM_MBUTTONDOWN || wParam == WM_NCMBUTTONDOWN) {
+                vkCode = VK_MBUTTON; // MOUSE3
+            } else if (wParam == WM_XBUTTONDOWN || wParam == WM_NCXBUTTONDOWN) {
+                DWORD button = HIWORD(pMouse->mouseData);
+                if (button == XBUTTON1) vkCode = VK_XBUTTON1; // MOUSE4
+                else if (button == XBUTTON2) vkCode = VK_XBUTTON2; // MOUSE5
+            }
+
+            if (vkCode != 0) {
+                dustfx::HotkeyManager::Instance().HandleKeyEvent(vkCode, isAlt, isCtrl, isShift);
+            }
+        }
+    }
+    return CallNextHookEx(g_hMouseHook, nCode, wParam, lParam);
+}
 #endif
 
 namespace dustfx {
@@ -49,7 +75,7 @@ bool HotkeyManager::Start() {
 #ifdef _WIN32
     m_thread = std::thread(&HotkeyManager::HookThreadProc, this);
 #endif
-    std::cout << "[HotkeyManager] Non-blocking global keyboard hook active (0% key lock)." << std::endl;
+    std::cout << "[HotkeyManager] Non-blocking global keyboard & mouse hook active (0% input lag)." << std::endl;
     return true;
 }
 
@@ -66,6 +92,10 @@ void HotkeyManager::Stop() {
         if (g_hKeyboardHook) {
             UnhookWindowsHookEx(g_hKeyboardHook);
             g_hKeyboardHook = NULL;
+        }
+        if (g_hMouseHook) {
+            UnhookWindowsHookEx(g_hMouseHook);
+            g_hMouseHook = NULL;
         }
 #endif
     }
@@ -108,12 +138,45 @@ std::string HotkeyManager::BuildKeyComboString(int vkCode, bool isAlt, bool isCt
         keyPart = std::string(1, static_cast<char>(vkCode));
     } else if (vkCode >= '0' && vkCode <= '9') {
         keyPart = std::string(1, static_cast<char>(vkCode));
-    } else if (vkCode == VK_SPACE) keyPart = "SPACE";
+    } else if (vkCode == VK_MBUTTON) keyPart = "MOUSE3";
+    else if (vkCode == VK_XBUTTON1) keyPart = "MOUSE4";
+    else if (vkCode == VK_XBUTTON2) keyPart = "MOUSE5";
+    else if (vkCode == VK_LBUTTON) keyPart = "MOUSE1";
+    else if (vkCode == VK_RBUTTON) keyPart = "MOUSE2";
+    else if (vkCode == VK_SPACE) keyPart = "SPACE";
     else if (vkCode == VK_INSERT) keyPart = "INSERT";
     else if (vkCode == VK_DELETE) keyPart = "DELETE";
     else if (vkCode == VK_HOME) keyPart = "HOME";
     else if (vkCode == VK_END) keyPart = "END";
+    else if (vkCode == VK_PRIOR) keyPart = "PAGEUP";
+    else if (vkCode == VK_NEXT) keyPart = "PAGEDOWN";
+    else if (vkCode == VK_UP) keyPart = "UP";
+    else if (vkCode == VK_DOWN) keyPart = "DOWN";
+    else if (vkCode == VK_LEFT) keyPart = "LEFT";
+    else if (vkCode == VK_RIGHT) keyPart = "RIGHT";
+    else if (vkCode == VK_TAB) keyPart = "TAB";
+    else if (vkCode == VK_CAPITAL) keyPart = "CAPSLOCK";
+    else if (vkCode == VK_RETURN) keyPart = "ENTER";
+    else if (vkCode == VK_ESCAPE) keyPart = "ESC";
+    else if (vkCode == VK_BACK) keyPart = "BACKSPACE";
+    else if (vkCode >= VK_NUMPAD0 && vkCode <= VK_NUMPAD9) {
+        keyPart = "NUMPAD" + std::to_string(vkCode - VK_NUMPAD0);
+    } else if (vkCode == VK_MULTIPLY) keyPart = "NUMPAD*";
+    else if (vkCode == VK_ADD) keyPart = "NUMPAD+";
+    else if (vkCode == VK_SUBTRACT) keyPart = "NUMPAD-";
+    else if (vkCode == VK_DECIMAL) keyPart = "NUMPAD.";
+    else if (vkCode == VK_DIVIDE) keyPart = "NUMPAD/";
     else if (vkCode == VK_OEM_3) keyPart = "~";
+    else if (vkCode == VK_OEM_1) keyPart = ";";
+    else if (vkCode == VK_OEM_PLUS) keyPart = "+";
+    else if (vkCode == VK_OEM_COMMA) keyPart = ",";
+    else if (vkCode == VK_OEM_MINUS) keyPart = "-";
+    else if (vkCode == VK_OEM_PERIOD) keyPart = ".";
+    else if (vkCode == VK_OEM_2) keyPart = "/";
+    else if (vkCode == VK_OEM_4) keyPart = "[";
+    else if (vkCode == VK_OEM_5) keyPart = "\\";
+    else if (vkCode == VK_OEM_6) keyPart = "]";
+    else if (vkCode == VK_OEM_7) keyPart = "'";
 
     if (keyPart.empty()) return "";
     return combo + keyPart;
@@ -170,6 +233,7 @@ void HotkeyManager::HookThreadProc() {
 #ifdef _WIN32
     g_hookThreadId = GetCurrentThreadId();
     g_hKeyboardHook = SetWindowsHookExA(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
+    g_hMouseHook    = SetWindowsHookExA(WH_MOUSE_LL, LowLevelMouseProc, GetModuleHandle(NULL), 0);
 
     MSG msg;
     while (m_running.load() && GetMessage(&msg, NULL, 0, 0)) {
@@ -181,6 +245,10 @@ void HotkeyManager::HookThreadProc() {
         UnhookWindowsHookEx(g_hKeyboardHook);
         g_hKeyboardHook = NULL;
     }
+    if (g_hMouseHook) {
+        UnhookWindowsHookEx(g_hMouseHook);
+        g_hMouseHook = NULL;
+    }
 #endif
 }
 
@@ -189,23 +257,35 @@ int HotkeyManager::ParseVirtualKey(const std::string& keyStr) {
     std::string k = keyStr;
     std::transform(k.begin(), k.end(), k.begin(), ::toupper);
 
-    if (k == "F1") return VK_F1;
-    if (k == "F2") return VK_F2;
-    if (k == "F3") return VK_F3;
-    if (k == "F4") return VK_F4;
-    if (k == "F5") return VK_F5;
-    if (k == "F6") return VK_F6;
-    if (k == "F7") return VK_F7;
-    if (k == "F8") return VK_F8;
-    if (k == "F9") return VK_F9;
-    if (k == "F10") return VK_F10;
-    if (k == "F11") return VK_F11;
-    if (k == "F12") return VK_F12;
+    if (k.rfind("CTRL+", 0) == 0) k = k.substr(5);
+    if (k.rfind("ALT+", 0) == 0) k = k.substr(4);
+    if (k.rfind("SHIFT+", 0) == 0) k = k.substr(6);
+
+    if (k >= "F1" && k <= "F24") {
+        int num = std::stoi(k.substr(1));
+        return VK_F1 + (num - 1);
+    }
+    if (k == "MOUSE3" || k == "MBUTTON") return VK_MBUTTON;
+    if (k == "MOUSE4" || k == "XBUTTON1") return VK_XBUTTON1;
+    if (k == "MOUSE5" || k == "XBUTTON2") return VK_XBUTTON2;
     if (k == "SPACE") return VK_SPACE;
     if (k == "INSERT") return VK_INSERT;
     if (k == "DELETE") return VK_DELETE;
     if (k == "HOME") return VK_HOME;
     if (k == "END") return VK_END;
+    if (k == "PAGEUP" || k == "PGUP") return VK_PRIOR;
+    if (k == "PAGEDOWN" || k == "PGDN") return VK_NEXT;
+    if (k == "UP") return VK_UP;
+    if (k == "DOWN") return VK_DOWN;
+    if (k == "LEFT") return VK_LEFT;
+    if (k == "RIGHT") return VK_RIGHT;
+    if (k == "TAB") return VK_TAB;
+    if (k == "CAPSLOCK") return VK_CAPITAL;
+    if (k == "ENTER" || k == "RETURN") return VK_RETURN;
+    if (k == "ESC" || k == "ESCAPE") return VK_ESCAPE;
+    if (k == "BACKSPACE" || k == "BACK") return VK_BACK;
+    if (k == "~" || k == "TILDE") return VK_OEM_3;
+
     if (k.length() == 1) {
         char c = k[0];
         if (c >= 'A' && c <= 'Z') return c;

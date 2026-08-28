@@ -139,33 +139,39 @@ void DustFxApp::ToggleCrosshair() {
     OverlayToast::Instance().ShowToast("🎯 NİŞANGAH (CROSSHAIR)", m_crosshairActive ? "AÇIK" : "KAPALI");
 }
 
+void DustFxApp::ToggleVibrance() {
+    m_vibranceActive = !m_vibranceActive;
+    DisplaySettings s = GpuController::Instance().GetCurrentSettings();
+    s.digitalVibrance = m_vibranceActive ? 75 : 0;
+    GpuController::Instance().ApplySettings(s);
+    SettingsManager::Instance().SetCurrentDisplaySettings(s);
+    OverlayToast::Instance().ShowToast("🎨 DIGITAL VIBRANCE", m_vibranceActive ? "%75 CANLILIK" : "KAPALI");
+}
+
+void DustFxApp::ToggleSniperZoom() {
+    bool active = !OverlayToast::Instance().IsSniperZoomActive();
+    OverlayToast::Instance().ToggleSniperZoom(active);
+    OverlayToast::Instance().ShowToast("🔭 SNIPER ZOOM", active ? "AÇIK" : "KAPALI");
+}
+
 void DustFxApp::HandleHotkey(HotkeyAction action, const std::string& param) {
     (void)param;
     switch (action) {
         case HotkeyAction::MAX_GAMMA_TOGGLE:
             QuickMaxGamma();
             break;
-        case HotkeyAction::VIBRANCE_TOGGLE: {
-            m_vibranceActive = !m_vibranceActive;
-            DisplaySettings s = GpuController::Instance().GetCurrentSettings();
-            s.digitalVibrance = m_vibranceActive ? 75 : 0;
-            GpuController::Instance().ApplySettings(s);
-            SettingsManager::Instance().SetCurrentDisplaySettings(s);
-            OverlayToast::Instance().ShowToast("🎨 DIGITAL VIBRANCE", m_vibranceActive ? "%75 CANLILIK" : "KAPALI");
+        case HotkeyAction::VIBRANCE_TOGGLE:
+            ToggleVibrance();
             break;
-        }
         case HotkeyAction::QUICK_RESET:
             QuickReset();
             break;
         case HotkeyAction::TOGGLE_CROSSHAIR:
             ToggleCrosshair();
             break;
-        case HotkeyAction::SNIPER_ZOOM_HOLD: {
-            bool active = !OverlayToast::Instance().IsSniperZoomActive();
-            OverlayToast::Instance().ToggleSniperZoom(active);
-            OverlayToast::Instance().ShowToast("🔭 SNIPER ZOOM", active ? "AÇIK" : "KAPALI");
+        case HotkeyAction::SNIPER_ZOOM_HOLD:
+            ToggleSniperZoom();
             break;
-        }
         case HotkeyAction::TOGGLE_OVERLAY:
             OverlayToast::Instance().ShowToast("🎮 DUSTFX PANEL", "http://127.0.0.1:19840");
             break;

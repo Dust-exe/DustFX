@@ -19,10 +19,8 @@ public:
     void QuickMaxGamma();
     void QuickReset();
     void ToggleCrosshair();
-
-private:
-    DustFxApp();
-    ~DustFxApp();
+    void ToggleVibrance();
+    void ToggleSniperZoom();
 
     void HandleHotkey(HotkeyAction action, const std::string& param);
     void HandleProcessEvent(const std::string& processName, bool isForeground);
