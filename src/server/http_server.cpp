@@ -265,19 +265,22 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
             json j = json::parse(body);
             DisplaySettings s = GpuController::Instance().GetCurrentSettings();
             
-            if (j.contains("gamma")) s.gamma = j["gamma"].get<float>();
-            if (j.contains("digitalVibrance")) s.digitalVibrance = j["digitalVibrance"].get<int>();
-            if (j.contains("brightnessOffset")) s.brightnessOffset = j["brightnessOffset"].get<float>();
-            if (j.contains("contrast")) s.contrast = j["contrast"].get<float>();
-            if (j.contains("rgbRed")) s.rgbRed = j["rgbRed"].get<float>();
-            if (j.contains("rgbGreen")) s.rgbGreen = j["rgbGreen"].get<float>();
-            if (j.contains("rgbBlue")) s.rgbBlue = j["rgbBlue"].get<float>();
-            if (j.contains("sharpness")) s.sharpness = j["sharpness"].get<float>();
-            if (j.contains("colorTemperature")) s.colorTemperature = j["colorTemperature"].get<float>();
-            if (j.contains("shadowDetail")) s.shadowDetail = j["shadowDetail"].get<float>();
-            if (j.contains("msaaStrength")) s.msaaStrength = j["msaaStrength"].get<float>();
-            if (j.contains("edgeEnhance")) s.edgeEnhance = j["edgeEnhance"].get<float>();
-            if (j.contains("bloom")) s.bloom = j["bloom"].get<float>();
+            bool displayChanged = false;
+
+            if (j.contains("gamma")) { s.gamma = j["gamma"].get<float>(); displayChanged = true; }
+            if (j.contains("digitalVibrance")) { s.digitalVibrance = j["digitalVibrance"].get<int>(); displayChanged = true; }
+            if (j.contains("brightnessOffset")) { s.brightnessOffset = j["brightnessOffset"].get<float>(); displayChanged = true; }
+            if (j.contains("contrast")) { s.contrast = j["contrast"].get<float>(); displayChanged = true; }
+            if (j.contains("rgbRed")) { s.rgbRed = j["rgbRed"].get<float>(); displayChanged = true; }
+            if (j.contains("rgbGreen")) { s.rgbGreen = j["rgbGreen"].get<float>(); displayChanged = true; }
+            if (j.contains("rgbBlue")) { s.rgbBlue = j["rgbBlue"].get<float>(); displayChanged = true; }
+            if (j.contains("sharpness")) { s.sharpness = j["sharpness"].get<float>(); displayChanged = true; }
+            if (j.contains("colorTemperature")) { s.colorTemperature = j["colorTemperature"].get<float>(); displayChanged = true; }
+            if (j.contains("shadowDetail")) { s.shadowDetail = j["shadowDetail"].get<float>(); displayChanged = true; }
+            if (j.contains("msaaStrength")) { s.msaaStrength = j["msaaStrength"].get<float>(); displayChanged = true; }
+            if (j.contains("edgeEnhance")) { s.edgeEnhance = j["edgeEnhance"].get<float>(); displayChanged = true; }
+            if (j.contains("bloom")) { s.bloom = j["bloom"].get<float>(); displayChanged = true; }
+
             if (j.contains("crosshairEnabled")) s.crosshairEnabled = j["crosshairEnabled"].get<bool>();
             if (j.contains("crosshairStyle")) s.crosshairStyle = j["crosshairStyle"].get<std::string>();
             if (j.contains("crosshairColor")) s.crosshairColor = j["crosshairColor"].get<std::string>();
@@ -297,7 +300,9 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
             if (j.contains("sniperZoomShowDot")) s.sniperZoomShowDot = j["sniperZoomShowDot"].get<bool>();
 
             int targetMon = SettingsManager::Instance().GetTargetMonitorIndex();
-            GpuController::Instance().ApplySettings(s, targetMon);
+            if (displayChanged) {
+                GpuController::Instance().ApplySettings(s, targetMon);
+            }
             SettingsManager::Instance().SetCurrentDisplaySettings(s);
             OverlayToast::Instance().UpdateCrosshair(s);
             OverlayToast::Instance().UpdateSniperZoom(s);
