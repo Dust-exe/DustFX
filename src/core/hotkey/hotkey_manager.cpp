@@ -154,6 +154,8 @@ void HotkeyManager::HandleKeyEvent(int vkCode, bool isAlt, bool isCtrl, bool isS
         cb(HotkeyAction::QUICK_RESET, "");
     } else if (upperCombo == ToUpperStr(cfg.toggleCrosshairKey)) {
         cb(HotkeyAction::TOGGLE_CROSSHAIR, "");
+    } else if (upperCombo == ToUpperStr(cfg.sniperZoomKey)) {
+        cb(HotkeyAction::SNIPER_ZOOM_HOLD, "");
     } else if (upperCombo == ToUpperStr(cfg.toggleOverlayKey)) {
         cb(HotkeyAction::TOGGLE_OVERLAY, "");
     } else {

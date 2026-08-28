@@ -322,6 +322,36 @@ export const ScreenFilterTab: React.FC<ScreenFilterTabProps> = ({ settings, onCh
               {t.edgeEnhanceDesc}
             </p>
           </div>
+
+          {/* Highlight Bloom Glow (Luminance Boost Slider) */}
+          <div className="flex flex-col gap-2 pt-2 border-t border-white/5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-zinc-100 font-semibold flex items-center gap-1.5">
+                <Sun className="w-4 h-4 text-amber-400 animate-pulse" />
+                {t.bloomTitle}
+              </span>
+              <span className="font-mono font-bold text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-lg border border-amber-500/30">
+                {((settings.bloom ?? 0) * 100).toFixed(0)}%
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0.0"
+              max="1.0"
+              step="0.02"
+              value={settings.bloom ?? 0.0}
+              onChange={(e) => onChange({ bloom: parseFloat(e.target.value) })}
+              className="w-full"
+            />
+            <div className="flex justify-between text-[10px] text-zinc-500 font-mono">
+              <span>0% ({lang === 'tr' ? 'Kapalı' : 'Off'})</span>
+              <span>50% ({lang === 'tr' ? 'Işıltılı Parlama' : 'Luminous Glow'})</span>
+              <span>100% ({lang === 'tr' ? 'Maksimum Bloom' : 'Max Bloom'})</span>
+            </div>
+            <p className="text-[10px] text-zinc-400 leading-relaxed">
+              {t.bloomDesc}
+            </p>
+          </div>
         </div>
       </div>
     </div>

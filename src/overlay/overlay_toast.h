@@ -22,6 +22,9 @@ public:
     void ShowToast(const std::string& title, const std::string& subtitle = "", int durationSeconds = 3);
     void ToggleCrosshair(bool enabled);
     void UpdateCrosshair(const DisplaySettings& settings);
+    void ToggleSniperZoom(bool active);
+    bool IsSniperZoomActive() const { return m_sniperZoomActive.load(); }
+    void UpdateSniperZoom(const DisplaySettings& settings);
 
 #ifdef _WIN32
     void SetCrosshairHwnd(HWND hWnd) { m_hWnd = hWnd; }
@@ -40,6 +43,7 @@ private:
     
     std::atomic<bool> m_running{false};
     std::atomic<bool> m_crosshairVisible{false};
+    std::atomic<bool> m_sniperZoomActive{false};
     DisplaySettings m_crosshairSettings;
 
     std::thread m_overlayThread;

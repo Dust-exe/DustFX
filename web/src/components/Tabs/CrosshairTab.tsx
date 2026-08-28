@@ -16,7 +16,11 @@ import {
   Bookmark,
   Trash2,
   Save,
+  Eye,
+  Tv,
+  Zap,
 } from 'lucide-react';
+import { api } from '../../api';
 import { DisplaySettings, SavedCrosshairPreset } from '../../types';
 import { translations, Language } from '../../translations';
 
@@ -1023,6 +1027,250 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange, 
                   </button>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sniper Zoom Lens Section */}
+      <div className="glass-card p-6 rounded-3xl border border-fuchsia-500/25 bg-[#0e0a22]/80 flex flex-col gap-5 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-fuchsia-600/10 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Section Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/5 relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-fuchsia-500/15 border border-fuchsia-500/30 flex items-center justify-center text-fuchsia-400 shadow-[0_0_15px_rgba(217,70,239,0.3)]">
+              <Eye className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-white font-mono flex items-center gap-2">
+                {t.zoomHeader}
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30">
+                  Zero Lag
+                </span>
+              </h3>
+              <p className="text-xs text-zinc-400">
+                {t.zoomSub}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={async () => {
+                const res = await api.toggleZoom();
+                onChange({ sniperZoomEnabled: res.active });
+              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-500 hover:to-purple-500 text-white text-xs font-mono font-bold shadow-[0_0_15px_rgba(217,70,239,0.35)] transition-all active:scale-95"
+            >
+              <Zap className="w-3.5 h-3.5" />
+              {lang === 'tr' ? 'Zoom Test (Aç / Kapat)' : 'Test Zoom Lens'}
+            </button>
+          </div>
+        </div>
+
+        {/* Zoom Controls Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+          {/* Left Column: Sliders & Shape */}
+          <div className="flex flex-col gap-4">
+            {/* Scale Slider */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-zinc-200 flex items-center gap-1.5">
+                  <Sliders className="w-4 h-4 text-fuchsia-400" />
+                  {t.zoomScale}
+                </span>
+                <span className="font-mono font-bold text-fuchsia-400 bg-fuchsia-500/10 px-2.5 py-0.5 rounded-lg border border-fuchsia-500/30">
+                  {(settings.sniperZoomScale ?? 2.0).toFixed(1)}x
+                </span>
+              </div>
+              <input
+                type="range"
+                min="1.2"
+                max="4.0"
+                step="0.1"
+                value={settings.sniperZoomScale ?? 2.0}
+                onChange={(e) => onChange({ sniperZoomScale: parseFloat(e.target.value) })}
+                className="w-full"
+              />
+              <div className="flex justify-between text-[10px] text-zinc-500 font-mono">
+                <span>1.2x ({lang === 'tr' ? 'Hafif' : 'Mild'})</span>
+                <span>2.0x ({lang === 'tr' ? 'Standart' : 'Standard'})</span>
+                <span>4.0x ({lang === 'tr' ? 'Maksimum Dürbün' : 'Max Scope'})</span>
+              </div>
+            </div>
+
+            {/* Lens Size / Diameter */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-zinc-200">
+                  {t.zoomSize}
+                </span>
+                <span className="font-mono font-bold text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-lg border border-purple-500/30">
+                  {settings.sniperZoomSize ?? 260}px
+                </span>
+              </div>
+              <input
+                type="range"
+                min="120"
+                max="480"
+                step="10"
+                value={settings.sniperZoomSize ?? 260}
+                onChange={(e) => onChange({ sniperZoomSize: parseInt(e.target.value) })}
+                className="w-full"
+              />
+            </div>
+
+            {/* Lens Shape */}
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-semibold text-zinc-300">
+                {t.zoomShape}
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => onChange({ sniperZoomShape: 'circle' })}
+                  className={`py-2 px-3 rounded-xl border text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all ${
+                    (settings.sniperZoomShape ?? 'circle') === 'circle'
+                      ? 'bg-fuchsia-500/20 border-fuchsia-500/50 text-fuchsia-300 shadow-[0_0_12px_rgba(217,70,239,0.25)]'
+                      : 'bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10'
+                  }`}
+                >
+                  <span className="w-3 h-3 rounded-full border border-current"></span>
+                  {t.zoomShapeCircle}
+                </button>
+                <button
+                  onClick={() => onChange({ sniperZoomShape: 'square' })}
+                  className={`py-2 px-3 rounded-xl border text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all ${
+                    settings.sniperZoomShape === 'square'
+                      ? 'bg-fuchsia-500/20 border-fuchsia-500/50 text-fuchsia-300 shadow-[0_0_12px_rgba(217,70,239,0.25)]'
+                      : 'bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10'
+                  }`}
+                >
+                  <span className="w-3 h-3 rounded-sm border border-current"></span>
+                  {t.zoomShapeSquare}
+                </button>
+              </div>
+            </div>
+
+            {/* Trigger Mode */}
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-semibold text-zinc-300">
+                {t.zoomMode}
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => onChange({ sniperZoomMode: 'hold' })}
+                  className={`py-2 px-3 rounded-xl border text-xs font-mono font-bold transition-all ${
+                    (settings.sniperZoomMode ?? 'hold') === 'hold'
+                      ? 'bg-purple-500/20 border-purple-500/50 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.25)]'
+                      : 'bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10'
+                  }`}
+                >
+                  {t.zoomModeHold}
+                </button>
+                <button
+                  onClick={() => onChange({ sniperZoomMode: 'toggle' })}
+                  className={`py-2 px-3 rounded-xl border text-xs font-mono font-bold transition-all ${
+                    settings.sniperZoomMode === 'toggle'
+                      ? 'bg-purple-500/20 border-purple-500/50 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.25)]'
+                      : 'bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10'
+                  }`}
+                >
+                  {t.zoomModeToggle}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Border, Center Dot & Live Preview */}
+          <div className="flex flex-col gap-4">
+            {/* Border Reticle Color & Width */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-zinc-300">
+                  {t.zoomBorderColor}
+                </span>
+                <span className="font-mono font-bold text-xs" style={{ color: settings.sniperZoomBorderColor ?? '#A855F7' }}>
+                  {settings.sniperZoomBorderColor ?? '#A855F7'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {['#A855F7', '#F59E0B', '#00FF66', '#00E5FF', '#FF0055', '#FFFFFF'].map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => onChange({ sniperZoomBorderColor: c })}
+                    className={`w-7 h-7 rounded-xl border-2 transition-transform ${
+                      (settings.sniperZoomBorderColor ?? '#A855F7') === c ? 'scale-110 border-white shadow-lg' : 'border-transparent opacity-75 hover:opacity-100'
+                    }`}
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Center Dot Toggle */}
+            <label className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/10 cursor-pointer">
+              <span className="text-xs font-semibold text-zinc-200">
+                {t.zoomShowDot}
+              </span>
+              <input
+                type="checkbox"
+                checked={settings.sniperZoomShowDot ?? true}
+                onChange={(e) => onChange({ sniperZoomShowDot: e.target.checked })}
+                className="w-4 h-4 accent-fuchsia-500 cursor-pointer"
+              />
+            </label>
+
+            {/* Live Interactive Scope Preview */}
+            <div className="p-4 rounded-2xl bg-black/60 border border-white/10 flex flex-col items-center justify-center gap-3 relative overflow-hidden h-[180px]">
+              {/* Background simulated enemy texture */}
+              <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:12px_12px]" />
+              
+              {/* Magnified Lens Simulation */}
+              <div
+                className={`relative flex items-center justify-center transition-all duration-300 ${
+                  (settings.sniperZoomShape ?? 'circle') === 'circle' ? 'rounded-full' : 'rounded-2xl'
+                }`}
+                style={{
+                  width: Math.min(140, (settings.sniperZoomSize ?? 260) * 0.45),
+                  height: Math.min(140, (settings.sniperZoomSize ?? 260) * 0.45),
+                  border: `${Math.max(1, settings.sniperZoomBorderWidth ?? 2)}px solid ${settings.sniperZoomBorderColor ?? '#A855F7'}`,
+                  boxShadow: `0 0 20px ${settings.sniperZoomBorderColor ?? '#A855F7'}40`,
+                  backgroundColor: 'rgba(15, 10, 30, 0.75)',
+                }}
+              >
+                {/* Background grid magnified */}
+                <div
+                  className="absolute inset-0 opacity-40 bg-[radial-gradient(#ffffff_1.5px,transparent_1.5px)] [background-size:24px_24px]"
+                  style={{
+                    transform: `scale(${settings.sniperZoomScale ?? 2.0})`,
+                  }}
+                />
+
+                {/* Target silhouette indicator */}
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500/80 animate-ping absolute" />
+
+                {/* Crosshair rendered on TOP at 1x original crisp scale */}
+                <div className="relative z-10">
+                  <CrosshairSvgRenderer
+                    style={currentStyle}
+                    color={settings.crosshairColor}
+                    size={size}
+                    thickness={thickness}
+                    gap={gap}
+                    dotSize={dotSize}
+                    outline={outline}
+                    opacity={opacity}
+                    width={48}
+                    height={48}
+                  />
+                </div>
+              </div>
+
+              <div className="text-[10px] font-mono text-zinc-400 flex items-center gap-1.5 z-10">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{lang === 'tr' ? 'Nişangah zoom üstünde 1x netlikte izole edilir' : 'Crosshair isolated at 1x native sharpness'}</span>
+              </div>
             </div>
           </div>
         </div>

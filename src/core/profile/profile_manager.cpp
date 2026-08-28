@@ -20,12 +20,26 @@ static json DisplaySettingsToJson(const DisplaySettings& s) {
         {"rgbGreen", s.rgbGreen},
         {"rgbBlue", s.rgbBlue},
         {"sharpness", s.sharpness},
+        {"colorTemperature", s.colorTemperature},
+        {"shadowDetail", s.shadowDetail},
+        {"bloom", s.bloom},
         {"crosshairEnabled", s.crosshairEnabled},
         {"crosshairStyle", s.crosshairStyle},
         {"crosshairColor", s.crosshairColor},
         {"crosshairSize", s.crosshairSize},
+        {"crosshairThickness", s.crosshairThickness},
+        {"crosshairGap", s.crosshairGap},
+        {"crosshairDotSize", s.crosshairDotSize},
+        {"crosshairOutline", s.crosshairOutline},
+        {"crosshairOpacity", s.crosshairOpacity},
         {"sniperZoomEnabled", s.sniperZoomEnabled},
-        {"sniperZoomFactor", s.sniperZoomFactor}
+        {"sniperZoomScale", s.sniperZoomScale},
+        {"sniperZoomSize", s.sniperZoomSize},
+        {"sniperZoomShape", s.sniperZoomShape},
+        {"sniperZoomMode", s.sniperZoomMode},
+        {"sniperZoomBorderColor", s.sniperZoomBorderColor},
+        {"sniperZoomBorderWidth", s.sniperZoomBorderWidth},
+        {"sniperZoomShowDot", s.sniperZoomShowDot}
     };
 }
 
@@ -39,12 +53,26 @@ static DisplaySettings JsonToDisplaySettings(const json& j) {
     s.rgbGreen = j.value("rgbGreen", 1.0f);
     s.rgbBlue = j.value("rgbBlue", 1.0f);
     s.sharpness = j.value("sharpness", 0.0f);
+    s.colorTemperature = j.value("colorTemperature", 6500.0f);
+    s.shadowDetail = j.value("shadowDetail", 0.0f);
+    s.bloom = j.value("bloom", 0.0f);
     s.crosshairEnabled = j.value("crosshairEnabled", false);
-    s.crosshairStyle = j.value("crosshairStyle", "dot");
+    s.crosshairStyle = j.value("crosshairStyle", "gap_cross");
     s.crosshairColor = j.value("crosshairColor", "#00FF66");
-    s.crosshairSize = j.value("crosshairSize", 6);
+    s.crosshairSize = j.value("crosshairSize", 10);
+    s.crosshairThickness = j.value("crosshairThickness", 2);
+    s.crosshairGap = j.value("crosshairGap", 4);
+    s.crosshairDotSize = j.value("crosshairDotSize", 0);
+    s.crosshairOutline = j.value("crosshairOutline", 1);
+    s.crosshairOpacity = j.value("crosshairOpacity", 1.0f);
     s.sniperZoomEnabled = j.value("sniperZoomEnabled", false);
-    s.sniperZoomFactor = j.value("sniperZoomFactor", 1.5f);
+    s.sniperZoomScale = j.value("sniperZoomScale", 2.0f);
+    s.sniperZoomSize = j.value("sniperZoomSize", 260);
+    s.sniperZoomShape = j.value("sniperZoomShape", "circle");
+    s.sniperZoomMode = j.value("sniperZoomMode", "hold");
+    s.sniperZoomBorderColor = j.value("sniperZoomBorderColor", "#A855F7");
+    s.sniperZoomBorderWidth = j.value("sniperZoomBorderWidth", 2);
+    s.sniperZoomShowDot = j.value("sniperZoomShowDot", true);
     return s;
 }
 

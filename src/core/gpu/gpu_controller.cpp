@@ -437,7 +437,18 @@ bool GpuController::ApplyGdiGammaRamp(const DisplaySettings& settings, int monit
         // 4. Contrast & brightness
         float cVal = (gVal - 0.5f) * contrast + 0.5f + bright;
 
-        // 5. RGB channels + color temp
+        // 5. Highlight Bloom Glow Knee Expansion
+        float bloom = std::clamp(settings.bloom, 0.0f, 1.0f);
+        if (bloom > 0.001f) {
+            float threshold = 0.55f;
+            if (normalized > threshold) {
+                float highlightT = (normalized - threshold) / (1.0f - threshold);
+                float bloomBoost = bloom * 0.30f * (highlightT * highlightT);
+                cVal += bloomBoost;
+            }
+        }
+
+        // 6. RGB channels + color temp
         float rVal = cVal * settings.rgbRed   * tempR;
         float gChannelVal = cVal * settings.rgbGreen * tempG;
         float bVal = cVal * settings.rgbBlue  * tempB;

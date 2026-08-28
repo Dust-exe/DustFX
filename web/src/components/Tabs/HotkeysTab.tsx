@@ -81,6 +81,13 @@ export const HotkeysTab: React.FC<HotkeysTabProps> = ({
       icon: '🎯',
     },
     {
+      id: 'sniperZoomKey',
+      action: 'Sniper Zoom Lens (Ekran Büyüteci)',
+      key: currentHotkeys.sniperZoomKey || 'V',
+      desc: 'Ekran ortası yakınlaştırma lensini/dürbününü açar veya basılı tutar.',
+      icon: '🔭',
+    },
+    {
       id: 'toggleOverlayKey',
       action: 'DustFX OSD Bilgi Paneli',
       key: currentHotkeys.toggleOverlayKey,

@@ -10,6 +10,8 @@
 
 #define WM_USER_UPDATE_CROSSHAIR     (WM_USER + 301)
 #define WM_USER_APPLY_MAGNIFICATION  (WM_USER + 302)
+#define WM_USER_UPDATE_SNIPER_ZOOM   (WM_USER + 303)
+#define TIMER_ID_ZOOM_REFRESH        101
 #define TRANSPARENT_COLOR_KEY RGB(255, 0, 255)
 
 typedef struct {
@@ -30,6 +32,7 @@ static std::mutex g_magMutex;
 static HWND g_hOverlayWnd = NULL;
 static dustfx::DisplaySettings g_crosshairSettings;
 static bool g_crosshairVisible = false;
+static bool g_sniperZoomActive = false;
 
 // Helper: Parse hex color "#RRGGBB" to COLORREF
 static COLORREF HexToColorRef(const std::string& hex) {
@@ -54,7 +57,136 @@ static COLORREF HexToColorRef(const std::string& hex) {
     }
 }
 
-// Windows Overlay Window Procedure — Double-Buffered Zero-Flicker Renderer
+// Render unmagnified, pixel-perfect crosshair directly onto DC at specified center (cx, cy)
+static void RenderCrosshairOnDC(HDC memDC, int cx, int cy, const dustfx::DisplaySettings& settings) {
+    COLORREF color = HexToColorRef(settings.crosshairColor);
+    int size = std::max(2, settings.crosshairSize);
+    int thickness = std::max(1, settings.crosshairThickness);
+    int gap = std::max(0, settings.crosshairGap);
+    int dotSize = settings.crosshairDotSize;
+    int outline = std::max(0, settings.crosshairOutline);
+    std::string style = settings.crosshairStyle;
+    if (style.empty()) style = "gap_cross";
+
+    HBRUSH colorBrush = CreateSolidBrush(color);
+    HPEN colorPen = CreatePen(PS_SOLID, thickness, color);
+    HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
+    HBRUSH outlineBrush = CreateSolidBrush(RGB(0, 0, 0));
+
+    auto DrawFilledRect = [&](int left, int top, int right, int bottom) {
+        if (outline > 0) {
+            RECT oRc = { left - outline, top - outline, right + outline, bottom + outline };
+            FillRect(memDC, &oRc, outlineBrush);
+        }
+        RECT fRc = { left, top, right, bottom };
+        FillRect(memDC, &fRc, colorBrush);
+    };
+
+    int halfThick = thickness / 2;
+    int tRem = thickness - halfThick;
+
+    if (style == "dot") {
+        int r = dotSize > 0 ? dotSize : size;
+        if (outline > 0) {
+            SelectObject(memDC, outlineBrush);
+            SelectObject(memDC, nullPen);
+            Ellipse(memDC, cx - r - outline, cy - r - outline, cx + r + outline, cy + r + outline);
+        }
+        SelectObject(memDC, colorBrush);
+        SelectObject(memDC, nullPen);
+        Ellipse(memDC, cx - r, cy - r, cx + r, cy + r);
+    }
+    else if (style == "cross") {
+        DrawFilledRect(cx - gap - size, cy - halfThick, cx - gap, cy + tRem);
+        DrawFilledRect(cx + gap, cy - halfThick, cx + gap + size, cy + tRem);
+        DrawFilledRect(cx - halfThick, cy - gap - size, cx + tRem, cy - gap);
+        DrawFilledRect(cx - halfThick, cy + gap, cx + tRem, cy + gap + size);
+    }
+    else if (style == "t-cross") {
+        DrawFilledRect(cx - gap - size, cy - halfThick, cx - gap, cy + tRem);
+        DrawFilledRect(cx + gap, cy - halfThick, cx + gap + size, cy + tRem);
+        DrawFilledRect(cx - halfThick, cy + gap, cx + tRem, cy + gap + size);
+    }
+    else if (style == "gap-cross" || style == "gap_cross") {
+        int bigGap = std::max(6, gap);
+        DrawFilledRect(cx - bigGap - size, cy - halfThick, cx - bigGap, cy + tRem);
+        DrawFilledRect(cx + bigGap, cy - halfThick, cx + bigGap + size, cy + tRem);
+        DrawFilledRect(cx - halfThick, cy - bigGap - size, cx + tRem, cy - bigGap);
+        DrawFilledRect(cx - halfThick, cy + bigGap, cx + tRem, cy + bigGap + size);
+    }
+    else if (style == "x-cross") {
+        int s = (int)(size * 0.707f);
+        int g = (int)(gap * 0.707f);
+        HPEN outlinePen = CreatePen(PS_SOLID, thickness + outline * 2, RGB(0, 0, 0));
+        if (outline > 0) {
+            SelectObject(memDC, outlinePen);
+            MoveToEx(memDC, cx - g - s, cy - g - s, NULL); LineTo(memDC, cx - g, cy - g);
+            MoveToEx(memDC, cx + g, cy + g, NULL); LineTo(memDC, cx + g + s, cy + g + s);
+            MoveToEx(memDC, cx + g + s, cy - g - s, NULL); LineTo(memDC, cx + g, cy - g);
+            MoveToEx(memDC, cx - g, cy + g, NULL); LineTo(memDC, cx - g - s, cy + g + s);
+        }
+        SelectObject(memDC, colorPen);
+        MoveToEx(memDC, cx - g - s, cy - g - s, NULL); LineTo(memDC, cx - g, cy - g);
+        MoveToEx(memDC, cx + g, cy + g, NULL); LineTo(memDC, cx + g + s, cy + g + s);
+        MoveToEx(memDC, cx + g + s, cy - g - s, NULL); LineTo(memDC, cx + g, cy - g);
+        MoveToEx(memDC, cx - g, cy + g, NULL); LineTo(memDC, cx - g - s, cy + g + s);
+        DeleteObject(outlinePen);
+    }
+    else if (style == "circle") {
+        int r = size + gap;
+        HPEN outlinePen = CreatePen(PS_SOLID, thickness + outline * 2, RGB(0, 0, 0));
+        SelectObject(memDC, GetStockObject(NULL_BRUSH));
+        if (outline > 0) {
+            SelectObject(memDC, outlinePen);
+            Ellipse(memDC, cx - r, cy - r, cx + r, cy + r);
+        }
+        SelectObject(memDC, colorPen);
+        Ellipse(memDC, cx - r, cy - r, cx + r, cy + r);
+        DeleteObject(outlinePen);
+    }
+    else if (style == "cross-dot") {
+        DrawFilledRect(cx - gap - size, cy - halfThick, cx - gap, cy + tRem);
+        DrawFilledRect(cx + gap, cy - halfThick, cx + gap + size, cy + tRem);
+        DrawFilledRect(cx - halfThick, cy - gap - size, cx + tRem, cy - gap);
+        DrawFilledRect(cx - halfThick, cy + gap, cx + tRem, cy + gap + size);
+        int d = std::max(2, dotSize > 0 ? dotSize : thickness);
+        if (outline > 0) {
+            SelectObject(memDC, outlineBrush);
+            SelectObject(memDC, nullPen);
+            Ellipse(memDC, cx - d - outline, cy - d - outline, cx + d + outline, cy + d + outline);
+        }
+        SelectObject(memDC, colorBrush);
+        SelectObject(memDC, nullPen);
+        Ellipse(memDC, cx - d, cy - d, cx + d, cy + d);
+    }
+    else if (style == "square") {
+        int halfS = size + gap;
+        if (outline > 0) {
+            RECT oRc = { cx - halfS - outline, cy - halfS - outline, cx + halfS + outline, cy + halfS + outline };
+            FrameRect(memDC, &oRc, outlineBrush);
+        }
+        RECT sRc = { cx - halfS, cy - halfS, cx + halfS, cy + halfS };
+        FrameRect(memDC, &sRc, colorBrush);
+    }
+
+    // Explicit Center Dot if enabled
+    if (dotSize > 0 && style != "dot" && style != "cross-dot") {
+        if (outline > 0) {
+            SelectObject(memDC, outlineBrush);
+            SelectObject(memDC, nullPen);
+            Ellipse(memDC, cx - dotSize - outline, cy - dotSize - outline, cx + dotSize + outline, cy + dotSize + outline);
+        }
+        SelectObject(memDC, colorBrush);
+        SelectObject(memDC, nullPen);
+        Ellipse(memDC, cx - dotSize, cy - dotSize, cx + dotSize, cy + dotSize);
+    }
+
+    DeleteObject(colorBrush);
+    DeleteObject(colorPen);
+    DeleteObject(outlineBrush);
+}
+
+// Windows Overlay Window Procedure — Double-Buffered Zero-Flicker Renderer with Zoom & Crosshair
 static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_USER_APPLY_MAGNIFICATION: {
@@ -65,10 +197,31 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
             return 0;
         }
 
+        case WM_TIMER: {
+            if (wParam == TIMER_ID_ZOOM_REFRESH && g_sniperZoomActive) {
+                InvalidateRect(hWnd, NULL, FALSE);
+            }
+            return 0;
+        }
+
+        case WM_USER_UPDATE_SNIPER_ZOOM:
         case WM_USER_UPDATE_CROSSHAIR: {
-            if (g_crosshairVisible) {
-                int screenW = GetSystemMetrics(SM_CXSCREEN);
-                int screenH = GetSystemMetrics(SM_CYSCREEN);
+            int screenW = GetSystemMetrics(SM_CXSCREEN);
+            int screenH = GetSystemMetrics(SM_CYSCREEN);
+
+            if (g_sniperZoomActive) {
+                int zoomSize = std::clamp(g_crosshairSettings.sniperZoomSize, 100, 500);
+                int x = (screenW - zoomSize) / 2;
+                int y = (screenH - zoomSize) / 2;
+
+                SetLayeredWindowAttributes(hWnd, TRANSPARENT_COLOR_KEY, 255, LWA_COLORKEY);
+                SetWindowPos(hWnd, HWND_TOPMOST, x, y, zoomSize, zoomSize, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+                SetTimer(hWnd, TIMER_ID_ZOOM_REFRESH, 16, NULL); // 60 FPS live screen refresh
+                InvalidateRect(hWnd, NULL, TRUE);
+                UpdateWindow(hWnd);
+            }
+            else if (g_crosshairVisible) {
+                KillTimer(hWnd, TIMER_ID_ZOOM_REFRESH);
                 int overlaySize = 200;
                 int x = (screenW - overlaySize) / 2;
                 int y = (screenH - overlaySize) / 2;
@@ -84,20 +237,15 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                 InvalidateRect(hWnd, NULL, TRUE);
                 UpdateWindow(hWnd);
             } else {
+                KillTimer(hWnd, TIMER_ID_ZOOM_REFRESH);
                 ShowWindow(hWnd, SW_HIDE);
             }
             return 0;
         }
 
         case WM_DISPLAYCHANGE: {
-            if (g_crosshairVisible) {
-                int screenW = GetSystemMetrics(SM_CXSCREEN);
-                int screenH = GetSystemMetrics(SM_CYSCREEN);
-                int overlaySize = 200;
-                int x = (screenW - overlaySize) / 2;
-                int y = (screenH - overlaySize) / 2;
-                SetWindowPos(hWnd, HWND_TOPMOST, x, y, overlaySize, overlaySize, SWP_NOACTIVATE);
-                InvalidateRect(hWnd, NULL, TRUE);
+            if (g_sniperZoomActive || g_crosshairVisible) {
+                PostMessage(hWnd, WM_USER_UPDATE_CROSSHAIR, 0, 0);
             }
             return 0;
         }
@@ -124,139 +272,79 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
             FillRect(memDC, &rc, transBrush);
             DeleteObject(transBrush);
 
-            if (g_crosshairVisible) {
-                COLORREF color = HexToColorRef(g_crosshairSettings.crosshairColor);
-                int size = std::max(2, g_crosshairSettings.crosshairSize);
-                int thickness = std::max(1, g_crosshairSettings.crosshairThickness);
-                int gap = std::max(0, g_crosshairSettings.crosshairGap);
-                int dotSize = g_crosshairSettings.crosshairDotSize;
-                int outline = std::max(0, g_crosshairSettings.crosshairOutline);
-                std::string style = g_crosshairSettings.crosshairStyle;
-                if (style.empty()) style = "cross";
+            int screenW = GetSystemMetrics(SM_CXSCREEN);
+            int screenH = GetSystemMetrics(SM_CYSCREEN);
 
-                HBRUSH colorBrush = CreateSolidBrush(color);
-                HPEN colorPen = CreatePen(PS_SOLID, thickness, color);
-                HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
-                HBRUSH outlineBrush = CreateSolidBrush(RGB(0, 0, 0));
+            // ==========================================
+            // CASE 1: SNIPER ZOOM LENS ACTIVE
+            // ==========================================
+            if (g_sniperZoomActive) {
+                float scale = std::clamp(g_crosshairSettings.sniperZoomScale, 1.2f, 4.0f);
+                int srcW = std::max(10, (int)((float)w / scale));
+                int srcH = std::max(10, (int)((float)h / scale));
+                int srcX = (screenW - srcW) / 2;
+                int srcY = (screenH - srcH) / 2;
 
-                auto DrawFilledRect = [&](int left, int top, int right, int bottom) {
-                    if (outline > 0) {
-                        RECT oRc = { left - outline, top - outline, right + outline, bottom + outline };
-                        FillRect(memDC, &oRc, outlineBrush);
-                    }
-                    RECT fRc = { left, top, right, bottom };
-                    FillRect(memDC, &fRc, colorBrush);
-                };
+                HDC screenDC = GetDC(NULL);
+                if (screenDC) {
+                    SetStretchBltMode(memDC, HALFTONE);
+                    SetBrushOrgEx(memDC, 0, 0, NULL);
 
-                int halfThick = thickness / 2;
-                int tRem = thickness - halfThick;
+                    HRGN clipRgn = NULL;
+                    if (g_crosshairSettings.sniperZoomShape == "circle") {
+                        clipRgn = CreateEllipticRgn(0, 0, w, h);
+                        SelectClipRgn(memDC, clipRgn);
+                    }
 
-                if (style == "dot") {
-                    int r = dotSize > 0 ? dotSize : size;
-                    if (outline > 0) {
-                        SelectObject(memDC, outlineBrush);
-                        SelectObject(memDC, nullPen);
-                        Ellipse(memDC, cx - r - outline, cy - r - outline, cx + r + outline, cy + r + outline);
+                    // Perform high-speed screen magnification
+                    StretchBlt(memDC, 0, 0, w, h, screenDC, srcX, srcY, srcW, srcH, SRCCOPY);
+
+                    if (clipRgn) {
+                        SelectClipRgn(memDC, NULL);
+                        DeleteObject(clipRgn);
                     }
-                    SelectObject(memDC, colorBrush);
-                    SelectObject(memDC, nullPen);
-                    Ellipse(memDC, cx - r, cy - r, cx + r, cy + r);
-                }
-                else if (style == "cross") {
-                    // Left
-                    DrawFilledRect(cx - gap - size, cy - halfThick, cx - gap, cy + tRem);
-                    // Right
-                    DrawFilledRect(cx + gap, cy - halfThick, cx + gap + size, cy + tRem);
-                    // Top
-                    DrawFilledRect(cx - halfThick, cy - gap - size, cx + tRem, cy - gap);
-                    // Bottom
-                    DrawFilledRect(cx - halfThick, cy + gap, cx + tRem, cy + gap + size);
-                }
-                else if (style == "t-cross") {
-                    // Left
-                    DrawFilledRect(cx - gap - size, cy - halfThick, cx - gap, cy + tRem);
-                    // Right
-                    DrawFilledRect(cx + gap, cy - halfThick, cx + gap + size, cy + tRem);
-                    // Bottom
-                    DrawFilledRect(cx - halfThick, cy + gap, cx + tRem, cy + gap + size);
-                }
-                else if (style == "gap-cross") {
-                    int bigGap = std::max(6, gap);
-                    DrawFilledRect(cx - bigGap - size, cy - halfThick, cx - bigGap, cy + tRem);
-                    DrawFilledRect(cx + bigGap, cy - halfThick, cx + bigGap + size, cy + tRem);
-                    DrawFilledRect(cx - halfThick, cy - bigGap - size, cx + tRem, cy - bigGap);
-                    DrawFilledRect(cx - halfThick, cy + bigGap, cx + tRem, cy + bigGap + size);
-                }
-                else if (style == "x-cross") {
-                    int s = (int)(size * 0.707f);
-                    int g = (int)(gap * 0.707f);
-                    HPEN outlinePen = CreatePen(PS_SOLID, thickness + outline * 2, RGB(0, 0, 0));
-                    if (outline > 0) {
-                        SelectObject(memDC, outlinePen);
-                        MoveToEx(memDC, cx - g - s, cy - g - s, NULL); LineTo(memDC, cx - g, cy - g);
-                        MoveToEx(memDC, cx + g, cy + g, NULL); LineTo(memDC, cx + g + s, cy + g + s);
-                        MoveToEx(memDC, cx + g + s, cy - g - s, NULL); LineTo(memDC, cx + g, cy - g);
-                        MoveToEx(memDC, cx - g, cy + g, NULL); LineTo(memDC, cx - g - s, cy + g + s);
-                    }
-                    SelectObject(memDC, colorPen);
-                    MoveToEx(memDC, cx - g - s, cy - g - s, NULL); LineTo(memDC, cx - g, cy - g);
-                    MoveToEx(memDC, cx + g, cy + g, NULL); LineTo(memDC, cx + g + s, cy + g + s);
-                    MoveToEx(memDC, cx + g + s, cy - g - s, NULL); LineTo(memDC, cx + g, cy - g);
-                    MoveToEx(memDC, cx - g, cy + g, NULL); LineTo(memDC, cx - g - s, cy + g + s);
-                    DeleteObject(outlinePen);
-                }
-                else if (style == "circle") {
-                    int r = size + gap;
-                    HPEN outlinePen = CreatePen(PS_SOLID, thickness + outline * 2, RGB(0, 0, 0));
-                    SelectObject(memDC, GetStockObject(NULL_BRUSH));
-                    if (outline > 0) {
-                        SelectObject(memDC, outlinePen);
-                        Ellipse(memDC, cx - r, cy - r, cx + r, cy + r);
-                    }
-                    SelectObject(memDC, colorPen);
-                    Ellipse(memDC, cx - r, cy - r, cx + r, cy + r);
-                    DeleteObject(outlinePen);
-                }
-                else if (style == "cross-dot") {
-                    DrawFilledRect(cx - gap - size, cy - halfThick, cx - gap, cy + tRem);
-                    DrawFilledRect(cx + gap, cy - halfThick, cx + gap + size, cy + tRem);
-                    DrawFilledRect(cx - halfThick, cy - gap - size, cx + tRem, cy - gap);
-                    DrawFilledRect(cx - halfThick, cy + gap, cx + tRem, cy + gap + size);
-                    int d = std::max(2, dotSize > 0 ? dotSize : thickness);
-                    if (outline > 0) {
-                        SelectObject(memDC, outlineBrush);
-                        SelectObject(memDC, nullPen);
-                        Ellipse(memDC, cx - d - outline, cy - d - outline, cx + d + outline, cy + d + outline);
-                    }
-                    SelectObject(memDC, colorBrush);
-                    SelectObject(memDC, nullPen);
-                    Ellipse(memDC, cx - d, cy - d, cx + d, cy + d);
-                }
-                else if (style == "square") {
-                    int halfS = size + gap;
-                    if (outline > 0) {
-                        RECT oRc = { cx - halfS - outline, cy - halfS - outline, cx + halfS + outline, cy + halfS + outline };
-                        FrameRect(memDC, &oRc, outlineBrush);
-                    }
-                    RECT sRc = { cx - halfS, cy - halfS, cx + halfS, cy + halfS };
-                    FrameRect(memDC, &sRc, colorBrush);
+
+                    ReleaseDC(NULL, screenDC);
                 }
 
-                // Explicit Center Dot if enabled
-                if (dotSize > 0 && style != "dot" && style != "cross-dot") {
-                    if (outline > 0) {
-                        SelectObject(memDC, outlineBrush);
-                        SelectObject(memDC, nullPen);
-                        Ellipse(memDC, cx - dotSize - outline, cy - dotSize - outline, cx + dotSize + outline, cy + dotSize + outline);
-                    }
-                    SelectObject(memDC, colorBrush);
-                    SelectObject(memDC, nullPen);
-                    Ellipse(memDC, cx - dotSize, cy - dotSize, cx + dotSize, cy + dotSize);
+                // Draw Lens Border
+                int borderW = std::max(1, g_crosshairSettings.sniperZoomBorderWidth);
+                COLORREF borderColor = HexToColorRef(g_crosshairSettings.sniperZoomBorderColor);
+                HPEN borderPen = CreatePen(PS_SOLID, borderW, borderColor);
+                HPEN oldPen = (HPEN)SelectObject(memDC, borderPen);
+                HBRUSH oldBrush = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
+
+                if (g_crosshairSettings.sniperZoomShape == "circle") {
+                    Ellipse(memDC, borderW / 2, borderW / 2, w - borderW / 2, h - borderW / 2);
+                } else {
+                    Rectangle(memDC, borderW / 2, borderW / 2, w - borderW / 2, h - borderW / 2);
                 }
 
-                DeleteObject(colorBrush);
-                DeleteObject(colorPen);
-                DeleteObject(outlineBrush);
+                SelectObject(memDC, oldPen);
+                SelectObject(memDC, oldBrush);
+                DeleteObject(borderPen);
+
+                // CRITICAL REQUIREMENT: CROSSHAIR ZOOM ISOLATION
+                // Render crosshair at 1x pixel-perfect resolution ON TOP of zoomed buffer!
+                if (g_crosshairVisible || g_crosshairSettings.crosshairEnabled) {
+                    RenderCrosshairOnDC(memDC, cx, cy, g_crosshairSettings);
+                } else if (g_crosshairSettings.sniperZoomShowDot) {
+                    // Draw clean 2px sniper laser center dot
+                    HBRUSH dotBrush = CreateSolidBrush(borderColor);
+                    HBRUSH oBrush = CreateSolidBrush(RGB(0, 0, 0));
+                    RECT dotRcOutline = { cx - 3, cy - 3, cx + 4, cy + 4 };
+                    FillRect(memDC, &dotRcOutline, oBrush);
+                    RECT dotRc = { cx - 2, cy - 2, cx + 3, cy + 3 };
+                    FillRect(memDC, &dotRc, dotBrush);
+                    DeleteObject(dotBrush);
+                    DeleteObject(oBrush);
+                }
+            }
+            // ==========================================
+            // CASE 2: STANDARD CROSSHAIR ONLY
+            // ==========================================
+            else if (g_crosshairVisible) {
+                RenderCrosshairOnDC(memDC, cx, cy, g_crosshairSettings);
             }
 
             BitBlt(hdc, 0, 0, w, h, memDC, 0, 0, SRCCOPY);
@@ -297,7 +385,7 @@ void OverlayToast::Initialize() {
         m_overlayThread = std::thread(&OverlayToast::OverlayThreadProc, this);
     }
 #endif
-    std::cout << "[OverlayToast] Modern zero-lag crosshair & OSD engine initialized." << std::endl;
+    std::cout << "[OverlayToast] Modern zero-lag crosshair & sniper zoom engine initialized." << std::endl;
 }
 
 void OverlayToast::Shutdown() {
@@ -428,6 +516,32 @@ void OverlayToast::UpdateCrosshair(const DisplaySettings& settings) {
 
     if (m_hWnd && IsWindow(m_hWnd)) {
         PostMessage(m_hWnd, WM_USER_UPDATE_CROSSHAIR, 0, 0);
+    }
+#endif
+}
+
+void OverlayToast::ToggleSniperZoom(bool active) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_sniperZoomActive.store(active);
+
+#ifdef _WIN32
+    g_sniperZoomActive = active;
+
+    if (m_hWnd && IsWindow(m_hWnd)) {
+        PostMessage(m_hWnd, WM_USER_UPDATE_SNIPER_ZOOM, 0, 0);
+    }
+#endif
+    std::cout << "[OverlayToast] Sniper Zoom Lens " << (active ? "ACTIVE" : "INACTIVE") << std::endl;
+}
+
+void OverlayToast::UpdateSniperZoom(const DisplaySettings& settings) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_crosshairSettings = settings;
+
+#ifdef _WIN32
+    g_crosshairSettings = settings;
+    if (m_hWnd && IsWindow(m_hWnd)) {
+        PostMessage(m_hWnd, WM_USER_UPDATE_SNIPER_ZOOM, 0, 0);
     }
 #endif
 }

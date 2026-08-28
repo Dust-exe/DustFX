@@ -266,4 +266,17 @@ export const api = {
       return true;
     }
   },
+
+  async toggleZoom(active?: boolean): Promise<{ success: boolean; active: boolean }> {
+    try {
+      const res = await fetch(`${API_BASE}/zoom/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(active !== undefined ? { active } : {}),
+      });
+      return await res.json();
+    } catch {
+      return { success: true, active: !!active };
+    }
+  },
 };

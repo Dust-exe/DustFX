@@ -48,6 +48,7 @@ bool SettingsManager::LoadFromFile(const std::string& configPath) {
             m_settings.hotkeys.quickResetKey = h.value("quickResetKey", "F10");
             m_settings.hotkeys.toggleOverlayKey = h.value("toggleOverlayKey", "Alt+X");
             m_settings.hotkeys.toggleCrosshairKey = h.value("toggleCrosshairKey", "Alt+Z");
+            m_settings.hotkeys.sniperZoomKey = h.value("sniperZoomKey", "V");
         }
 
         if (j.contains("currentSettings")) {
@@ -62,8 +63,9 @@ bool SettingsManager::LoadFromFile(const std::string& configPath) {
             m_settings.currentSettings.sharpness = s.value("sharpness", 0.0f);
             m_settings.currentSettings.msaaStrength = s.value("msaaStrength", 0.0f);
             m_settings.currentSettings.edgeEnhance = s.value("edgeEnhance", 0.0f);
+            m_settings.currentSettings.bloom = s.value("bloom", 0.0f);
             m_settings.currentSettings.crosshairEnabled = s.value("crosshairEnabled", false);
-            m_settings.currentSettings.crosshairStyle = s.value("crosshairStyle", "cross");
+            m_settings.currentSettings.crosshairStyle = s.value("crosshairStyle", "gap_cross");
             m_settings.currentSettings.crosshairColor = s.value("crosshairColor", "#00FF66");
             m_settings.currentSettings.crosshairSize = s.value("crosshairSize", 10);
             m_settings.currentSettings.crosshairThickness = s.value("crosshairThickness", 2);
@@ -71,6 +73,14 @@ bool SettingsManager::LoadFromFile(const std::string& configPath) {
             m_settings.currentSettings.crosshairDotSize = s.value("crosshairDotSize", 0);
             m_settings.currentSettings.crosshairOutline = s.value("crosshairOutline", 1);
             m_settings.currentSettings.crosshairOpacity = s.value("crosshairOpacity", 1.0f);
+            m_settings.currentSettings.sniperZoomEnabled = s.value("sniperZoomEnabled", false);
+            m_settings.currentSettings.sniperZoomScale = s.value("sniperZoomScale", 2.0f);
+            m_settings.currentSettings.sniperZoomSize = s.value("sniperZoomSize", 260);
+            m_settings.currentSettings.sniperZoomShape = s.value("sniperZoomShape", "circle");
+            m_settings.currentSettings.sniperZoomMode = s.value("sniperZoomMode", "hold");
+            m_settings.currentSettings.sniperZoomBorderColor = s.value("sniperZoomBorderColor", "#A855F7");
+            m_settings.currentSettings.sniperZoomBorderWidth = s.value("sniperZoomBorderWidth", 2);
+            m_settings.currentSettings.sniperZoomShowDot = s.value("sniperZoomShowDot", true);
         }
 
         return true;
@@ -105,7 +115,8 @@ bool SettingsManager::SaveToFile(const std::string& configPath) {
             {"vibranceKey", m_settings.hotkeys.vibranceKey},
             {"quickResetKey", m_settings.hotkeys.quickResetKey},
             {"toggleOverlayKey", m_settings.hotkeys.toggleOverlayKey},
-            {"toggleCrosshairKey", m_settings.hotkeys.toggleCrosshairKey}
+            {"toggleCrosshairKey", m_settings.hotkeys.toggleCrosshairKey},
+            {"sniperZoomKey", m_settings.hotkeys.sniperZoomKey}
         };
 
         j["currentSettings"] = {
@@ -119,6 +130,7 @@ bool SettingsManager::SaveToFile(const std::string& configPath) {
             {"sharpness", m_settings.currentSettings.sharpness},
             {"msaaStrength", m_settings.currentSettings.msaaStrength},
             {"edgeEnhance", m_settings.currentSettings.edgeEnhance},
+            {"bloom", m_settings.currentSettings.bloom},
             {"crosshairEnabled", m_settings.currentSettings.crosshairEnabled},
             {"crosshairStyle", m_settings.currentSettings.crosshairStyle},
             {"crosshairColor", m_settings.currentSettings.crosshairColor},
@@ -127,7 +139,15 @@ bool SettingsManager::SaveToFile(const std::string& configPath) {
             {"crosshairGap", m_settings.currentSettings.crosshairGap},
             {"crosshairDotSize", m_settings.currentSettings.crosshairDotSize},
             {"crosshairOutline", m_settings.currentSettings.crosshairOutline},
-            {"crosshairOpacity", m_settings.currentSettings.crosshairOpacity}
+            {"crosshairOpacity", m_settings.currentSettings.crosshairOpacity},
+            {"sniperZoomEnabled", m_settings.currentSettings.sniperZoomEnabled},
+            {"sniperZoomScale", m_settings.currentSettings.sniperZoomScale},
+            {"sniperZoomSize", m_settings.currentSettings.sniperZoomSize},
+            {"sniperZoomShape", m_settings.currentSettings.sniperZoomShape},
+            {"sniperZoomMode", m_settings.currentSettings.sniperZoomMode},
+            {"sniperZoomBorderColor", m_settings.currentSettings.sniperZoomBorderColor},
+            {"sniperZoomBorderWidth", m_settings.currentSettings.sniperZoomBorderWidth},
+            {"sniperZoomShowDot", m_settings.currentSettings.sniperZoomShowDot}
         };
 
         std::ofstream f(m_configPath);

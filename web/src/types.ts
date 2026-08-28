@@ -11,6 +11,7 @@ export interface DisplaySettings {
   shadowDetail: number;
   msaaStrength?: number;       // 0.0 - 1.0 (Legacy alias)
   edgeEnhance?: number;        // 0.0 - 1.0 (Edge contour & silhouette sharpness boost)
+  bloom?: number;              // 0.0 - 1.0 (Highlight bloom & luminance glow)
   crosshairEnabled: boolean;
   crosshairStyle: 'dot' | 'cross' | 'circle' | 'gap-cross' | 'x-cross' | 't-cross' | 'cross-dot' | 'square';
   crosshairColor: string;
@@ -20,8 +21,16 @@ export interface DisplaySettings {
   crosshairDotSize?: number;
   crosshairOutline?: number;
   crosshairOpacity?: number;
+  
+  // Sniper Zoom Lens
   sniperZoomEnabled?: boolean;
-  sniperZoomFactor?: number;
+  sniperZoomScale?: number;     // 1.2x - 4.0x
+  sniperZoomSize?: number;      // 100px - 500px
+  sniperZoomShape?: 'circle' | 'square';
+  sniperZoomMode?: 'hold' | 'toggle';
+  sniperZoomBorderColor?: string;
+  sniperZoomBorderWidth?: number;
+  sniperZoomShowDot?: boolean;
 }
 
 export interface SavedCrosshairPreset {
@@ -87,4 +96,5 @@ export interface HotkeyConfig {
   quickResetKey: string;
   toggleOverlayKey: string;
   toggleCrosshairKey: string;
+  sniperZoomKey?: string;
 }

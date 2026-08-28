@@ -15,7 +15,7 @@ export const translations = {
     // Sidebar
     filterTab: 'Screen Filter',
     profilesTab: 'Game Profiles',
-    crosshairTab: 'PvP Crosshair',
+    crosshairTab: 'PvP Crosshair & Zoom',
     monitorsTab: 'Monitors & Games',
     hotkeysTab: 'Hotkeys',
     updatesTab: 'Updates',
@@ -23,13 +23,15 @@ export const translations = {
 
     // Screen Filter Tab
     filterTitle: 'GPU Screen Calibration & Enhancer',
-    filterSubtitle: 'Direct hardware-level GPU color calibration, DCCW gamma boost, and silhouette edge contrast.',
+    filterSubtitle: 'Direct hardware-level GPU color calibration, DCCW gamma boost, highlight bloom glow, and silhouette edge contrast.',
     gammaTitle: 'DCCW Gamma Boost',
     gammaDesc: 'Hardware night vision lighting (0.5x – 3.0x). Zero input lag.',
     vibranceTitle: 'Digital Vibrance',
     vibranceDesc: 'Persistent hardware color saturation with dedicated DWM message pump & NVAPI.',
     edgeEnhanceTitle: 'Edge & Silhouette Contrast (Contour Sharpness)',
     edgeEnhanceDesc: 'Sharpens object boundaries, player silhouettes, and enemy outlines without halo artifacts.',
+    bloomTitle: 'Highlight Bloom Glow (Luminance Boost)',
+    bloomDesc: 'Expands bright highlights, neon lights, muzzle flashes, and player borders with luminous glow.',
     casTitle: 'CAS Adaptive Sharpness',
     casDesc: 'Multi-band frequency sharpening for distant targets and fine textures.',
     contrastTitle: 'Display Contrast',
@@ -45,8 +47,8 @@ export const translations = {
     resetDefaults: 'Reset All to Windows Defaults',
 
     // Crosshair Tab
-    crosshairTitle: 'PvP Crosshair Overlay Engine',
-    crosshairSubtitle: 'Pixel-perfect, hardware-accelerated click-through topmost overlay with customizable shapes and saved presets.',
+    crosshairTitle: 'PvP Crosshair & Sniper Zoom Engine',
+    crosshairSubtitle: 'Pixel-perfect topmost hardware overlay with customizable crosshair presets and standalone center sniper zoom lens.',
     crosshairActive: 'CROSSHAIR OVERLAY ACTIVE',
     crosshairInactive: 'CROSSHAIR OVERLAY DISABLED',
     previewTitle: 'Real-Time Crosshair Preview',
@@ -75,6 +77,24 @@ export const translations = {
     importBtn: 'Import & Apply',
     cancel: 'Cancel',
 
+    // Sniper Zoom Lens Section
+    zoomHeader: 'Sniper Zoom Lens (Screen Magnifier)',
+    zoomSub: 'Hardware-accelerated center magnifying scope. Works with or without crosshair active (crosshair is isolated and rendered sharp on top).',
+    zoomActive: 'SNIPER ZOOM ACTIVE',
+    zoomInactive: 'SNIPER ZOOM DISABLED',
+    zoomScale: 'Zoom Scale (Magnification)',
+    zoomSize: 'Lens Diameter / Size',
+    zoomShape: 'Lens Shape',
+    zoomShapeCircle: 'Circular Scope',
+    zoomShapeSquare: 'Square Window',
+    zoomMode: 'Trigger Mode',
+    zoomModeHold: 'Hold Hotkey',
+    zoomModeToggle: 'Toggle On/Off',
+    zoomBorderColor: 'Border / Reticle Color',
+    zoomBorderWidth: 'Border Thickness',
+    zoomShowDot: 'Show Sniper Center Dot',
+    zoomHotkeyHint: 'Trigger Hotkey: ',
+
     // Profiles Tab
     profilesTitle: 'Game Color Profiles & Presets',
     profilesSubtitle: 'One-click presets optimized for competitive shooters, tactical stealth, and cinematic visuals.',
@@ -102,6 +122,8 @@ export const translations = {
     pressKeyPrompt: 'Press any key or combo...',
     unassigned: 'Unassigned',
     clearHotkey: 'Clear Hotkey',
+    sniperZoomHotkeyLabel: 'Sniper Zoom Lens Trigger',
+    sniperZoomHotkeyDesc: 'Toggles or holds the center magnifying scope (Default: V)',
 
     // Updates Tab
     updatesTitle: 'GitHub Automatic Update Monitor',
@@ -159,7 +181,7 @@ export const translations = {
     // Sidebar
     filterTab: 'Ekran Filtresi',
     profilesTab: 'Hazır Profiller',
-    crosshairTab: 'PvP Nişangah',
+    crosshairTab: 'PvP Nişangah & Zoom',
     monitorsTab: 'Monitör & Oyun',
     hotkeysTab: 'Kısayollar',
     updatesTab: 'Güncellemeler',
@@ -167,13 +189,15 @@ export const translations = {
 
     // Screen Filter Tab
     filterTitle: 'GPU Ekran Kalibrasyonu & Filtre',
-    filterSubtitle: 'Doğrudan donanım seviyesinde GPU renk kalibrasyonu, DCCW gama artışı ve silüet kenar belirginleştirme.',
+    filterSubtitle: 'Doğrudan donanım seviyesinde GPU renk kalibrasyonu, DCCW gama artışı, ışık patlaması (bloom) ve silüet kenar belirginleştirme.',
     gammaTitle: 'DCCW Gama Artışı',
     gammaDesc: 'Donanımsal gece görüşü aydınlatması (0.5x – 3.0x). Sıfır gecikme.',
     vibranceTitle: 'Digital Vibrance (Canlılık)',
     vibranceDesc: 'Dedicated DWM mesaj döngüsü ve NVAPI ile kalıcı donanım renk doygunluğu.',
     edgeEnhanceTitle: 'Kenar & Silüet Belirginleştirme (Kontur Keskinliği)',
     edgeEnhanceDesc: 'Karakter silüetlerini, düşman sınırlarını ve nesne konturlarını hale oluşturmadan keskinleştirir.',
+    bloomTitle: 'Işık Patlaması & Parlama (Bloom Glow)',
+    bloomDesc: 'Güneş yansımalarını, neon ışıkları, namlu alevlerini ve parlak alanları ışıldatarak belirginleştirir.',
     casTitle: 'CAS Donanım Keskinleştirme',
     casDesc: 'Uzak hedefler ve detay dokuları için frekans ayrıştırmalı netlik.',
     contrastTitle: 'Ekran Kontrastı',
@@ -189,8 +213,8 @@ export const translations = {
     resetDefaults: 'Tümünü Windows Varsayılanlarına Sıfırla',
 
     // Crosshair Tab
-    crosshairTitle: 'PvP Nişangah Overlay Motoru',
-    crosshairSubtitle: 'Piksel-kusursuz, donanım hızlandırmalı, tıklama-geçirgen en üst katman overlay ve kayıtlı özel nişangahlar.',
+    crosshairTitle: 'PvP Nişangah & Sniper Zoom Motoru',
+    crosshairSubtitle: 'Piksel-kusursuz en üst katman overlay, kayıtlı özel nişangahlar ve bağımsız ekran ortası büyüteç (sniper zoom).',
     crosshairActive: 'NİŞANGAH OVERLAY AKTİF',
     crosshairInactive: 'NİŞANGAH OVERLAY DEVRE DIŞI',
     previewTitle: 'Canlı Nişangah Önizleme',
@@ -219,6 +243,24 @@ export const translations = {
     importBtn: 'İçe Aktar & Uygula',
     cancel: 'İptal',
 
+    // Sniper Zoom Lens Section
+    zoomHeader: 'Sniper Zoom (Ekran Ortası Büyüteci)',
+    zoomSub: 'Donanım hızlandırmalı ekran ortası yakınlaştırma dürbünü. Nişangah açık olsa da olmasa da çalışır (nişangah zoomun üzerinde bozulmadan keskin kalır).',
+    zoomActive: 'SNIPER ZOOM AKTİF',
+    zoomInactive: 'SNIPER ZOOM DEVRE DIŞI',
+    zoomScale: 'Yakınlaştırma Ölçeği (Zoom)',
+    zoomSize: 'Lens Çapı / Boyutu',
+    zoomShape: 'Lens Şekli',
+    zoomShapeCircle: 'Dairesel Dürbün (Scope)',
+    zoomShapeSquare: 'Kare Pencere',
+    zoomMode: 'Tetikleme Modu',
+    zoomModeHold: 'Tuşa Basılı Tut',
+    zoomModeToggle: 'Aç / Kapa (Toggle)',
+    zoomBorderColor: 'Dürbün Çerçeve Rengi',
+    zoomBorderWidth: 'Çerçeve Kalınlığı',
+    zoomShowDot: 'Merkez Lazer Noktası Göster',
+    zoomHotkeyHint: 'Tetikleme Kısayolu: ',
+
     // Profiles Tab
     profilesTitle: 'Oyun Renk Profilleri',
     profilesSubtitle: 'Rekabetçi FPS, gece operasyonları ve sinematik grafikler için hazır profiller.',
@@ -246,6 +288,8 @@ export const translations = {
     pressKeyPrompt: 'Bir tuşa veya kombinasyona basın...',
     unassigned: 'Atanmadı',
     clearHotkey: 'Kısayolu Kaldır',
+    sniperZoomHotkeyLabel: 'Sniper Zoom (Büyüteç) Kısayolu',
+    sniperZoomHotkeyDesc: 'Ekran ortası yakınlaştırma lensini açar veya basılı tutar (Varsayılan: V)',
 
     // Updates Tab
     updatesTitle: 'GitHub Otomatik Güncelleme Takibi',

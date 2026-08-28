@@ -2,7 +2,7 @@
 
 > High-Performance Hardware GPU Display Calibration, DCCW Gamma Boost, Digital Vibrance, PvP Crosshair Overlay Engine & Auto-Update System
 
-[![Release](https://img.shields.io/badge/Release-v1.4.2-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
+[![Release](https://img.shields.io/badge/Release-v1.5.0-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge)](LICENSE.txt)
 [![CPU Usage](https://img.shields.io/badge/CPU-%3C0.1%25-brightgreen?style=for-the-badge)](https://dust-studio.com)
 [![RAM Usage](https://img.shields.io/badge/RAM-%3C15MB-brightgreen?style=for-the-badge)](https://dust-studio.com)
@@ -32,11 +32,12 @@ DustFX is engineered from the ground up in native C++20 for maximum gaming perfo
 
 ---
 
-## Key Features (v1.4.2)
+## Key Features (v1.5.0)
 
 ### 1. Hardware-Level GPU & DCCW Gamma Control
 - **DCCW Gamma Boost (0.5x - 3.0x):** Zero-latency night vision lighting powered by Windows GDI GammaRamp and direct hardware color ramps.
 - **Dedicated Digital Vibrance (0% - 100%):** Real-time hardware saturation engine with dedicated background DWM message pump & NVAPI hardware acceleration.
+- **Highlight Bloom Glow (0% - 100%):** High-luminance knee expansion filter that makes enemy silhouettes, neon lights, and muzzle flashes luminous.
 - **Edge & Silhouette Contour Contrast:** High-frequency chromatic boundary separation that makes player silhouettes and enemy outlines stand out sharply without halo artifacts.
 - **Enhanced CAS Sharpness (Unsharp Mask LUT):** Frequency-separated multi-band sharpening that highlights distant targets and fine textures.
 - **Shadow Detail Recovery (Toe Curve):** Lifts dark shadows in tunnels, caves, and dark buildings without washing out highlight contrast (0% - 100%).
@@ -46,11 +47,12 @@ DustFX is engineered from the ground up in native C++20 for maximum gaming perfo
 - **Multilingual Support:** Instant EN/TR language toggle with English primary default.
 - **Dust Studio Hub:** Ecosystem overview with project details for Dust-vpn, DustFX, and DustReplay.
 
-### 2. PvP Crosshair Overlay Engine
+### 2. PvP Crosshair & Sniper Zoom Lens Overlay
+- **Sniper Zoom Lens (Screen Center Magnifier):** Hardware-accelerated center scope (1.2x – 4.0x zoom, 100px – 500px diameter, circle/square shape, hold/toggle modes).
+- **Crosshair Zoom Isolation (CRITICAL):** When the crosshair is active during sniper zoom, the crosshair is rendered on a top layer ABOVE the zoom buffer at 1x resolution, ensuring it is never blurred or distorted.
 - **Pixel-Perfect Center Lock:** Lightweight 200x200 transparent, click-through, topmost hardware overlay (`Alt + Z`).
 - **8 Distinct Shapes:** Dot, Cross (+), T-Cross, Gap-Cross, X-Cross, Circle (O), Cross-Dot, and Square.
 - **Named Custom Presets:** Save custom crosshair designs with personalized names and live SVG previews.
-- **Full Customization:** Size (2-40px), thickness (1-10px), center gap (0-30px), center dot size, black outline, custom opacity, and RGB neon colors.
 
 ### 3. Intelligent Game Detection & Auto-Reset
 - Automatically engages designated profiles when games launch.
@@ -80,6 +82,7 @@ DustFX is engineered from the ground up in native C++20 for maximum gaming perfo
 | **F11** | MAX DCCW GAMMA | Instantly toggles 2.5x Gamma Boost on/off |
 | **F12** | Vibrance Toggle | Instantly toggles 75% Digital Vibrance |
 | **F10** | Quick Reset | Resets all display settings to Windows defaults |
+| **V** | Sniper Zoom Lens | Holds or toggles the hardware center zoom magnifier |
 | **Alt + Z** | Crosshair Toggle | Turns on-screen PvP crosshair overlay on/off |
 | **Alt + X** | DustFX HUD | Triggers in-game OSD toast notification |
 

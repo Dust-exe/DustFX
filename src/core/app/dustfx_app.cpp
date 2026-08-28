@@ -160,6 +160,12 @@ void DustFxApp::HandleHotkey(HotkeyAction action, const std::string& param) {
         case HotkeyAction::TOGGLE_CROSSHAIR:
             ToggleCrosshair();
             break;
+        case HotkeyAction::SNIPER_ZOOM_HOLD: {
+            bool active = !OverlayToast::Instance().IsSniperZoomActive();
+            OverlayToast::Instance().ToggleSniperZoom(active);
+            OverlayToast::Instance().ShowToast("🔭 SNIPER ZOOM", active ? "AÇIK" : "KAPALI");
+            break;
+        }
         case HotkeyAction::TOGGLE_OVERLAY:
             OverlayToast::Instance().ShowToast("🎮 DUSTFX PANEL", "http://127.0.0.1:19840");
             break;

@@ -235,6 +235,7 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
                 {"shadowDetail", s.shadowDetail},
                 {"msaaStrength", s.msaaStrength},
                 {"edgeEnhance", s.edgeEnhance},
+                {"bloom", s.bloom},
                 {"crosshairEnabled", s.crosshairEnabled},
                 {"crosshairStyle", s.crosshairStyle},
                 {"crosshairColor", s.crosshairColor},
@@ -243,7 +244,15 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
                 {"crosshairGap", s.crosshairGap},
                 {"crosshairDotSize", s.crosshairDotSize},
                 {"crosshairOutline", s.crosshairOutline},
-                {"crosshairOpacity", s.crosshairOpacity}
+                {"crosshairOpacity", s.crosshairOpacity},
+                {"sniperZoomEnabled", s.sniperZoomEnabled},
+                {"sniperZoomScale", s.sniperZoomScale},
+                {"sniperZoomSize", s.sniperZoomSize},
+                {"sniperZoomShape", s.sniperZoomShape},
+                {"sniperZoomMode", s.sniperZoomMode},
+                {"sniperZoomBorderColor", s.sniperZoomBorderColor},
+                {"sniperZoomBorderWidth", s.sniperZoomBorderWidth},
+                {"sniperZoomShowDot", s.sniperZoomShowDot}
             }},
             {"monitors", jMonitors}
         };
@@ -268,6 +277,7 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
             if (j.contains("shadowDetail")) s.shadowDetail = j["shadowDetail"].get<float>();
             if (j.contains("msaaStrength")) s.msaaStrength = j["msaaStrength"].get<float>();
             if (j.contains("edgeEnhance")) s.edgeEnhance = j["edgeEnhance"].get<float>();
+            if (j.contains("bloom")) s.bloom = j["bloom"].get<float>();
             if (j.contains("crosshairEnabled")) s.crosshairEnabled = j["crosshairEnabled"].get<bool>();
             if (j.contains("crosshairStyle")) s.crosshairStyle = j["crosshairStyle"].get<std::string>();
             if (j.contains("crosshairColor")) s.crosshairColor = j["crosshairColor"].get<std::string>();
@@ -277,11 +287,20 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
             if (j.contains("crosshairDotSize")) s.crosshairDotSize = j["crosshairDotSize"].get<int>();
             if (j.contains("crosshairOutline")) s.crosshairOutline = j["crosshairOutline"].get<int>();
             if (j.contains("crosshairOpacity")) s.crosshairOpacity = j["crosshairOpacity"].get<float>();
+            if (j.contains("sniperZoomEnabled")) s.sniperZoomEnabled = j["sniperZoomEnabled"].get<bool>();
+            if (j.contains("sniperZoomScale")) s.sniperZoomScale = j["sniperZoomScale"].get<float>();
+            if (j.contains("sniperZoomSize")) s.sniperZoomSize = j["sniperZoomSize"].get<int>();
+            if (j.contains("sniperZoomShape")) s.sniperZoomShape = j["sniperZoomShape"].get<std::string>();
+            if (j.contains("sniperZoomMode")) s.sniperZoomMode = j["sniperZoomMode"].get<std::string>();
+            if (j.contains("sniperZoomBorderColor")) s.sniperZoomBorderColor = j["sniperZoomBorderColor"].get<std::string>();
+            if (j.contains("sniperZoomBorderWidth")) s.sniperZoomBorderWidth = j["sniperZoomBorderWidth"].get<int>();
+            if (j.contains("sniperZoomShowDot")) s.sniperZoomShowDot = j["sniperZoomShowDot"].get<bool>();
 
             int targetMon = SettingsManager::Instance().GetTargetMonitorIndex();
             GpuController::Instance().ApplySettings(s, targetMon);
             SettingsManager::Instance().SetCurrentDisplaySettings(s);
             OverlayToast::Instance().UpdateCrosshair(s);
+            OverlayToast::Instance().UpdateSniperZoom(s);
 
             return MakeHttpResponse(200, "OK", "application/json", "{\"success\":true}");
         } catch (const std::exception& e) {
@@ -452,7 +471,8 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
             {"vibranceKey", cfg.vibranceKey},
             {"quickResetKey", cfg.quickResetKey},
             {"toggleOverlayKey", cfg.toggleOverlayKey},
-            {"toggleCrosshairKey", cfg.toggleCrosshairKey}
+            {"toggleCrosshairKey", cfg.toggleCrosshairKey},
+            {"sniperZoomKey", cfg.sniperZoomKey}
         };
         return MakeHttpResponse(200, "OK", "application/json", j.dump());
     }
@@ -467,15 +487,31 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
             if (j.contains("quickResetKey")) cfg.quickResetKey = j["quickResetKey"].get<std::string>();
             if (j.contains("toggleOverlayKey")) cfg.toggleOverlayKey = j["toggleOverlayKey"].get<std::string>();
             if (j.contains("toggleCrosshairKey")) cfg.toggleCrosshairKey = j["toggleCrosshairKey"].get<std::string>();
+            if (j.contains("sniperZoomKey")) cfg.sniperZoomKey = j["sniperZoomKey"].get<std::string>();
 
             SettingsManager::Instance().SetHotkeyConfig(cfg);
             SettingsManager::Instance().SaveToFile();
             HotkeyManager::Instance().SetConfig(cfg);
 
-            OverlayToast::Instance().ShowToast("⌨️ KISAYOL AYARLARI KAYDEDİLDİ", "Max Gama: " + cfg.maxGammaKey);
+            OverlayToast::Instance().ShowToast("⌨️ KISAYOL AYARLARI KAYDEDİLDİ", "Sniper Zoom: " + cfg.sniperZoomKey);
             return MakeHttpResponse(200, "OK", "application/json", "{\"success\":true}");
         } catch (const std::exception& e) {
             return MakeHttpResponse(400, "Bad Request", "application/json", "{\"error\":\"Invalid JSON\"}");
+        }
+    }
+
+    // 6f. POST /api/zoom/toggle
+    if (path == "/api/zoom/toggle" && method == "POST") {
+        try {
+            bool active = !OverlayToast::Instance().IsSniperZoomActive();
+            if (!body.empty()) {
+                json j = json::parse(body);
+                if (j.contains("active")) active = j["active"].get<bool>();
+            }
+            OverlayToast::Instance().ToggleSniperZoom(active);
+            return MakeHttpResponse(200, "OK", "application/json", "{\"success\":true,\"active\":" + std::string(active ? "true" : "false") + "}");
+        } catch (...) {
+            return MakeHttpResponse(400, "Bad Request", "application/json", "{\"error\":\"Invalid request\"}");
         }
     }
 

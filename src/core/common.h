@@ -35,10 +35,11 @@ struct DisplaySettings {
     float shadowDetail = 0.0f;        // 0.0 - 1.0
     float msaaStrength = 0.0f;        // 0.0 - 1.0 (MSAA edge smoothing via DWM matrix)
     float edgeEnhance = 0.0f;         // 0.0 - 1.0 (Edge contour & silhouette contrast boost)
+    float bloom = 0.0f;               // 0.0 - 1.0 (Highlight bloom & luminance glow)
     
-    // PvP Tools
+    // PvP Tools & Crosshair
     bool crosshairEnabled = false;
-    std::string crosshairStyle = "cross";
+    std::string crosshairStyle = "gap_cross";
     std::string crosshairColor = "#00FF66";
     int crosshairSize = 10;
     int crosshairThickness = 2;
@@ -46,8 +47,16 @@ struct DisplaySettings {
     int crosshairDotSize = 0;
     int crosshairOutline = 1;
     float crosshairOpacity = 1.0f;
+    
+    // Sniper Zoom Lens
     bool sniperZoomEnabled = false;
-    float sniperZoomFactor = 1.5f;
+    float sniperZoomScale = 2.0f;     // 1.2x - 4.0x
+    int sniperZoomSize = 260;         // 100px - 500px
+    std::string sniperZoomShape = "circle"; // "circle" or "square"
+    std::string sniperZoomMode = "hold";    // "hold" or "toggle"
+    std::string sniperZoomBorderColor = "#A855F7";
+    int sniperZoomBorderWidth = 2;
+    bool sniperZoomShowDot = true;
 };
 
 struct GameProfile {
@@ -109,6 +118,6 @@ struct AppSettings {
 } // namespace dustfx
 
 #ifndef DUSTFX_VERSION_STRING
-#define DUSTFX_VERSION_STRING "1.4.2"
+#define DUSTFX_VERSION_STRING "1.5.0"
 #endif
 
