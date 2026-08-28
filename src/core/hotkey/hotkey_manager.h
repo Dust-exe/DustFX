@@ -20,7 +20,7 @@ enum class HotkeyAction {
     CUSTOM_PROFILE_TRIGGER
 };
 
-using HotkeyActionCallback = std::function<void(HotkeyAction action, const std::string& param)>;
+using HotkeyActionCallback = std::function<void(HotkeyAction, const std::string&, bool)>;
 
 class HotkeyManager {
 public:
@@ -34,7 +34,7 @@ public:
 
     void RegisterCallback(HotkeyActionCallback callback);
     void BindProfileHotkey(const std::string& keyName, const std::string& profileId);
-    void HandleKeyEvent(int vkCode, bool isAlt, bool isCtrl, bool isShift);
+    void HandleKeyEvent(int vkCode, bool isAlt, bool isCtrl, bool isShift, bool isKeyDown);
 
 private:
     HotkeyManager();

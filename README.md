@@ -2,7 +2,7 @@
 
 > High-Performance Hardware GPU Display Calibration, DCCW Gamma Boost, Digital Vibrance, PvP Crosshair Overlay Engine & Auto-Update System
 
-[![Release](https://img.shields.io/badge/Release-v1.5.2-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
+[![Release](https://img.shields.io/badge/Release-v1.6.0-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge)](LICENSE.txt)
 [![CPU Usage](https://img.shields.io/badge/CPU-%3C0.1%25-brightgreen?style=for-the-badge)](https://dust-studio.com)
 [![RAM Usage](https://img.shields.io/badge/RAM-%3C15MB-brightgreen?style=for-the-badge)](https://dust-studio.com)
@@ -32,7 +32,7 @@ DustFX is engineered from the ground up in native C++20 for maximum gaming perfo
 
 ---
 
-## Key Features (v1.5.2)
+## Key Features (v1.6.0)
 
 ### 1. Hardware-Level GPU & DCCW Gamma Control
 - **DCCW Gamma Boost (0.5x - 3.0x):** Zero-latency night vision lighting powered by Windows GDI GammaRamp and direct hardware color ramps.

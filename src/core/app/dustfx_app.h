@@ -24,7 +24,7 @@ private:
     DustFxApp();
     ~DustFxApp();
 
-    void HandleHotkey(HotkeyAction action, const std::string& param);
+    void HandleHotkey(HotkeyAction action, const std::string& param, bool isKeyDown);
     void HandleProcessEvent(const std::string& processName, bool isForeground);
     void OnUpdateDetected(bool available, const ReleaseInfo& info);
 

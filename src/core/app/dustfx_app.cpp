@@ -42,8 +42,8 @@ bool DustFxApp::Initialize() {
 
     // 4. Hotkeys
     HotkeyManager::Instance().SetConfig(SettingsManager::Instance().GetHotkeyConfig());
-    HotkeyManager::Instance().RegisterCallback([this](HotkeyAction action, const std::string& param) {
-        HandleHotkey(action, param);
+    HotkeyManager::Instance().RegisterCallback([this](HotkeyAction action, const std::string& param, bool isKeyDown) {
+        HandleHotkey(action, param, isKeyDown);
     });
     HotkeyManager::Instance().Start();
 
@@ -139,8 +139,24 @@ void DustFxApp::ToggleCrosshair() {
     OverlayToast::Instance().ShowToast("🎯 NİŞANGAH (CROSSHAIR)", m_crosshairActive ? "AÇIK" : "KAPALI");
 }
 
-void DustFxApp::HandleHotkey(HotkeyAction action, const std::string& param) {
+void DustFxApp::HandleHotkey(HotkeyAction action, const std::string& param, bool isKeyDown) {
     (void)param;
+
+    // For Sniper Zoom Hold, process both KeyDown and KeyUp events
+    if (action == HotkeyAction::SNIPER_ZOOM_HOLD) {
+        bool active = isKeyDown;
+        if (active != OverlayToast::Instance().IsSniperZoomActive()) {
+            OverlayToast::Instance().ToggleSniperZoom(active);
+            if (active) {
+                OverlayToast::Instance().ShowToast("🔭 SNIPER ZOOM", "AÇIK");
+            }
+        }
+        return;
+    }
+
+    // For all other toggles, ONLY trigger on KeyDown to prevent double-firing
+    if (!isKeyDown) return;
+
     switch (action) {
         case HotkeyAction::MAX_GAMMA_TOGGLE:
             QuickMaxGamma();
@@ -160,12 +176,6 @@ void DustFxApp::HandleHotkey(HotkeyAction action, const std::string& param) {
         case HotkeyAction::TOGGLE_CROSSHAIR:
             ToggleCrosshair();
             break;
-        case HotkeyAction::SNIPER_ZOOM_HOLD: {
-            bool active = !OverlayToast::Instance().IsSniperZoomActive();
-            OverlayToast::Instance().ToggleSniperZoom(active);
-            OverlayToast::Instance().ShowToast("🔭 SNIPER ZOOM", active ? "AÇIK" : "KAPALI");
-            break;
-        }
         case HotkeyAction::TOGGLE_OVERLAY:
             OverlayToast::Instance().ShowToast("🎮 DUSTFX PANEL", "http://127.0.0.1:19840");
             break;
