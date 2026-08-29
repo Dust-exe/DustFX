@@ -249,73 +249,45 @@ bool AutoUpdater::DownloadUpdate(const ReleaseInfo& info, const std::string& sav
 #ifdef _WIN32
     DeleteFileA(savePath.c_str());
 
-    auto checkValidFile = [](const std::string& path) -> bool {
-        std::ifstream checkFile(path, std::ios::binary | std::ios::ate);
-        if (checkFile.is_open()) {
-            std::streamsize sz = checkFile.tellg();
-            checkFile.close();
-            return (sz > 50000); // Greater than 50KB
-        }
+    HINTERNET hInternet = InternetOpenA("DustFX-Updater/1.7", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    if (!hInternet) return false;
+
+    DWORD flags = INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_SECURE |
+                  INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTPS | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTP;
+    HINTERNET hFile = InternetOpenUrlA(hInternet, info.downloadUrl.c_str(), NULL, 0, flags, 0);
+    if (!hFile) {
+        InternetCloseHandle(hInternet);
         return false;
-    };
+    }
 
-    // Tier 1: WinINet Stream with modern redirect & SSL flags
-    {
-        HINTERNET hInternet = InternetOpenA("DustFX-Updater/1.4", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-        if (hInternet) {
-            DWORD flags = INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_SECURE |
-                          INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTPS | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTP;
-            HINTERNET hFile = InternetOpenUrlA(hInternet, info.downloadUrl.c_str(), NULL, 0, flags, 0);
-            if (hFile) {
-                std::ofstream out(savePath, std::ios::binary);
-                if (out.is_open()) {
-                    char buffer[16384];
-                    DWORD bytesRead = 0;
-                    while (InternetReadFile(hFile, buffer, sizeof(buffer), &bytesRead) && bytesRead > 0) {
-                        out.write(buffer, bytesRead);
-                    }
-                    out.close();
-                }
-                InternetCloseHandle(hFile);
-            }
-            InternetCloseHandle(hInternet);
-        }
-        if (checkValidFile(savePath)) {
-            std::cout << "[AutoUpdater] Download successful via WinINet." << std::endl;
+    std::ofstream out(savePath, std::ios::binary);
+    if (!out.is_open()) {
+        InternetCloseHandle(hFile);
+        InternetCloseHandle(hInternet);
+        return false;
+    }
+
+    char buffer[32768];
+    DWORD bytesRead = 0;
+    while (InternetReadFile(hFile, buffer, sizeof(buffer), &bytesRead) && bytesRead > 0) {
+        out.write(buffer, bytesRead);
+    }
+    out.close();
+
+    InternetCloseHandle(hFile);
+    InternetCloseHandle(hInternet);
+
+    std::ifstream checkFile(savePath, std::ios::binary | std::ios::ate);
+    if (checkFile.is_open()) {
+        std::streamsize sz = checkFile.tellg();
+        checkFile.close();
+        if (sz > 50000) {
+            std::cout << "[AutoUpdater] Download successful (" << sz << " bytes)." << std::endl;
             return true;
         }
     }
 
-    // Tier 2: Windows 10/11 built-in curl.exe
-    {
-        std::string curlCmd = "curl.exe -f -s -S -L --connect-timeout 15 -o \"" + savePath + "\" \"" + info.downloadUrl + "\"";
-        int ret = system(curlCmd.c_str());
-        if (ret == 0 && checkValidFile(savePath)) {
-            std::cout << "[AutoUpdater] Download successful via curl.exe." << std::endl;
-            return true;
-        }
-    }
-
-    // Tier 3: PowerShell WebClient with TLS 1.2
-    {
-        std::string psCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object Net.WebClient).DownloadFile('" + info.downloadUrl + "', '" + savePath + "')\"";
-        int ret = system(psCmd.c_str());
-        if (ret == 0 && checkValidFile(savePath)) {
-            std::cout << "[AutoUpdater] Download successful via PowerShell." << std::endl;
-            return true;
-        }
-    }
-
-    // Tier 4: URLDownloadToFile fallback
-    {
-        HRESULT hr = URLDownloadToFileA(NULL, info.downloadUrl.c_str(), savePath.c_str(), 0, NULL);
-        if (SUCCEEDED(hr) && checkValidFile(savePath)) {
-            std::cout << "[AutoUpdater] Download successful via URLDownloadToFile." << std::endl;
-            return true;
-        }
-    }
-
-    std::cerr << "[AutoUpdater] All download tiers failed." << std::endl;
+    std::cerr << "[AutoUpdater] Download failed or file corrupted." << std::endl;
     return false;
 #else
     std::string cmd = "curl -f -L -o '" + savePath + "' '" + info.downloadUrl + "' 2>/dev/null";

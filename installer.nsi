@@ -49,12 +49,10 @@ Function .onInstSuccess
 FunctionEnd
 
 Function KillDustFXProcesses
-  ; Forcefully kill all instances of DustFX via multiple fallback mechanisms
-  nsExec::Exec 'cmd.exe /c taskkill.exe /F /IM DustFX.exe /T >nul 2>&1'
+  ; Forcefully kill running instances of DustFX cleanly via taskkill
+  nsExec::Exec 'taskkill.exe /F /IM DustFX.exe /T'
   nsExec::Exec '"$SYSDIR\taskkill.exe" /F /IM DustFX.exe /T'
-  nsExec::Exec '"$WINDIR\SysNative\taskkill.exe" /F /IM DustFX.exe /T'
-  nsExec::Exec 'powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Get-Process -Name DustFX -ErrorAction SilentlyContinue | Stop-Process -Force"'
-  Sleep 1000
+  Sleep 500
 FunctionEnd
 
 Function .onInit
@@ -73,6 +71,7 @@ Section "MainSection" SEC01
   RMDir /r "$INSTDIR\web\dist"
 
   File "DustFX.exe"
+  File "WebView2Loader.dll"
   File "app.ico"
   File "LICENSE.txt"
 
@@ -100,10 +99,9 @@ SectionEnd
 
 Section "Uninstall"
   ; Terminate running DustFX before uninstalling
-  nsExec::Exec 'cmd.exe /c taskkill.exe /F /IM DustFX.exe /T >nul 2>&1'
+  nsExec::Exec 'taskkill.exe /F /IM DustFX.exe /T'
   nsExec::Exec '"$SYSDIR\taskkill.exe" /F /IM DustFX.exe /T'
-  nsExec::Exec 'powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Get-Process -Name DustFX -ErrorAction SilentlyContinue | Stop-Process -Force"'
-  Sleep 800
+  Sleep 500
 
   Delete "$DESKTOP\DustFX.lnk"
   Delete "$SMPROGRAMS\DustFX\DustFX.lnk"
@@ -112,6 +110,7 @@ Section "Uninstall"
 
   RMDir /r "$INSTDIR\web"
   Delete "$INSTDIR\DustFX.exe"
+  Delete "$INSTDIR\WebView2Loader.dll"
   Delete "$INSTDIR\app.ico"
   Delete "$INSTDIR\LICENSE.txt"
   Delete "$INSTDIR\Uninstall.exe"
