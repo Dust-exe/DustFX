@@ -6,6 +6,7 @@
 #include <windows.h>
 
 static HHOOK g_hKeyboardHook = NULL;
+static HHOOK g_hMouseHook = NULL;
 static DWORD g_hookThreadId = 0;
 
 static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
@@ -28,6 +29,25 @@ static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lP
     }
     // ALWAYS call CallNextHookEx — PASSTHROUGH guarantees keys are NEVER locked!
     return CallNextHookEx(g_hKeyboardHook, nCode, wParam, lParam);
+}
+
+static LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
+    if (nCode == HC_ACTION) {
+        MSLLHOOKSTRUCT* pMouse = reinterpret_cast<MSLLHOOKSTRUCT*>(lParam);
+        if (pMouse) {
+            bool isAlt = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+            bool isCtrl = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
+            bool isShift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+
+            if (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP) {
+                int xButton = HIWORD(pMouse->mouseData);
+                int vkCode = (xButton == 1) ? VK_XBUTTON1 : VK_XBUTTON2;
+                bool isDown = (wParam == WM_XBUTTONDOWN);
+                dustfx::HotkeyManager::Instance().HandleKeyEvent(vkCode, isAlt, isCtrl, isShift, isDown);
+            }
+        }
+    }
+    return CallNextHookEx(g_hMouseHook, nCode, wParam, lParam);
 }
 #endif
 
@@ -67,6 +87,10 @@ void HotkeyManager::Stop() {
         if (g_hKeyboardHook) {
             UnhookWindowsHookEx(g_hKeyboardHook);
             g_hKeyboardHook = NULL;
+        }
+        if (g_hMouseHook) {
+            UnhookWindowsHookEx(g_hMouseHook);
+            g_hMouseHook = NULL;
         }
 #endif
     }
@@ -115,6 +139,8 @@ std::string HotkeyManager::BuildKeyComboString(int vkCode, bool isAlt, bool isCt
     else if (vkCode == VK_HOME) keyPart = "HOME";
     else if (vkCode == VK_END) keyPart = "END";
     else if (vkCode == VK_OEM_3) keyPart = "~";
+    else if (vkCode == VK_XBUTTON1) keyPart = "MOUSE4";
+    else if (vkCode == VK_XBUTTON2) keyPart = "MOUSE5";
 
     if (keyPart.empty()) return "";
     return combo + keyPart;
@@ -171,6 +197,7 @@ void HotkeyManager::HookThreadProc() {
 #ifdef _WIN32
     g_hookThreadId = GetCurrentThreadId();
     g_hKeyboardHook = SetWindowsHookExA(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
+    g_hMouseHook = SetWindowsHookExA(WH_MOUSE_LL, LowLevelMouseProc, GetModuleHandle(NULL), 0);
 
     MSG msg;
     while (m_running.load() && GetMessage(&msg, NULL, 0, 0)) {
@@ -181,6 +208,10 @@ void HotkeyManager::HookThreadProc() {
     if (g_hKeyboardHook) {
         UnhookWindowsHookEx(g_hKeyboardHook);
         g_hKeyboardHook = NULL;
+    }
+    if (g_hMouseHook) {
+        UnhookWindowsHookEx(g_hMouseHook);
+        g_hMouseHook = NULL;
     }
 #endif
 }
@@ -212,6 +243,8 @@ int HotkeyManager::ParseVirtualKey(const std::string& keyStr) {
         if (c >= 'A' && c <= 'Z') return c;
         if (c >= '0' && c <= '9') return c;
     }
+    if (k == "MOUSE4") return VK_XBUTTON1;
+    if (k == "MOUSE5") return VK_XBUTTON2;
 #endif
     (void)keyStr;
     return 0;

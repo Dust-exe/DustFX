@@ -142,13 +142,23 @@ void DustFxApp::ToggleCrosshair() {
 void DustFxApp::HandleHotkey(HotkeyAction action, const std::string& param, bool isKeyDown) {
     (void)param;
 
-    // For Sniper Zoom Hold, process both KeyDown and KeyUp events
+    // For Sniper Zoom Hold/Toggle, process both KeyDown and KeyUp events
     if (action == HotkeyAction::SNIPER_ZOOM_HOLD) {
-        bool active = isKeyDown;
-        if (active != OverlayToast::Instance().IsSniperZoomActive()) {
-            OverlayToast::Instance().ToggleSniperZoom(active);
-            if (active) {
-                OverlayToast::Instance().ShowToast("🔭 SNIPER ZOOM", "AÇIK");
+        std::string mode = SettingsManager::Instance().GetCurrentDisplaySettings().sniperZoomMode;
+        if (mode == "hold") {
+            bool active = isKeyDown;
+            if (active != OverlayToast::Instance().IsSniperZoomActive()) {
+                OverlayToast::Instance().ToggleSniperZoom(active);
+                if (active) {
+                    OverlayToast::Instance().ShowToast("🔭 SNIPER ZOOM", "AÇIK");
+                }
+            }
+        } else {
+            // mode == "toggle"
+            if (isKeyDown) {
+                bool active = !OverlayToast::Instance().IsSniperZoomActive();
+                OverlayToast::Instance().ToggleSniperZoom(active);
+                OverlayToast::Instance().ShowToast("🔭 SNIPER ZOOM", active ? "AÇIK" : "KAPALI");
             }
         }
         return;
