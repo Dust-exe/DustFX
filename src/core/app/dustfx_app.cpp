@@ -208,11 +208,14 @@ void DustFxApp::HandleProcessEvent(const std::string& processName, bool isForegr
         ApplyProfile(matched.id);
     } else {
         // If desktop/explorer focused and policy is auto reset
+        // Ignore resets when switching to the DustFX app itself
         if (processName == "explorer.exe" || processName == "dwm.exe") {
             auto settings = SettingsManager::Instance().GetSettings();
             if (settings.resetPolicy == AutoResetPolicy::ON_DESKTOP_FOCUS) {
                 GpuController::Instance().ResetToDefault(-1);
             }
+        } else if (processName == "DustFX.exe" || processName == "msedge.exe" || processName == "chrome.exe") {
+            // Keep the active profile when using the DustFX UI
         }
     }
 }

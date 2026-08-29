@@ -110,13 +110,28 @@ export const HotkeysTab: React.FC<HotkeysTabProps> = ({
 
     const key = e.key;
     if (!['Control', 'Alt', 'Shift', 'Meta'].includes(key)) {
-      keys.push(key.length === 1 ? key.toUpperCase() : key.toUpperCase());
+      keys.push(key.toUpperCase());
     }
 
     const combo = keys.join('+');
     if (combo && !['CTRL', 'ALT', 'SHIFT'].includes(combo)) {
       setPressedKey(combo);
     }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const keys: string[] = [];
+    if (e.ctrlKey) keys.push('CTRL');
+    if (e.altKey) keys.push('ALT');
+    if (e.shiftKey) keys.push('SHIFT');
+
+    if (e.button === 3) keys.push('MOUSE4');
+    else if (e.button === 4) keys.push('MOUSE5');
+    else return;
+
+    const combo = keys.join('+');
+    setPressedKey(combo);
   };
 
   const confirmKey = async (id: string) => {
@@ -229,6 +244,7 @@ export const HotkeysTab: React.FC<HotkeysTabProps> = ({
                     <div
                       tabIndex={0}
                       onKeyDown={handleKeyDown}
+                      onMouseDown={handleMouseDown}
                       className="min-w-[130px] px-3 py-2 rounded-xl bg-fuchsia-950/80 border-2 border-fuchsia-500 text-sm font-mono text-fuchsia-200 text-center outline-none animate-pulse focus:outline-none cursor-text"
                       autoFocus
                     >
@@ -314,6 +330,7 @@ export const HotkeysTab: React.FC<HotkeysTabProps> = ({
                       <div
                         tabIndex={0}
                         onKeyDown={handleKeyDown}
+                        onMouseDown={handleMouseDown}
                         className="min-w-[90px] px-2 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-500 text-xs font-mono text-emerald-200 text-center outline-none animate-pulse"
                         autoFocus
                       >

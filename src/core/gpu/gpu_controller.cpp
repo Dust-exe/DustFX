@@ -461,11 +461,6 @@ bool GpuController::ApplyGdiGammaRamp(const DisplaySettings& settings, int monit
     bool anySuccess = false;
 
     // Primary desktop DC
-    HDC hdcPrimary = GetDC(NULL);
-    if (hdcPrimary) {
-        if (SetDeviceGammaRamp(hdcPrimary, ramp)) anySuccess = true;
-        ReleaseDC(NULL, hdcPrimary);
-    }
 
     // All enumerated displays
     DISPLAY_DEVICEA dd; dd.cb = sizeof(dd);
