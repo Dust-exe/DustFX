@@ -11,6 +11,8 @@
 #include <windows.h>
 #include <shellapi.h>
 #include <objbase.h>
+#include <shobjidl.h>
+#include <shlobj.h>
 
 #define ID_TRAY_ICON       1001
 #define WM_TRAYICON        (WM_USER + 1)
@@ -28,8 +30,84 @@ void OpenInDefaultBrowser(const char* url) {
 }
 
 void LaunchStudioUI() {
-    // Open directly in the user's default browser to prevent Microsoft Edge / Chrome pinning issues on the taskbar.
-    OpenInDefaultBrowser("http://127.0.0.1:19840/");
+    char localAppData[MAX_PATH] = {0};
+    GetEnvironmentVariableA("LOCALAPPDATA", localAppData, MAX_PATH);
+    std::string profileArg = "--user-data-dir=\"" + std::string(localAppData) + "\\DustFX\\app_profile\"";
+
+    // Highly optimized flags: 0% GPU load when idle, standalone desktop app mode
+    std::string browserArgs = "--app=http://127.0.0.1:19840/ " + profileArg +
+        " --window-size=1180,800 --window-controls-overlay " +
+        " --disable-gpu-vsync --disable-backgrounding-occluded-windows --enable-low-res-tiling " +
+        " --enable-gpu-rasterization --enable-zero-copy --disable-software-rasterizer " +
+        " --disable-extensions --disable-features=Translate,OptimizationHints,MediaRouter,DevTools,Fullscreen --disable-default-apps";
+
+    // Generate a temporary shortcut (.lnk) to force the DustFX icon on the taskbar instead of Edge's icon
+    char exePath[MAX_PATH] = {0};
+    GetModuleFileNameA(NULL, exePath, MAX_PATH);
+
+    char tempPath[MAX_PATH] = {0};
+    GetTempPathA(MAX_PATH, tempPath);
+    std::string lnkPath = std::string(tempPath) + "DustFX_UI.lnk";
+
+    bool shortcutCreated = false;
+    IShellLinkA* psl = NULL;
+    if (SUCCEEDED(CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLinkA, (LPVOID*)&psl))) {
+        IPersistFile* ppf = NULL;
+
+        // Find msedge.exe path
+        char msedgePath[MAX_PATH] = {0};
+        DWORD pathSize = MAX_PATH;
+        if (RegGetValueA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\msedge.exe", "", RRF_RT_REG_SZ, NULL, msedgePath, &pathSize) == ERROR_SUCCESS) {
+             psl->SetPath(msedgePath);
+             psl->SetArguments(browserArgs.c_str());
+             psl->SetIconLocation(exePath, 0); // Use the main executable's icon
+
+             if (SUCCEEDED(psl->QueryInterface(IID_IPersistFile, (LPVOID*)&ppf))) {
+                 WCHAR wsz[MAX_PATH];
+                 MultiByteToWideChar(CP_ACP, 0, lnkPath.c_str(), -1, wsz, MAX_PATH);
+                 if (SUCCEEDED(ppf->Save(wsz, TRUE))) {
+                     shortcutCreated = true;
+                 }
+                 ppf->Release();
+             }
+        }
+        psl->Release();
+    }
+
+    HINSTANCE hRes = (HINSTANCE)0;
+
+    if (shortcutCreated) {
+         hRes = ShellExecuteA(NULL, "open", lnkPath.c_str(), NULL, NULL, SW_SHOW);
+    }
+
+    // Fallback: Try Edge directly in standalone app mode if shortcut failed
+    if ((intptr_t)hRes <= 32) {
+        hRes = ShellExecuteA(
+            NULL,
+            "open",
+            "msedge.exe",
+            browserArgs.c_str(),
+            NULL,
+            SW_SHOW
+        );
+    }
+
+    // Fallback: try chrome in app mode
+    if ((intptr_t)hRes <= 32) {
+        hRes = ShellExecuteA(
+            NULL,
+            "open",
+            "chrome.exe",
+            browserArgs.c_str(),
+            NULL,
+            SW_SHOW
+        );
+    }
+
+    // Final fallback: default browser
+    if ((intptr_t)hRes <= 32) {
+        ShellExecuteA(NULL, "open", "http://127.0.0.1:19840/", NULL, NULL, SW_SHOW);
+    }
 }
 
 void AddTrayIcon(HWND hWnd) {
