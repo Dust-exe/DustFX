@@ -2,7 +2,7 @@
 
 > High-Performance Hardware GPU Display Calibration, DCCW Gamma Boost, Digital Vibrance, PvP Crosshair Overlay Engine & Auto-Update System
 
-[![Release](https://img.shields.io/badge/Release-v2.0.1-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
+[![Release](https://img.shields.io/badge/Release-v2.1.0-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge)](LICENSE.txt)
 [![CPU Usage](https://img.shields.io/badge/CPU-%3C0.1%25-brightgreen?style=for-the-badge)](https://dust-studio.com)
 [![RAM Usage](https://img.shields.io/badge/RAM-%3C15MB-brightgreen?style=for-the-badge)](https://dust-studio.com)
@@ -32,7 +32,7 @@ DustFX is engineered from the ground up in native C++20 for maximum gaming perfo
 
 ---
 
-## Key Features (v2.0.1)
+## Key Features (v2.1.0)
 
 ### 1. Fully Customizable Auto Game Detection
 - **Smart App Detection:** Link any game or application (e.g., `fivem.exe`, `cs2.exe`) to your own custom filter profile.

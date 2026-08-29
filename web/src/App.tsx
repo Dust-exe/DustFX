@@ -13,7 +13,7 @@ import { AppStatus, DisplaySettings, GameProfile, ReleaseInfo, HotkeyConfig } fr
 import { Flame, RotateCcw, Download, Globe } from 'lucide-react';
 import { translations, Language } from './translations';
 
-const CURRENT_VERSION = '2.0.1';
+const CURRENT_VERSION = '2.1.0';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<TabId>('filter');
