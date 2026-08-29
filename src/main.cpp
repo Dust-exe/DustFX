@@ -6,11 +6,15 @@
 #include <thread>
 #include <chrono>
 #include <atomic>
+#include <memory>
 
 #ifdef _WIN32
 #include <windows.h>
 #include <shellapi.h>
 #include <objbase.h>
+
+#define WEBVIEW_EDGE
+#include "webview/webview.h"
 
 #define ID_TRAY_ICON          1001
 #define WM_TRAYICON           (WM_USER + 1)
@@ -30,15 +34,28 @@
 
 static NOTIFYICONDATA g_nid = {0};
 static HWND g_hHiddenWnd = NULL;
+static HWND g_hWebviewWnd = NULL;
+static WNDPROC g_pOriginalWebviewWndProc = NULL;
+static std::unique_ptr<webview::webview> g_pWebView = nullptr;
+static std::atomic<bool> g_isExiting{false};
 
-// Open in default system browser
-void OpenInDefaultBrowser(const char* url) {
-    ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOW);
+void ShowStudioUI() {
+    if (g_hWebviewWnd && IsWindow(g_hWebviewWnd)) {
+        ShowWindow(g_hWebviewWnd, SW_SHOW);
+        ShowWindow(g_hWebviewWnd, SW_RESTORE);
+        SetForegroundWindow(g_hWebviewWnd);
+    } else {
+        ShellExecuteA(NULL, "open", "http://127.0.0.1:19840/", NULL, NULL, SW_SHOW);
+    }
 }
 
-void LaunchStudioUI() {
-    // Open directly in the user's default browser to prevent Microsoft Edge / Chrome pinning issues on the taskbar.
-    OpenInDefaultBrowser("http://127.0.0.1:19840/");
+// Subclassed window procedure for WebView2 window to minimize/hide to tray on close
+LRESULT CALLBACK WebviewSubclassWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_CLOSE && !g_isExiting.load()) {
+        ShowWindow(hWnd, SW_HIDE);
+        return 0;
+    }
+    return CallWindowProc(g_pOriginalWebviewWndProc, hWnd, msg, wParam, lParam);
 }
 
 void AddTrayIcon(HWND hWnd) {
@@ -56,7 +73,7 @@ void AddTrayIcon(HWND hWnd) {
     if (!g_nid.hIcon) {
         g_nid.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     }
-    lstrcpyA(g_nid.szTip, "DustFX v1.6.0 — GPU Display & Gamma Optimizer");
+    lstrcpyA(g_nid.szTip, "DustFX v1.7.0 — GPU Display & Gamma Optimizer");
     Shell_NotifyIconA(NIM_ADD, &g_nid);
 }
 
@@ -72,7 +89,7 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
         case WM_TRAYICON: {
             if (lParam == WM_LBUTTONDBLCLK || lParam == WM_LBUTTONUP) {
-                LaunchStudioUI();
+                ShowStudioUI();
             } else if (lParam == WM_RBUTTONUP) {
                 POINT pt;
                 GetCursorPos(&pt);
@@ -109,7 +126,7 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
                 DestroyMenu(hMenu);
 
                 if (cmd == IDM_TRAY_OPEN) {
-                    LaunchStudioUI();
+                    ShowStudioUI();
                 } else if (cmd == IDM_TRAY_MAXGAMMA) {
                     dustfx::DustFxApp::Instance().QuickMaxGamma();
                 } else if (cmd == IDM_TRAY_VIBRANCE) {
@@ -129,8 +146,12 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
                 } else if (cmd == IDM_TRAY_RESET) {
                     dustfx::DustFxApp::Instance().QuickReset();
                 } else if (cmd == IDM_TRAY_CHECKUPDATE) {
-                    LaunchStudioUI();
+                    ShowStudioUI();
                 } else if (cmd == IDM_TRAY_EXIT) {
+                    g_isExiting.store(true);
+                    if (g_pWebView) {
+                        g_pWebView->terminate();
+                    }
                     PostQuitMessage(0);
                 }
             }
@@ -149,11 +170,18 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    // Single instance mutex - if already running, open the UI
+    // Single instance mutex - if already running, bring existing window to front
     HANDLE hMutex = CreateMutexA(NULL, TRUE, "DustFX_SingleInstance_Mutex");
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
-        // Bring existing window to front + open UI
-        LaunchStudioUI();
+        HWND hWndExisting = FindWindowA(NULL, "DustFX — GPU Display & Gamma Optimizer");
+        if (!hWndExisting) hWndExisting = FindWindowA(NULL, "DustFX");
+        if (hWndExisting) {
+            ShowWindow(hWndExisting, SW_SHOW);
+            ShowWindow(hWndExisting, SW_RESTORE);
+            SetForegroundWindow(hWndExisting);
+        } else {
+            ShellExecuteA(NULL, "open", "http://127.0.0.1:19840/", NULL, NULL, SW_SHOW);
+        }
         return 0;
     }
 
@@ -182,17 +210,54 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     dustfx::OverlayToast::Instance().Initialize();
 
-    LaunchStudioUI();
+    // Initialize Native WebView2 Application Window
+    bool webviewSuccess = false;
+    try {
+        g_pWebView = std::make_unique<webview::webview>(false, nullptr);
+        g_pWebView->set_title("DustFX — GPU Display & Gamma Optimizer");
+        g_pWebView->set_size(1240, 820, WEBVIEW_HINT_NONE);
+        
+        g_hWebviewWnd = (HWND)g_pWebView->window().value();
+        if (g_hWebviewWnd) {
+            // Apply authentic purple DustFX icon to the window
+            HICON hIconBig = (HICON)LoadImageA(GetModuleHandle(NULL), MAKEINTRESOURCE(1), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            HICON hIconSmall = (HICON)LoadImageA(GetModuleHandle(NULL), MAKEINTRESOURCE(1), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+            if (!hIconBig) hIconBig = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(1));
+            if (!hIconSmall) hIconSmall = hIconBig;
+            if (hIconBig) SendMessageA(g_hWebviewWnd, WM_SETICON, ICON_BIG, (LPARAM)hIconBig);
+            if (hIconSmall) SendMessageA(g_hWebviewWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIconSmall);
 
-    MSG msg;
-    while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+            // Subclass window procedure to handle WM_CLOSE -> hide to tray
+            g_pOriginalWebviewWndProc = (WNDPROC)SetWindowLongPtrA(g_hWebviewWnd, GWLP_WNDPROC, (LONG_PTR)WebviewSubclassWndProc);
+        }
+
+        g_pWebView->navigate("http://127.0.0.1:19840/");
+        webviewSuccess = true;
+    } catch (const std::exception& e) {
+        std::cerr << "[DustFX] WebView2 initialization failed: " << e.what() << std::endl;
+        webviewSuccess = false;
+    } catch (...) {
+        std::cerr << "[DustFX] WebView2 initialization failed with unknown error." << std::endl;
+        webviewSuccess = false;
     }
 
+    if (webviewSuccess && g_pWebView) {
+        // Run native WebView2 event message loop
+        g_pWebView->run();
+    } else {
+        // Fallback: Open in default browser if WebView2 runtime is not present
+        ShellExecuteA(NULL, "open", "http://127.0.0.1:19840/", NULL, NULL, SW_SHOW);
+        MSG msg;
+        while (GetMessage(&msg, NULL, 0, 0)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+
+    g_isExiting.store(true);
     app.Stop();
     if (hMutex) CloseHandle(hMutex);
-    return (int)msg.wParam;
+    return 0;
 }
 
 #else
@@ -224,3 +289,4 @@ int main(int argc, char* argv[]) {
 }
 
 #endif
+

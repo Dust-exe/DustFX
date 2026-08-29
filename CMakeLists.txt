@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(DustFX VERSION 1.6.0 LANGUAGES C CXX)
+project(DustFX VERSION 1.7.0 LANGUAGES C CXX)
 
 
 set(CMAKE_CXX_STANDARD 20)
@@ -12,6 +12,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/webview
 )
 
 # Version definitions
@@ -48,7 +49,7 @@ if(WIN32)
     add_executable(DustFX WIN32 ${DUSTFX_SOURCES})
     target_link_libraries(DustFX PRIVATE
         Threads::Threads
-        gdi32 user32 shell32 ole32 ws2_32
+        gdi32 user32 shell32 ole32 ws2_32 shlwapi version advapi32 oleaut32 wininet urlmon
     )
 else()
     add_executable(DustFX ${DUSTFX_SOURCES})

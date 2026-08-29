@@ -2,7 +2,7 @@
 
 > High-Performance Hardware GPU Display Calibration, DCCW Gamma Boost, Digital Vibrance, PvP Crosshair Overlay Engine & Auto-Update System
 
-[![Release](https://img.shields.io/badge/Release-v1.6.0-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
+[![Release](https://img.shields.io/badge/Release-v1.7.0-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge)](LICENSE.txt)
 [![CPU Usage](https://img.shields.io/badge/CPU-%3C0.1%25-brightgreen?style=for-the-badge)](https://dust-studio.com)
 [![RAM Usage](https://img.shields.io/badge/RAM-%3C15MB-brightgreen?style=for-the-badge)](https://dust-studio.com)
@@ -32,7 +32,7 @@ DustFX is engineered from the ground up in native C++20 for maximum gaming perfo
 
 ---
 
-## Key Features (v1.6.0)
+## Key Features (v1.7.0)
 
 ### 1. Hardware-Level GPU & DCCW Gamma Control
 - **DCCW Gamma Boost (0.5x - 3.0x):** Zero-latency night vision lighting powered by Windows GDI GammaRamp and direct hardware color ramps.
@@ -102,7 +102,7 @@ Download the official setup installer from the [Releases](https://github.com/Dus
 ```bash
 x86_64-w64-mingw32-g++ -std=c++20 -O3 -mwindows \
   -DDUSTFX_WIN32 -DWIN32_LEAN_AND_MEAN \
-  -I src -I include \
+  -I src -I include -I include/webview \
   src/main.cpp \
   src/core/gpu/gpu_controller.cpp \
   src/core/display/monitor_manager.cpp \
@@ -115,7 +115,7 @@ x86_64-w64-mingw32-g++ -std=c++20 -O3 -mwindows \
   src/overlay/overlay_toast.cpp \
   src/server/http_server.cpp \
   resources/dustfx_rc.o \
-  -lws2_32 -lgdi32 -luser32 -lshell32 -lole32 -lwininet -lurlmon -lpthread \
+  -lws2_32 -lgdi32 -luser32 -lshell32 -lole32 -lshlwapi -lversion -ladvapi32 -loleaut32 -lwininet -lurlmon -lpthread \
   -static -static-libgcc -static-libstdc++ \
   -o DustFX.exe
 ```

@@ -8,12 +8,12 @@ InstallDir "$LOCALAPPDATA\DustFX"
 RequestExecutionLevel user
 SetCompressor lzma
 
-VIProductVersion "1.6.0.0"
+VIProductVersion "1.7.0.0"
 VIAddVersionKey "ProductName" "DustFX"
 VIAddVersionKey "CompanyName" "Dust Studio"
 VIAddVersionKey "LegalCopyright" "Copyright (C) 2026 Dust Studio. All rights reserved."
 VIAddVersionKey "FileDescription" "DustFX GPU & DCCW Gamma Optimizer Setup"
-VIAddVersionKey "FileVersion" "1.6.0"
+VIAddVersionKey "FileVersion" "1.7.0"
 VIAddVersionKey "OriginalFilename" "DustFX_Setup.exe"
 VIAddVersionKey "InternalName" "DustFX_Setup"
 
@@ -94,7 +94,7 @@ Section "MainSection" SEC01
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "DisplayName" "DustFX"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "UninstallString" '"$INSTDIR\Uninstall.exe"'
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "DisplayIcon" '"$INSTDIR\app.ico"'
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "DisplayVersion" "1.6.0"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "DisplayVersion" "1.7.0"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DustFX" "Publisher" "Dust Studio"
 SectionEnd
 
