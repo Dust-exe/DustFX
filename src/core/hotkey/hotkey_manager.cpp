@@ -152,6 +152,7 @@ std::string HotkeyManager::BuildKeyComboString(int vkCode, bool isAlt, bool isCt
 
 void HotkeyManager::HandleKeyEvent(int vkCode, bool isAlt, bool isCtrl, bool isShift, bool isKeyDown) {
     std::string pressedCombo = BuildKeyComboString(vkCode, isAlt, isCtrl, isShift);
+    std::string baseKey = BuildKeyComboString(vkCode, false, false, false);
     if (pressedCombo.empty()) return;
 
     HotkeyActionCallback cb;
@@ -172,23 +173,35 @@ void HotkeyManager::HandleKeyEvent(int vkCode, bool isAlt, bool isCtrl, bool isS
     };
 
     std::string upperCombo = ToUpperStr(pressedCombo);
+    std::string upperBase = ToUpperStr(baseKey);
 
-    if (upperCombo == ToUpperStr(cfg.maxGammaKey)) {
+    // Lambda to check if a configured key matches either the exact combo or the base key fallback
+    auto matches = [&](const std::string& configKey) {
+        std::string upperCfg = ToUpperStr(configKey);
+        return (upperCombo == upperCfg) || (!upperBase.empty() && upperBase == upperCfg);
+    };
+
+    if (matches(cfg.maxGammaKey)) {
         cb(HotkeyAction::MAX_GAMMA_TOGGLE, "", isKeyDown);
-    } else if (upperCombo == ToUpperStr(cfg.vibranceKey)) {
+    } else if (matches(cfg.vibranceKey)) {
         cb(HotkeyAction::VIBRANCE_TOGGLE, "", isKeyDown);
-    } else if (upperCombo == ToUpperStr(cfg.quickResetKey)) {
+    } else if (matches(cfg.quickResetKey)) {
         cb(HotkeyAction::QUICK_RESET, "", isKeyDown);
-    } else if (upperCombo == ToUpperStr(cfg.toggleCrosshairKey)) {
+    } else if (matches(cfg.toggleCrosshairKey)) {
         cb(HotkeyAction::TOGGLE_CROSSHAIR, "", isKeyDown);
-    } else if (upperCombo == ToUpperStr(cfg.sniperZoomKey)) {
+    } else if (matches(cfg.sniperZoomKey)) {
         cb(HotkeyAction::SNIPER_ZOOM_HOLD, "", isKeyDown);
-    } else if (upperCombo == ToUpperStr(cfg.toggleOverlayKey)) {
+    } else if (matches(cfg.toggleOverlayKey)) {
         cb(HotkeyAction::TOGGLE_OVERLAY, "", isKeyDown);
     } else {
         auto it = profHotkeys.find(upperCombo);
         if (it != profHotkeys.end()) {
             cb(HotkeyAction::CUSTOM_PROFILE_TRIGGER, it->second, isKeyDown);
+        } else if (!upperBase.empty() && upperBase != upperCombo) {
+            auto itBase = profHotkeys.find(upperBase);
+            if (itBase != profHotkeys.end()) {
+                cb(HotkeyAction::CUSTOM_PROFILE_TRIGGER, itBase->second, isKeyDown);
+            }
         }
     }
 }

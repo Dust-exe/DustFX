@@ -204,8 +204,12 @@ void DustFxApp::HandleProcessEvent(const std::string& processName, bool isForegr
 
     GameProfile matched = ProfileManager::Instance().GetProfileByExe(processName);
     if (!matched.id.empty()) {
-        std::cout << "[DustFxApp] 🎮 Game detected: " << processName << " -> Applying " << matched.name << std::endl;
-        ApplyProfile(matched.id);
+        if (matched.autoApplyOnLaunch) {
+            std::cout << "[DustFxApp] 🎮 Game detected: " << processName << " -> Applying " << matched.name << std::endl;
+            ApplyProfile(matched.id);
+        } else {
+            std::cout << "[DustFxApp] 🎮 Game detected: " << processName << " -> Auto-apply disabled, skipping." << std::endl;
+        }
     } else {
         // If desktop/explorer focused and policy is auto reset
         // Ignore resets when switching to the DustFX app itself
