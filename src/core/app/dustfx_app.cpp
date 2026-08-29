@@ -104,6 +104,8 @@ void DustFxApp::ApplyProfile(const std::string& profileId) {
         int targetMon = SettingsManager::Instance().GetTargetMonitorIndex();
         GpuController::Instance().ApplySettings(p.settings, targetMon);
         SettingsManager::Instance().SetCurrentDisplaySettings(p.settings);
+        m_crosshairActive = p.settings.crosshairEnabled;
+        OverlayToast::Instance().UpdateCrosshair(p.settings);
         OverlayToast::Instance().ShowToast(p.icon + " " + p.name, "Profil Aktif");
     }
 }
@@ -138,7 +140,7 @@ void DustFxApp::ToggleCrosshair() {
     DisplaySettings s = GpuController::Instance().GetCurrentSettings();
     s.crosshairEnabled = m_crosshairActive;
     SettingsManager::Instance().SetCurrentDisplaySettings(s);
-    OverlayToast::Instance().ToggleCrosshair(m_crosshairActive);
+    OverlayToast::Instance().UpdateCrosshair(s);
     OverlayToast::Instance().ShowToast("🎯 NİŞANGAH (CROSSHAIR)", m_crosshairActive ? "AÇIK" : "KAPALI");
 }
 
