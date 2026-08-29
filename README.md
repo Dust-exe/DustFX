@@ -34,24 +34,23 @@ DustFX is engineered from the ground up in native C++20 for maximum gaming perfo
 
 ## Key Features (v2.0.1)
 
-### 1. Tamamen Özelleştirilebilir Otomatik Oyun Algılama
-- **Akıllı Uygulama Tespiti:** İstediğiniz herhangi bir oyun veya programı (ör: `fivem.exe`, `cs2.exe`) kendi özel filtrenize bağlayın.
-- **Kesintisiz Geçiş:** Oyun açıldığında filtreler anında ve otomatik devreye girer. Alt-Tab attığınızda veya oyun kapandığında saniyesinde masaüstü varsayılan renklerinize döner. Göz yorgunluğuna son!
-- **%100 Kullanıcı Kontrolü:** Uygulama içerisindeki hiçbir hazır profil sizi kısıtlamaz, tüm profilleri ve hangi oyunda çalışacağını siz belirlersiniz.
+### 1. Fully Customizable Auto Game Detection
+- **Smart App Detection:** Link any game or application (e.g., `fivem.exe`, `cs2.exe`) to your own custom filter profile.
+- **Seamless Transitions:** Filters apply instantly and automatically when the game launches. If you Alt-Tab or close the game, your display reverts to standard Windows colors in milliseconds. No more eye strain!
+- **100% User Control:** You are not restricted by built-in profiles. You create, manage, and decide exactly which profile runs on which game.
 
-### 2. Görünmezlik Kalkanı: Ring 0 / DWM Düzeyinde Çalışma (Stream-Proof)
-- **Yayınlarda ve Ekran Paylaşımlarında Gizlilik:** DustFX doğrudan ekran kartı sürücüsü (NVAPI) ve Ring 0 DWM katmanında çalıştığı için; açtığınız Crosshair (Nişangah), Sniper Zoom veya renk filtreleri **kesinlikle OBS, Discord ekran paylaşımı veya yayınlarda GÖZÜKMEZ**.
-- İzleyicileriniz sizin tamamen normal ve saf bir ekranla oynadığınızı sanarken, siz tüm taktiksel avantajlara (netlik, gece görüşü, zoom) sahip olursunuz!
+### 2. Invisible Shield: Ring 0 / DWM Level Execution (Stream-Proof)
+- **Absolute Privacy in Streams & Captures:** Because DustFX operates directly at the GPU driver level (NVAPI) and Ring 0 DWM layer, your active Crosshair, Sniper Zoom, and color filters **WILL NOT BE VISIBLE on OBS, Discord screen shares, or any other capture software**.
 
-### 3. PvP Crosshair & Gelişmiş Sniper Zoom (Dürbün)
-- **Sniper Zoom Lens:** Ekranın merkezini anında büyüterek (1.2x – 4.0x) uzak mesafedeki rakipleri kolayca avlamanızı sağlar.
-- **Crosshair İzolasyonu:** Sniper Zoom açıkken bile Crosshair (Nişangah) asla bozulmaz, bulanıklaşmaz veya büyümez. Özel bir katmanda her zaman kristal netliğinde kalır.
-- **Kişiselleştirilebilir Nişangahlar:** Nokta, Artı, T-Cross, Boşluklu Artı gibi 8 farklı şekil ve istediğiniz renk seçeneği.
+### 3. PvP Crosshair & Advanced Sniper Zoom
+- **Sniper Zoom Lens:** Instantly magnifies the center of your screen (1.2x – 4.0x) to easily spot distant targets.
+- **Crosshair Isolation:** Even with Sniper Zoom active, the Crosshair never distorts, blurs, or scales up. It remains crystal clear on an independent top layer.
+- **Customizable Crosshairs:** 8 different shapes (Dot, Cross, T-Cross, Gap-Cross, etc.) with infinite color choices.
 
-### 4. Donanımsal GPU & DCCW Renk Kontrolü
-- **Sıfır Gecikme (Zero-Lag):** ReShade gibi oyuna DLL enjekte edip FPS düşüren yazılımların aksine donanım katmanında çalışır. Tam olarak 0 FPS kaybı.
-- **Gece Görüşü ve Mağara Modu:** GDI GammaRamp ile zifiri karanlık haritaları gündüze çevirin.
-- **Digital Vibrance (%0 - %100):** Ekran kartı denetim masasına girmeden, anında renk doygunluğunu artırın.
+### 4. Hardware GPU & DCCW Color Control
+- **Zero-Lag Performance:** Unlike software such as ReShade that injects DLLs into games and lowers FPS, DustFX runs at the hardware layer resulting in exactly 0 FPS loss.
+- **Night Vision & Cave Mode:** Turn pitch-black maps into daylight using native GDI GammaRamps.
+- **Digital Vibrance (0% - 100%):** Instantly boost color saturation without opening your GPU control panel.
 
 ### 5. Multi-Monitor Management
 - Synchronize all displays or apply calibrations independently to your primary gaming monitor.
