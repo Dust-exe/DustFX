@@ -124,9 +124,12 @@ void DustFxApp::QuickMaxGamma() {
 void DustFxApp::QuickReset() {
     m_maxGammaActive = false;
     m_vibranceActive = false;
+    m_crosshairActive = false;
     DisplaySettings s;
     GpuController::Instance().ResetToDefault(-1);
     SettingsManager::Instance().SetCurrentDisplaySettings(s);
+    OverlayToast::Instance().ToggleCrosshair(false);
+    OverlayToast::Instance().ToggleSniperZoom(false);
     OverlayToast::Instance().ShowToast("🔄 AYARLAR SIFIRLANDI", "Varsayılan Windows Renkleri");
 }
 
@@ -206,6 +209,7 @@ void DustFxApp::HandleProcessEvent(const std::string& processName, bool isForegr
     if (!matched.id.empty()) {
         if (matched.autoApplyOnLaunch) {
             std::cout << "[DustFxApp] 🎮 Game detected: " << processName << " -> Applying " << matched.name << std::endl;
+            OverlayToast::Instance().ShowToast("🎮 PROFIL AKTİF", matched.name + " (" + processName + ")");
             ApplyProfile(matched.id);
         } else {
             std::cout << "[DustFxApp] 🎮 Game detected: " << processName << " -> Auto-apply disabled, skipping." << std::endl;
@@ -216,7 +220,15 @@ void DustFxApp::HandleProcessEvent(const std::string& processName, bool isForegr
         if (processName == "explorer.exe" || processName == "dwm.exe") {
             auto settings = SettingsManager::Instance().GetSettings();
             if (settings.resetPolicy == AutoResetPolicy::ON_DESKTOP_FOCUS) {
+                m_maxGammaActive = false;
+                m_vibranceActive = false;
+                m_crosshairActive = false;
+                DisplaySettings s;
                 GpuController::Instance().ResetToDefault(-1);
+                SettingsManager::Instance().SetCurrentDisplaySettings(s);
+                OverlayToast::Instance().ToggleCrosshair(false);
+                OverlayToast::Instance().ToggleSniperZoom(false);
+                OverlayToast::Instance().ShowToast("🔄 OYUN KAPANDI", "Filtreler Devre Dışı Bırakıldı");
             }
         } else if (processName == "DustFX.exe" || processName == "msedge.exe" || processName == "chrome.exe") {
             // Keep the active profile when using the DustFX UI

@@ -26,154 +26,7 @@ interface ProfilesTabProps {
   onDeleteProfile: (id: string) => void;
 }
 
-// Built-in curated community profiles to enrich search
-const extraCommunityPresets: GameProfile[] = [
-  {
-    id: 'comm_cs2_pro',
-    name: 'CS2 Pro Vivid & Crisp',
-    icon: '⚡',
-    description: 'Counter-Strike 2 için sarı-yeşil ve terörist silüetlerini maksimum öne çıkaran turnuva modu.',
-    exePattern: 'cs2.exe',
-    hotkey: 'F6',
-    isBuiltin: true,
-    autoApplyOnLaunch: true,
-    settings: {
-      gamma: 1.40,
-      digitalVibrance: 75,
-      brightnessOffset: 0.04,
-      contrast: 1.35,
-      rgbRed: 1.05,
-      rgbGreen: 1.0,
-      rgbBlue: 0.95,
-      sharpness: 0.80,
-      colorTemperature: 6500,
-      shadowDetail: 0.1,
-      crosshairEnabled: true,
-      crosshairStyle: 'cross',
-      crosshairColor: '#00FF66',
-      crosshairSize: 8,
-      crosshairThickness: 2,
-      crosshairGap: 3,
-      crosshairDotSize: 0,
-      crosshairOutline: 1,
-      crosshairOpacity: 1.0,
-    },
-  },
-  {
-    id: 'comm_rust_night',
-    name: 'Rust Night & Bush Hunter',
-    icon: '🌲',
-    description: 'Rust gece döngülerinde ve yoğun çalılıklarda kamuflajlı oyuncuları fark ettiren yüksek gama eğrisi.',
-    exePattern: 'RustClient.exe',
-    hotkey: 'F9',
-    isBuiltin: true,
-    autoApplyOnLaunch: true,
-    settings: {
-      gamma: 2.20,
-      digitalVibrance: 50,
-      brightnessOffset: 0.15,
-      contrast: 1.20,
-      rgbRed: 1.0,
-      rgbGreen: 1.0,
-      rgbBlue: 1.0,
-      sharpness: 0.65,
-      colorTemperature: 6500,
-      shadowDetail: 0.5,
-      crosshairEnabled: true,
-      crosshairStyle: 'dot',
-      crosshairColor: '#FF0055',
-      crosshairSize: 6,
-      crosshairThickness: 2,
-      crosshairGap: 0,
-      crosshairDotSize: 3,
-      crosshairOutline: 1,
-      crosshairOpacity: 1.0,
-    },
-  },
-  {
-    id: 'comm_val_headshot',
-    name: 'Valorant Neon Headshot',
-    icon: '🎯',
-    description: 'Viper dumanları ve parlak ajan yeteneklerinde düşman kafalarını izole eden yüksek kontrast.',
-    exePattern: 'VALORANT-Win64-Shipping.exe',
-    hotkey: 'F8',
-    isBuiltin: true,
-    autoApplyOnLaunch: true,
-    settings: {
-      gamma: 1.25,
-      digitalVibrance: 85,
-      brightnessOffset: 0.02,
-      contrast: 1.30,
-      rgbRed: 1.0,
-      rgbGreen: 1.0,
-      rgbBlue: 1.05,
-      sharpness: 0.70,
-      colorTemperature: 6800,
-      shadowDetail: 0.1,
-      crosshairEnabled: true,
-      crosshairStyle: 'cross',
-      crosshairColor: '#00E5FF',
-      crosshairSize: 6,
-      crosshairThickness: 2,
-      crosshairGap: 2,
-      crosshairDotSize: 0,
-      crosshairOutline: 1,
-      crosshairOpacity: 1.0,
-    },
-  },
-  {
-    id: 'comm_tarkov_clarity',
-    name: 'Tarkov High-Pass Clarity',
-    icon: '🩸',
-    description: 'Escape from Tarkov bina içi gölgeleri aydınlatır, donuk renkleri açar ve uzak mesafe netliği sağlar.',
-    exePattern: 'EscapeFromTarkov.exe',
-    hotkey: 'Alt+F9',
-    isBuiltin: true,
-    autoApplyOnLaunch: true,
-    settings: {
-      gamma: 1.90,
-      digitalVibrance: 55,
-      brightnessOffset: 0.10,
-      contrast: 1.25,
-      rgbRed: 1.02,
-      rgbGreen: 1.0,
-      rgbBlue: 0.98,
-      sharpness: 0.90,
-      colorTemperature: 6400,
-      shadowDetail: 0.4,
-      crosshairEnabled: false,
-      crosshairStyle: 'dot',
-      crosshairColor: '#00FF66',
-      crosshairSize: 6,
-    },
-  },
-  {
-    id: 'comm_fivem_cinematic',
-    name: 'FiveM / GTA V Sunset',
-    icon: '🏎️',
-    description: 'Sıcak sinematik Hollywood renk tonlaması, araç ışıkları ve gece şehir detaylarını canlandırır.',
-    exePattern: 'FiveM.exe;GTA5.exe',
-    hotkey: 'F7',
-    isBuiltin: true,
-    autoApplyOnLaunch: true,
-    settings: {
-      gamma: 1.15,
-      digitalVibrance: 70,
-      brightnessOffset: -0.02,
-      contrast: 1.15,
-      rgbRed: 1.08,
-      rgbGreen: 0.96,
-      rgbBlue: 0.88,
-      sharpness: 0.40,
-      colorTemperature: 5000,
-      shadowDetail: 0.1,
-      crosshairEnabled: false,
-      crosshairStyle: 'dot',
-      crosshairColor: '#00FF66',
-      crosshairSize: 6,
-    },
-  },
-];
+
 
 // Helper: encode/decode profile share string safely
 function generateProfileShareCode(profile: GameProfile): string {
@@ -250,6 +103,7 @@ export const ProfilesTab: React.FC<ProfilesTabProps> = ({
   const [newProfileDesc, setNewProfileDesc] = useState('');
   const [newProfileHotkey, setNewProfileHotkey] = useState('');
   const [newProfileExe, setNewProfileExe] = useState('');
+  const [newProfileAutoApply, setNewProfileAutoApply] = useState(true);
 
   // Import State
   const [importCode, setImportCode] = useState('');
@@ -257,13 +111,7 @@ export const ProfilesTab: React.FC<ProfilesTabProps> = ({
 
   // Merge loaded profiles with extra curated community presets (avoiding duplicate IDs)
   const allProfiles = useMemo(() => {
-    const list = [...profiles];
-    for (const extra of extraCommunityPresets) {
-      if (!list.some((p) => p.id === extra.id)) {
-        list.push(extra);
-      }
-    }
-    return list;
+    return profiles;
   }, [profiles]);
 
   // Filtered profiles based on search
@@ -293,6 +141,7 @@ export const ProfilesTab: React.FC<ProfilesTabProps> = ({
     setNewProfileDesc(`Gama: ${currentSettings.gamma.toFixed(2)}x, Canlılık: %${currentSettings.digitalVibrance}, Netlik: %${(currentSettings.sharpness * 100).toFixed(0)}`);
     setNewProfileHotkey('');
     setNewProfileExe('');
+    setNewProfileAutoApply(true);
     setShowSaveModal(true);
   };
 
@@ -306,7 +155,7 @@ export const ProfilesTab: React.FC<ProfilesTabProps> = ({
       description: newProfileDesc.trim() || 'Kullanıcı tarafından kaydedilen özel renk ayarı.',
       exePattern: newProfileExe.trim(),
       hotkey: newProfileHotkey.trim(),
-      autoApplyOnLaunch: !!newProfileExe.trim(),
+      autoApplyOnLaunch: newProfileAutoApply && !!newProfileExe.trim(),
       isBuiltin: false,
       settings: { ...currentSettings },
     };
@@ -584,14 +433,25 @@ export const ProfilesTab: React.FC<ProfilesTabProps> = ({
 
               <div>
                 <label className="text-zinc-300 font-semibold mb-1 block font-mono">Otomatik Oyun .exe Bağlantısı:</label>
-                <input
-                  type="text"
-                  value={newProfileExe}
-                  onChange={(e) => setNewProfileExe(e.target.value)}
-                  placeholder="Örn: RustClient.exe;cs2.exe (Oyun açılınca oto-aktif olur)"
-                  maxLength={100}
-                  className="w-full p-2.5 rounded-xl bg-black/50 border border-white/10 text-white outline-none focus:border-purple-500 text-xs font-mono"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newProfileExe}
+                    onChange={(e) => setNewProfileExe(e.target.value)}
+                    placeholder="Örn: RustClient.exe;cs2.exe"
+                    maxLength={100}
+                    className="flex-1 p-2.5 rounded-xl bg-black/50 border border-white/10 text-white outline-none focus:border-purple-500 text-xs font-mono"
+                  />
+                  <label className="flex items-center gap-2 cursor-pointer bg-black/30 p-2.5 rounded-xl border border-white/5 hover:bg-white/5 transition-colors">
+                    <input 
+                      type="checkbox" 
+                      checked={newProfileAutoApply}
+                      onChange={(e) => setNewProfileAutoApply(e.target.checked)}
+                      className="w-4 h-4 rounded accent-purple-500 bg-black/50 border-white/10"
+                    />
+                    <span className="text-xs text-zinc-300 select-none whitespace-nowrap font-mono">Oto Aktif Et</span>
+                  </label>
+                </div>
               </div>
             </div>
 
