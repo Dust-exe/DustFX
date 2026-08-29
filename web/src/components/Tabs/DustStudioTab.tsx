@@ -206,7 +206,7 @@ export const DustStudioTab: React.FC<DustStudioTabProps> = ({ lang, onOpenExtern
                 <Monitor className="w-5 h-5" />
               </div>
               <span className="text-[10px] font-mono font-semibold px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                v1.6.0 Active
+                v1.7.1 Active
               </span>
             </div>
 
