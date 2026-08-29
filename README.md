@@ -34,43 +34,26 @@ DustFX is engineered from the ground up in native C++20 for maximum gaming perfo
 
 ## Key Features (v2.0.1)
 
-### 1. Hardware-Level GPU & DCCW Gamma Control
-- **DCCW Gamma Boost (0.5x - 3.0x):** Zero-latency night vision lighting powered by Windows GDI GammaRamp and direct hardware color ramps.
-- **Dedicated Digital Vibrance (0% - 100%):** Real-time hardware saturation engine with dedicated background DWM message pump & NVAPI hardware acceleration.
-- **Highlight Bloom Glow (0% - 100%):** High-luminance knee expansion filter that makes enemy silhouettes, neon lights, and muzzle flashes luminous.
-- **Edge & Silhouette Contour Contrast:** High-frequency chromatic boundary separation that makes player silhouettes and enemy outlines stand out sharply without halo artifacts.
-- **Enhanced CAS Sharpness (Unsharp Mask LUT):** Frequency-separated multi-band sharpening that highlights distant targets and fine textures.
-- **Shadow Detail Recovery (Toe Curve):** Lifts dark shadows in tunnels, caves, and dark buildings without washing out highlight contrast (0% - 100%).
-- **Kelvin Color Temperature (2700K - 10000K):** Physical color temperature mapping for anti-fatigue warm night filters or icy competitive blue tints.
-- **Independent RGB Calibration:** Fine-tune Red, Green, and Blue channels separately.
-- **Hotkey Management:** Custom key bindings with instant reset and one-click key removal support.
-- **Multilingual Support:** Instant EN/TR language toggle with English primary default.
-- **Dust Studio Hub:** Ecosystem overview with project details for Dust-vpn, DustFX, and DustReplay.
+### 1. Tamamen Özelleştirilebilir Otomatik Oyun Algılama
+- **Akıllı Uygulama Tespiti:** İstediğiniz herhangi bir oyun veya programı (ör: `fivem.exe`, `cs2.exe`) kendi özel filtrenize bağlayın.
+- **Kesintisiz Geçiş:** Oyun açıldığında filtreler anında ve otomatik devreye girer. Alt-Tab attığınızda veya oyun kapandığında saniyesinde masaüstü varsayılan renklerinize döner. Göz yorgunluğuna son!
+- **%100 Kullanıcı Kontrolü:** Uygulama içerisindeki hiçbir hazır profil sizi kısıtlamaz, tüm profilleri ve hangi oyunda çalışacağını siz belirlersiniz.
 
-### 2. PvP Crosshair & Sniper Zoom Lens Overlay
-- **Sniper Zoom Lens (Screen Center Magnifier):** Hardware-accelerated center scope (1.2x – 4.0x zoom, 100px – 500px diameter, circle/square shape, hold/toggle modes).
-- **Crosshair Zoom Isolation (CRITICAL):** When the crosshair is active during sniper zoom, the crosshair is rendered on a top layer ABOVE the zoom buffer at 1x resolution, ensuring it is never blurred or distorted.
-- **Pixel-Perfect Center Lock:** Lightweight 200x200 transparent, click-through, topmost hardware overlay (`Alt + Z`).
-- **8 Distinct Shapes:** Dot, Cross (+), T-Cross, Gap-Cross, X-Cross, Circle (O), Cross-Dot, and Square.
-- **Named Custom Presets:** Save custom crosshair designs with personalized names and live SVG previews.
+### 2. Görünmezlik Kalkanı: Ring 0 / DWM Düzeyinde Çalışma (Stream-Proof)
+- **Yayınlarda ve Ekran Paylaşımlarında Gizlilik:** DustFX doğrudan ekran kartı sürücüsü (NVAPI) ve Ring 0 DWM katmanında çalıştığı için; açtığınız Crosshair (Nişangah), Sniper Zoom veya renk filtreleri **kesinlikle OBS, Discord ekran paylaşımı veya yayınlarda GÖZÜKMEZ**.
+- İzleyicileriniz sizin tamamen normal ve saf bir ekranla oynadığınızı sanarken, siz tüm taktiksel avantajlara (netlik, gece görüşü, zoom) sahip olursunuz!
 
-### 3. Intelligent Game Detection & Auto-Reset
-- Automatically engages designated profiles when games launch.
-- Automatically resets screen colors back to standard Windows defaults on Alt+Tab or game exit to prevent eye strain.
+### 3. PvP Crosshair & Gelişmiş Sniper Zoom (Dürbün)
+- **Sniper Zoom Lens:** Ekranın merkezini anında büyüterek (1.2x – 4.0x) uzak mesafedeki rakipleri kolayca avlamanızı sağlar.
+- **Crosshair İzolasyonu:** Sniper Zoom açıkken bile Crosshair (Nişangah) asla bozulmaz, bulanıklaşmaz veya büyümez. Özel bir katmanda her zaman kristal netliğinde kalır.
+- **Kişiselleştirilebilir Nişangahlar:** Nokta, Artı, T-Cross, Boşluklu Artı gibi 8 farklı şekil ve istediğiniz renk seçeneği.
 
-### 4. Preset Library & Community Profiles
-- **Night Vision Boost:** Maximum visibility for nighttime tactical operations and dense shadows.
-- **Cave Illuminator:** Ultra-high 2.5x gamma with deep shadow recovery.
-- **PvP Crisp & Contrast:** Sharp enemy silhouette clarity for competitive shooters (CS2, Valorant, Rust, Tarkov).
-- **Daylight Vivid:** Cinematic 80% saturation boost.
-- **Eye Care Mode:** Gentle warm night filter reducing blue light.
-- **Community Share Codes (DUST-COLOR):** One-click import/export of color profile configurations.
+### 4. Donanımsal GPU & DCCW Renk Kontrolü
+- **Sıfır Gecikme (Zero-Lag):** ReShade gibi oyuna DLL enjekte edip FPS düşüren yazılımların aksine donanım katmanında çalışır. Tam olarak 0 FPS kaybı.
+- **Gece Görüşü ve Mağara Modu:** GDI GammaRamp ile zifiri karanlık haritaları gündüze çevirin.
+- **Digital Vibrance (%0 - %100):** Ekran kartı denetim masasına girmeden, anında renk doygunluğunu artırın.
 
-### 5. GitHub Direct Auto-Updater
-- Checks the official `Dust-exe/DustFX` GitHub Releases API in the background.
-- Multi-tier download engine with automatic background termination of older versions during setup.
-
-### 6. Multi-Monitor Management
+### 5. Multi-Monitor Management
 - Synchronize all displays or apply calibrations independently to your primary gaming monitor.
 
 ---
