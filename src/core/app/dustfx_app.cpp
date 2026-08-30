@@ -105,7 +105,12 @@ void DustFxApp::ApplyProfile(const std::string& profileId) {
         GpuController::Instance().ApplySettings(p.settings, targetMon);
         SettingsManager::Instance().SetCurrentDisplaySettings(p.settings);
         m_crosshairActive = p.settings.crosshairEnabled;
+        
+        // Sync the overlay state with the newly applied profile
         OverlayToast::Instance().UpdateCrosshair(p.settings);
+        OverlayToast::Instance().UpdateSniperZoom(p.settings);
+        OverlayToast::Instance().RefreshOverlayPosition();
+
         OverlayToast::Instance().ShowToast(p.icon + " " + p.name, "Profil Aktif");
     }
 }
@@ -236,6 +241,10 @@ void DustFxApp::HandleProcessEvent(const std::string& processName, bool isForegr
             // Keep the active profile when using the DustFX UI
         }
     }
+    
+    // Always enforce overlay topmost position when foreground process changes 
+    // to prevent it from hiding behind full-screen windowed games
+    OverlayToast::Instance().RefreshOverlayPosition();
 }
 
 void DustFxApp::OnUpdateDetected(bool available, const ReleaseInfo& info) {

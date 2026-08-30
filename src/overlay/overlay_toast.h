@@ -25,6 +25,7 @@ public:
     void ToggleSniperZoom(bool active);
     bool IsSniperZoomActive() const { return m_sniperZoomActive.load(); }
     void UpdateSniperZoom(const DisplaySettings& settings);
+    void RefreshOverlayPosition();
 
 #ifdef _WIN32
     void SetCrosshairHwnd(HWND hWnd) { m_hWnd = hWnd; }

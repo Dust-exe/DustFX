@@ -114,9 +114,13 @@ export function App() {
   }, []);
 
   // Apply settings with 16ms debounce to prevent API flooding during fast slider drags
-  const handleSettingsChange = useCallback((patch: Partial<DisplaySettings>) => {
+  const pendingUpdatesRef = useRef<Partial<DisplaySettings>>({});
+
+  const handleSettingsChange = useCallback((updates: Partial<DisplaySettings>) => {
+    pendingUpdatesRef.current = { ...pendingUpdatesRef.current, ...updates };
+
     setSettings((prev) => {
-      const next = { ...prev, ...patch };
+      const next = { ...prev, ...updates };
       settingsRef.current = next;
 
       if (debounceTimerRef.current) {
@@ -128,7 +132,9 @@ export function App() {
         }
         const controller = new AbortController();
         abortControllerRef.current = controller;
-        api.applySettings(next, controller.signal).catch(() => {});
+        const delta = { ...pendingUpdatesRef.current };
+        pendingUpdatesRef.current = {};
+        api.applySettings(delta, controller.signal).catch(() => {});
       }, 16);
 
       return next;
@@ -140,18 +146,8 @@ export function App() {
     setActiveProfileId(id);
     const p = profiles.find((item) => item.id === id);
     if (p) {
-      const cur = settingsRef.current;
       const profileSettings: DisplaySettings = {
         ...p.settings,
-        crosshairEnabled: cur.crosshairEnabled,
-        crosshairStyle: cur.crosshairStyle,
-        crosshairColor: cur.crosshairColor,
-        crosshairSize: cur.crosshairSize,
-        crosshairThickness: cur.crosshairThickness,
-        crosshairGap: cur.crosshairGap,
-        crosshairDotSize: cur.crosshairDotSize,
-        crosshairOutline: cur.crosshairOutline,
-        crosshairOpacity: cur.crosshairOpacity,
       };
       setSettings(profileSettings);
       await api.applySettings(profileSettings);

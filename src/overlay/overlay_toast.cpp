@@ -480,12 +480,31 @@ void OverlayToast::ToggleSniperZoom(bool active) {
 
 void OverlayToast::UpdateSniperZoom(const DisplaySettings& settings) {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_crosshairSettings = settings;
+    // Only update sniper zoom properties to avoid overwriting crosshair properties
+    m_crosshairSettings.sniperZoomEnabled = settings.sniperZoomEnabled;
+    m_crosshairSettings.sniperZoomScale = settings.sniperZoomScale;
+    m_crosshairSettings.sniperZoomSize = settings.sniperZoomSize;
+    m_crosshairSettings.sniperZoomShape = settings.sniperZoomShape;
+    m_crosshairSettings.sniperZoomMode = settings.sniperZoomMode;
+    m_crosshairSettings.sniperZoomBorderColor = settings.sniperZoomBorderColor;
+    m_crosshairSettings.sniperZoomBorderWidth = settings.sniperZoomBorderWidth;
+    m_crosshairSettings.sniperZoomShowDot = settings.sniperZoomShowDot;
 
 #ifdef _WIN32
     g_crosshairSettings = settings;
     if (m_hWnd && IsWindow(m_hWnd)) {
         PostMessage(m_hWnd, WM_USER_UPDATE_SNIPER_ZOOM, 0, 0);
+    }
+#endif
+}
+
+void OverlayToast::RefreshOverlayPosition() {
+#ifdef _WIN32
+    if (m_hWnd && IsWindow(m_hWnd)) {
+        // Enforce TOPMOST and visible again if hidden behind full screen window
+        SetWindowPos(m_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        InvalidateRect(m_hWnd, NULL, TRUE);
+        UpdateWindow(m_hWnd);
     }
 #endif
 }
