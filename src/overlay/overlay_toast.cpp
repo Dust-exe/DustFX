@@ -61,6 +61,9 @@ static void RenderCrosshairOnDC(HDC memDC, int cx, int cy, const dustfx::Display
     HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
     HBRUSH outlineBrush = CreateSolidBrush(RGB(0, 0, 0));
 
+    HGDIOBJ oldBrush = GetCurrentObject(memDC, OBJ_BRUSH);
+    HGDIOBJ oldPen = GetCurrentObject(memDC, OBJ_PEN);
+
     auto DrawFilledRect = [&](int left, int top, int right, int bottom) {
         if (outline > 0) {
             RECT oRc = { left - outline, top - outline, right + outline, bottom + outline };
@@ -169,6 +172,9 @@ static void RenderCrosshairOnDC(HDC memDC, int cx, int cy, const dustfx::Display
         Ellipse(memDC, cx - dotSize, cy - dotSize, cx + dotSize, cy + dotSize);
     }
 
+    SelectObject(memDC, oldBrush);
+    SelectObject(memDC, oldPen);
+
     DeleteObject(colorBrush);
     DeleteObject(colorPen);
     DeleteObject(outlineBrush);
@@ -198,7 +204,6 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                 SetWindowPos(hWnd, HWND_TOPMOST, x, y, zoomSize, zoomSize, SWP_NOACTIVATE | SWP_SHOWWINDOW);
                 SetTimer(hWnd, TIMER_ID_ZOOM_REFRESH, 16, NULL); // 60 FPS live screen refresh
                 InvalidateRect(hWnd, NULL, TRUE);
-                UpdateWindow(hWnd);
             }
             else if (g_crosshairVisible || g_crosshairSettings.crosshairEnabled) {
                 KillTimer(hWnd, TIMER_ID_ZOOM_REFRESH);
@@ -215,7 +220,6 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 
                 SetWindowPos(hWnd, HWND_TOPMOST, x, y, overlaySize, overlaySize, SWP_NOACTIVATE | SWP_SHOWWINDOW);
                 InvalidateRect(hWnd, NULL, TRUE);
-                UpdateWindow(hWnd);
             } else {
                 KillTimer(hWnd, TIMER_ID_ZOOM_REFRESH);
                 ShowWindow(hWnd, SW_HIDE);
