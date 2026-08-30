@@ -201,7 +201,8 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                 int y = (screenH - zoomSize) / 2;
 
                 SetLayeredWindowAttributes(hWnd, TRANSPARENT_COLOR_KEY, 255, LWA_COLORKEY);
-                SetWindowPos(hWnd, HWND_TOPMOST, x, y, zoomSize, zoomSize, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+                ShowWindow(hWnd, SW_SHOWNOACTIVATE);
+                SetWindowPos(hWnd, HWND_TOPMOST, x, y, zoomSize, zoomSize, SWP_NOACTIVATE);
                 SetTimer(hWnd, TIMER_ID_ZOOM_REFRESH, 16, NULL); // 60 FPS live screen refresh
                 InvalidateRect(hWnd, NULL, TRUE);
             }
@@ -218,7 +219,8 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                     SetLayeredWindowAttributes(hWnd, TRANSPARENT_COLOR_KEY, 255, LWA_COLORKEY);
                 }
 
-                SetWindowPos(hWnd, HWND_TOPMOST, x, y, overlaySize, overlaySize, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+                ShowWindow(hWnd, SW_SHOWNOACTIVATE);
+                SetWindowPos(hWnd, HWND_TOPMOST, x, y, overlaySize, overlaySize, SWP_NOACTIVATE);
                 InvalidateRect(hWnd, NULL, TRUE);
             } else {
                 KillTimer(hWnd, TIMER_ID_ZOOM_REFRESH);
