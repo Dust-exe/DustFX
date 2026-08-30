@@ -118,7 +118,7 @@ void DustFxApp::ApplyProfile(const std::string& profileId) {
 void DustFxApp::QuickMaxGamma() {
     m_maxGammaActive = !m_maxGammaActive;
     if (m_maxGammaActive) {
-        DisplaySettings s = GpuController::Instance().GetCurrentSettings();
+        DisplaySettings s = SettingsManager::Instance().GetCurrentDisplaySettings();
         s.gamma = 2.5f;
         GpuController::Instance().ApplySettings(s);
         SettingsManager::Instance().SetCurrentDisplaySettings(s);
@@ -132,7 +132,17 @@ void DustFxApp::QuickReset() {
     m_maxGammaActive = false;
     m_vibranceActive = false;
     m_crosshairActive = false;
-    DisplaySettings s;
+    DisplaySettings s = SettingsManager::Instance().GetCurrentDisplaySettings();
+    s.gamma = 1.0f;
+    s.digitalVibrance = 0;
+    s.contrast = 1.0f;
+    s.brightnessOffset = 0.0f;
+    s.rgbRed = 1.0f;
+    s.rgbGreen = 1.0f;
+    s.rgbBlue = 1.0f;
+    s.crosshairEnabled = false;
+    s.sniperZoomEnabled = false;
+    
     GpuController::Instance().ResetToDefault(-1);
     SettingsManager::Instance().SetCurrentDisplaySettings(s);
     OverlayToast::Instance().ToggleCrosshair(false);
@@ -142,7 +152,7 @@ void DustFxApp::QuickReset() {
 
 void DustFxApp::ToggleCrosshair() {
     m_crosshairActive = !m_crosshairActive;
-    DisplaySettings s = GpuController::Instance().GetCurrentSettings();
+    DisplaySettings s = SettingsManager::Instance().GetCurrentDisplaySettings();
     s.crosshairEnabled = m_crosshairActive;
     SettingsManager::Instance().SetCurrentDisplaySettings(s);
     OverlayToast::Instance().UpdateCrosshair(s);
@@ -183,7 +193,7 @@ void DustFxApp::HandleHotkey(HotkeyAction action, const std::string& param, bool
             break;
         case HotkeyAction::VIBRANCE_TOGGLE: {
             m_vibranceActive = !m_vibranceActive;
-            DisplaySettings s = GpuController::Instance().GetCurrentSettings();
+            DisplaySettings s = SettingsManager::Instance().GetCurrentDisplaySettings();
             s.digitalVibrance = m_vibranceActive ? 75 : 0;
             GpuController::Instance().ApplySettings(s);
             SettingsManager::Instance().SetCurrentDisplaySettings(s);
@@ -230,7 +240,17 @@ void DustFxApp::HandleProcessEvent(const std::string& processName, bool isForegr
                 m_maxGammaActive = false;
                 m_vibranceActive = false;
                 m_crosshairActive = false;
-                DisplaySettings s;
+                DisplaySettings s = SettingsManager::Instance().GetCurrentDisplaySettings();
+                s.gamma = 1.0f;
+                s.digitalVibrance = 0;
+                s.contrast = 1.0f;
+                s.brightnessOffset = 0.0f;
+                s.rgbRed = 1.0f;
+                s.rgbGreen = 1.0f;
+                s.rgbBlue = 1.0f;
+                s.crosshairEnabled = false;
+                s.sniperZoomEnabled = false;
+                
                 GpuController::Instance().ResetToDefault(-1);
                 SettingsManager::Instance().SetCurrentDisplaySettings(s);
                 OverlayToast::Instance().ToggleCrosshair(false);

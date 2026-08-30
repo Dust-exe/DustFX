@@ -118,6 +118,6 @@ struct AppSettings {
 } // namespace dustfx
 
 #ifndef DUSTFX_VERSION_STRING
-#define DUSTFX_VERSION_STRING "2.1.0"
+#define DUSTFX_VERSION_STRING "2.2.3"
 #endif
 

@@ -263,7 +263,7 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
     if (path == "/api/apply" && method == "POST") {
         try {
             json j = json::parse(body);
-            DisplaySettings s = GpuController::Instance().GetCurrentSettings();
+            DisplaySettings s = SettingsManager::Instance().GetCurrentDisplaySettings();
             
             bool displayChanged = false;
 
@@ -315,7 +315,7 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
 
     // 3. POST /api/max-gamma
     if (path == "/api/max-gamma" && method == "POST") {
-        DisplaySettings s = GpuController::Instance().GetCurrentSettings();
+        DisplaySettings s = SettingsManager::Instance().GetCurrentDisplaySettings();
         s.gamma = 2.5f;
         GpuController::Instance().ApplySettings(s);
         SettingsManager::Instance().SetCurrentDisplaySettings(s);
@@ -338,7 +338,7 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
             json j = json::parse(body);
             int monIndex = j.value("index", -1);
             SettingsManager::Instance().SetTargetMonitorIndex(monIndex);
-            DisplaySettings s = GpuController::Instance().GetCurrentSettings();
+            DisplaySettings s = SettingsManager::Instance().GetCurrentDisplaySettings();
             GpuController::Instance().ApplySettings(s, monIndex);
             
             std::string monMsg = (monIndex == -1) ? "Tüm Monitörler (Senkronize)" : ("Monitör " + std::to_string(monIndex + 1));
@@ -436,6 +436,25 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
                 p.settings.rgbGreen = std::clamp(s.value("rgbGreen", 1.0f), 0.2f, 2.0f);
                 p.settings.rgbBlue = std::clamp(s.value("rgbBlue", 1.0f), 0.2f, 2.0f);
                 p.settings.sharpness = std::clamp(s.value("sharpness", 0.0f), 0.0f, 1.0f);
+                
+                if (s.contains("crosshairEnabled")) p.settings.crosshairEnabled = s["crosshairEnabled"].get<bool>();
+                if (s.contains("crosshairStyle")) p.settings.crosshairStyle = s["crosshairStyle"].get<std::string>();
+                if (s.contains("crosshairColor")) p.settings.crosshairColor = s["crosshairColor"].get<std::string>();
+                if (s.contains("crosshairSize")) p.settings.crosshairSize = s["crosshairSize"].get<int>();
+                if (s.contains("crosshairThickness")) p.settings.crosshairThickness = s["crosshairThickness"].get<int>();
+                if (s.contains("crosshairGap")) p.settings.crosshairGap = s["crosshairGap"].get<int>();
+                if (s.contains("crosshairDotSize")) p.settings.crosshairDotSize = s["crosshairDotSize"].get<int>();
+                if (s.contains("crosshairOutline")) p.settings.crosshairOutline = s["crosshairOutline"].get<int>();
+                if (s.contains("crosshairOpacity")) p.settings.crosshairOpacity = s["crosshairOpacity"].get<float>();
+                
+                if (s.contains("sniperZoomEnabled")) p.settings.sniperZoomEnabled = s["sniperZoomEnabled"].get<bool>();
+                if (s.contains("sniperZoomScale")) p.settings.sniperZoomScale = s["sniperZoomScale"].get<float>();
+                if (s.contains("sniperZoomSize")) p.settings.sniperZoomSize = s["sniperZoomSize"].get<int>();
+                if (s.contains("sniperZoomShape")) p.settings.sniperZoomShape = s["sniperZoomShape"].get<std::string>();
+                if (s.contains("sniperZoomMode")) p.settings.sniperZoomMode = s["sniperZoomMode"].get<std::string>();
+                if (s.contains("sniperZoomBorderColor")) p.settings.sniperZoomBorderColor = s["sniperZoomBorderColor"].get<std::string>();
+                if (s.contains("sniperZoomBorderWidth")) p.settings.sniperZoomBorderWidth = s["sniperZoomBorderWidth"].get<int>();
+                if (s.contains("sniperZoomShowDot")) p.settings.sniperZoomShowDot = s["sniperZoomShowDot"].get<bool>();
             }
 
             bool ok = ProfileManager::Instance().SaveProfile(p);

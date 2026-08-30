@@ -15,6 +15,7 @@
 #define WM_USER_UPDATE_CROSSHAIR     (WM_USER + 301)
 #define WM_USER_UPDATE_SNIPER_ZOOM   (WM_USER + 303)
 #define TIMER_ID_ZOOM_REFRESH        101
+#define TIMER_ID_TOPMOST_HEARTBEAT   102
 #define TRANSPARENT_COLOR_KEY RGB(255, 0, 255)
 
 static HWND g_hOverlayWnd = NULL;
@@ -180,6 +181,23 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
         case WM_TIMER: {
             if (wParam == TIMER_ID_ZOOM_REFRESH && g_sniperZoomActive) {
                 InvalidateRect(hWnd, NULL, FALSE);
+            } else if (wParam == TIMER_ID_TOPMOST_HEARTBEAT) {
+                int screenW = GetSystemMetrics(SM_CXSCREEN);
+                int screenH = GetSystemMetrics(SM_CYSCREEN);
+                
+                if (g_sniperZoomActive) {
+                    int zoomSize = std::clamp(g_crosshairSettings.sniperZoomSize, 100, 500);
+                    int x = (screenW - zoomSize) / 2;
+                    int y = (screenH - zoomSize) / 2;
+                    SetWindowPos(hWnd, HWND_TOPMOST, x, y, zoomSize, zoomSize, SWP_NOACTIVATE);
+                } else if (g_crosshairVisible || g_crosshairSettings.crosshairEnabled) {
+                    int overlaySize = 200;
+                    int x = (screenW - overlaySize) / 2;
+                    int y = (screenH - overlaySize) / 2;
+                    SetWindowPos(hWnd, HWND_TOPMOST, x, y, overlaySize, overlaySize, SWP_NOACTIVATE);
+                } else {
+                    SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                }
             }
             return 0;
         }
@@ -197,6 +215,7 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                 SetLayeredWindowAttributes(hWnd, TRANSPARENT_COLOR_KEY, 255, LWA_COLORKEY);
                 SetWindowPos(hWnd, HWND_TOPMOST, x, y, zoomSize, zoomSize, SWP_NOACTIVATE | SWP_SHOWWINDOW);
                 SetTimer(hWnd, TIMER_ID_ZOOM_REFRESH, 16, NULL); // 60 FPS live screen refresh
+                SetTimer(hWnd, TIMER_ID_TOPMOST_HEARTBEAT, 1000, NULL);
                 InvalidateRect(hWnd, NULL, TRUE);
                 UpdateWindow(hWnd);
             }
@@ -214,10 +233,12 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                 }
 
                 SetWindowPos(hWnd, HWND_TOPMOST, x, y, overlaySize, overlaySize, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+                SetTimer(hWnd, TIMER_ID_TOPMOST_HEARTBEAT, 1000, NULL);
                 InvalidateRect(hWnd, NULL, TRUE);
                 UpdateWindow(hWnd);
             } else {
                 KillTimer(hWnd, TIMER_ID_ZOOM_REFRESH);
+                KillTimer(hWnd, TIMER_ID_TOPMOST_HEARTBEAT);
                 ShowWindow(hWnd, SW_HIDE);
             }
             return 0;
@@ -451,11 +472,19 @@ void OverlayToast::ToggleCrosshair(bool enabled) {
 
 void OverlayToast::UpdateCrosshair(const DisplaySettings& settings) {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_crosshairSettings = settings;
+    m_crosshairSettings.crosshairEnabled = settings.crosshairEnabled;
+    m_crosshairSettings.crosshairStyle = settings.crosshairStyle;
+    m_crosshairSettings.crosshairSize = settings.crosshairSize;
+    m_crosshairSettings.crosshairColor = settings.crosshairColor;
+    m_crosshairSettings.crosshairThickness = settings.crosshairThickness;
+    m_crosshairSettings.crosshairGap = settings.crosshairGap;
+    m_crosshairSettings.crosshairOutline = settings.crosshairOutline;
+    m_crosshairSettings.crosshairDotSize = settings.crosshairDotSize;
+    m_crosshairSettings.crosshairOpacity = settings.crosshairOpacity;
     m_crosshairVisible.store(settings.crosshairEnabled);
 
 #ifdef _WIN32
-    g_crosshairSettings = settings;
+    g_crosshairSettings = m_crosshairSettings;
     g_crosshairVisible = settings.crosshairEnabled;
 
     if (m_hWnd && IsWindow(m_hWnd)) {
@@ -491,7 +520,7 @@ void OverlayToast::UpdateSniperZoom(const DisplaySettings& settings) {
     m_crosshairSettings.sniperZoomShowDot = settings.sniperZoomShowDot;
 
 #ifdef _WIN32
-    g_crosshairSettings = settings;
+    g_crosshairSettings = m_crosshairSettings;
     if (m_hWnd && IsWindow(m_hWnd)) {
         PostMessage(m_hWnd, WM_USER_UPDATE_SNIPER_ZOOM, 0, 0);
     }
