@@ -530,10 +530,9 @@ void OverlayToast::UpdateSniperZoom(const DisplaySettings& settings) {
 void OverlayToast::RefreshOverlayPosition() {
 #ifdef _WIN32
     if (m_hWnd && IsWindow(m_hWnd)) {
-        // Enforce TOPMOST and visible again if hidden behind full screen window
-        SetWindowPos(m_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-        InvalidateRect(m_hWnd, NULL, TRUE);
-        UpdateWindow(m_hWnd);
+        // Safe cross-thread invocation to enforce TOPMOST and visibility
+        // Handles cases where it gets hidden behind full screen window games during alt-tabs
+        PostMessage(m_hWnd, WM_USER_UPDATE_CROSSHAIR, 0, 0);
     }
 #endif
 }
