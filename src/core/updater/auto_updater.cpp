@@ -296,6 +296,30 @@ static std::string EscapeDoubleQuotes(const std::string& input) {
     }
     return output;
 }
+
+// Helper to base64 encode data for PowerShell -EncodedCommand
+static std::string Base64Encode(const unsigned char* data, size_t len) {
+    static const char lookup[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    std::string out;
+    out.reserve(((len + 2) / 3) * 4);
+    int val = 0;
+    int valb = -6;
+    for (size_t i = 0; i < len; i++) {
+        val = (val << 8) + data[i];
+        valb += 8;
+        while (valb >= 0) {
+            out.push_back(lookup[(val >> valb) & 0x3F]);
+            valb -= 6;
+        }
+    }
+    if (valb > -6) {
+        out.push_back(lookup[((val << 8) >> (valb + 8)) & 0x3F]);
+    }
+    while (out.size() % 4) {
+        out.push_back('=');
+    }
+    return out;
+}
 #endif
 
 bool AutoUpdater::DownloadUpdate(const ReleaseInfo& info, const std::string& savePath) {
@@ -370,7 +394,19 @@ bool AutoUpdater::DownloadUpdate(const ReleaseInfo& info, const std::string& sav
     {
         std::string safeSavePath = EscapePowerShell(savePath);
         std::string safeUrl = EscapePowerShell(info.downloadUrl);
-        std::string psCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command \"[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object Net.WebClient).DownloadFile('" + safeUrl + "', '" + safeSavePath + "')\"";
+        std::string script = "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object Net.WebClient).DownloadFile('" + safeUrl + "', '" + safeSavePath + "')";
+
+        std::string encodedCmd;
+        int wlen = MultiByteToWideChar(CP_UTF8, 0, script.c_str(), -1, NULL, 0);
+        if (wlen > 0) {
+            std::vector<wchar_t> wstr(wlen);
+            MultiByteToWideChar(CP_UTF8, 0, script.c_str(), -1, wstr.data(), wlen);
+            // Do not include the null terminator in the base64 encoded string
+            size_t dataLen = (wlen - 1) * sizeof(wchar_t);
+            encodedCmd = Base64Encode(reinterpret_cast<const unsigned char*>(wstr.data()), dataLen);
+        }
+
+        std::string psCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -EncodedCommand " + encodedCmd;
         int ret = RunCommand(psCmd);
         if (ret == 0 && checkValidFile(savePath)) {
             std::cout << "[AutoUpdater] Download successful via PowerShell." << std::endl;
