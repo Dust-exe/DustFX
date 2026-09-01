@@ -30,8 +30,7 @@ else()
     find_package(CURL REQUIRED)
 endif()
 
-set(DUSTFX_SOURCES
-    src/main.cpp
+set(DUSTFX_LIB_SOURCES
     src/core/gpu/gpu_controller.cpp
     src/core/display/monitor_manager.cpp
     src/core/profile/profile_manager.cpp
@@ -44,20 +43,33 @@ set(DUSTFX_SOURCES
     src/server/http_server.cpp
 )
 
+add_library(DustFX_Lib STATIC ${DUSTFX_LIB_SOURCES})
+
 if(WIN32)
-    add_executable(DustFX WIN32 ${DUSTFX_SOURCES})
-    target_link_libraries(DustFX PRIVATE
+    target_link_libraries(DustFX_Lib PRIVATE
         Threads::Threads
         gdi32 user32 shell32 ole32 ws2_32
     )
 else()
-    add_executable(DustFX ${DUSTFX_SOURCES})
-    target_link_libraries(DustFX PRIVATE
+    target_link_libraries(DustFX_Lib PRIVATE
         Threads::Threads
         CURL::libcurl
     )
 endif()
 
+if(WIN32)
+    add_executable(DustFX WIN32 src/main.cpp)
+else()
+    add_executable(DustFX src/main.cpp)
+endif()
+
+target_link_libraries(DustFX PRIVATE DustFX_Lib)
+
 set_target_properties(DustFX PROPERTIES
     OUTPUT_NAME "DustFX"
 )
+
+enable_testing()
+add_executable(DustFX_Tests tests/test_http_server.cpp)
+target_link_libraries(DustFX_Tests PRIVATE DustFX_Lib)
+add_test(NAME HTTP_Server_Tests COMMAND DustFX_Tests)
