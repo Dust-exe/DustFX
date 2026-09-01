@@ -654,8 +654,28 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
     }
 
     std::string filePath = m_webRoot + relPath;
+
+    // Check if the original path is in the cache
+    {
+        std::lock_guard<std::mutex> lock(m_cacheMutex);
+        auto it = m_fileCache.find(filePath);
+        if (it != m_fileCache.end()) {
+            return MakeHttpResponse(200, "OK", it->second.mime, it->second.content);
+        }
+    }
+
+    // Not in cache, check if it exists on disk, otherwise SPA fallback to index.html
     if (!std::filesystem::exists(filePath) || std::filesystem::is_directory(filePath)) {
         filePath = m_webRoot + "/index.html";
+    }
+
+    // Check cache again for the fallback path
+    {
+        std::lock_guard<std::mutex> lock(m_cacheMutex);
+        auto it = m_fileCache.find(filePath);
+        if (it != m_fileCache.end()) {
+            return MakeHttpResponse(200, "OK", it->second.mime, it->second.content);
+        }
     }
 
     if (std::filesystem::exists(filePath)) {
@@ -675,6 +695,11 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
             else if (ext == ".png") mime = "image/png";
             else if (ext == ".jpg" || ext == ".jpeg") mime = "image/jpeg";
             else if (ext == ".ico") mime = "image/x-icon";
+
+            {
+                std::lock_guard<std::mutex> lock(m_cacheMutex);
+                m_fileCache[filePath] = {content, mime};
+            }
 
             return MakeHttpResponse(200, "OK", mime, content);
         }

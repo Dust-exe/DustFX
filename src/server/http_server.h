@@ -5,6 +5,8 @@
 #include <atomic>
 #include <functional>
 #include <memory>
+#include <unordered_map>
+#include <mutex>
 
 namespace dustfx {
 
@@ -30,6 +32,13 @@ private:
     std::atomic<bool> m_running{false};
     std::thread m_serverThread;
     uintptr_t m_serverSocket = 0;
+
+    struct CachedFile {
+        std::string content;
+        std::string mime;
+    };
+    std::unordered_map<std::string, CachedFile> m_fileCache;
+    std::mutex m_cacheMutex;
 };
 
 } // namespace dustfx
