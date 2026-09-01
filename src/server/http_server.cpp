@@ -37,6 +37,27 @@ namespace dustfx {
 
 using json = nlohmann::json;
 
+static bool IsValidHttpUrl(const std::string& url) {
+    if (url.find("http://") != 0 && url.find("https://") != 0) {
+        return false;
+    }
+
+    // Explicitly reject characters that could break out of quotes or cause issues
+    const std::string badChars = "'\"`;|$\n\r\\";
+    for (char c : url) {
+        if (badChars.find(c) != std::string::npos || (unsigned char)c < 32 || (unsigned char)c == 127) {
+            return false;
+        }
+    }
+
+    // Reasonable length limit
+    if (url.length() > 2048) {
+        return false;
+    }
+
+    return true;
+}
+
 HttpServer& HttpServer::Instance() {
     static HttpServer instance;
     return instance;
@@ -612,6 +633,9 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
             json j = json::parse(body);
             std::string url = j.value("url", "");
             if (!url.empty()) {
+                if (!IsValidHttpUrl(url)) {
+                    return MakeHttpResponse(400, "Bad Request", "application/json", "{\"error\":\"Invalid or unsafe URL\"}");
+                }
 #ifdef _WIN32
                 ShellExecuteA(NULL, "open", url.c_str(), NULL, NULL, SW_SHOW);
 #else
@@ -626,7 +650,7 @@ std::string HttpServer::ProcessRequest(const std::string& method, const std::str
         }
     }
 
-    // 8. Static Web Files Serve
+    // 9. Static Web Files Serve
     std::string relPath = path;
     if (relPath == "/" || relPath.empty()) {
         relPath = "/index.html";
