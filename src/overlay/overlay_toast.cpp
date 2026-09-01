@@ -5,6 +5,40 @@
 #include <string>
 #include <thread>
 
+namespace dustfx {
+
+// Helper: Parse hex color "#RRGGBB" to uint32_t (COLORREF equivalent)
+uint32_t HexToRGB(const std::string& hex) {
+    std::string cleanHex = hex;
+    if (!cleanHex.empty() && cleanHex[0] == '#') {
+        cleanHex = cleanHex.substr(1);
+    }
+    if (cleanHex.length() < 6) return RGB(0, 255, 102);
+
+    // Validate characters are valid hex characters to prevent negative signs or whitespace bypasses
+    for (int i = 0; i < 6; ++i) {
+        if (!std::isxdigit(static_cast<unsigned char>(cleanHex[i]))) {
+            return RGB(0, 255, 102);
+        }
+    }
+
+    try {
+        unsigned long r = std::stoul(cleanHex.substr(0, 2), nullptr, 16);
+        unsigned long g = std::stoul(cleanHex.substr(2, 2), nullptr, 16);
+        unsigned long b = std::stoul(cleanHex.substr(4, 2), nullptr, 16);
+
+        // Guard against matching transparency chroma key (255, 0, 255)
+        if (r == 255 && g == 0 && b == 255) {
+            r = 254; b = 254;
+        }
+        return RGB((uint8_t)r, (uint8_t)g, (uint8_t)b);
+    } catch (...) {
+        return RGB(0, 255, 102);
+    }
+}
+
+} // namespace dustfx
+
 #ifdef _WIN32
 #include <windows.h>
 
@@ -23,32 +57,9 @@ static dustfx::DisplaySettings g_crosshairSettings;
 static bool g_crosshairVisible = false;
 static bool g_sniperZoomActive = false;
 
-// Helper: Parse hex color "#RRGGBB" to COLORREF
-static COLORREF HexToColorRef(const std::string& hex) {
-    std::string cleanHex = hex;
-    if (!cleanHex.empty() && cleanHex[0] == '#') {
-        cleanHex = cleanHex.substr(1);
-    }
-    if (cleanHex.length() < 6) return RGB(0, 255, 102);
-
-    try {
-        unsigned long r = std::stoul(cleanHex.substr(0, 2), nullptr, 16);
-        unsigned long g = std::stoul(cleanHex.substr(2, 2), nullptr, 16);
-        unsigned long b = std::stoul(cleanHex.substr(4, 2), nullptr, 16);
-
-        // Guard against matching transparency chroma key (255, 0, 255)
-        if (r == 255 && g == 0 && b == 255) {
-            r = 254; b = 254;
-        }
-        return RGB((BYTE)r, (BYTE)g, (BYTE)b);
-    } catch (...) {
-        return RGB(0, 255, 102);
-    }
-}
-
 // Render unmagnified, pixel-perfect crosshair directly onto DC at specified center (cx, cy)
 static void RenderCrosshairOnDC(HDC memDC, int cx, int cy, const dustfx::DisplaySettings& settings) {
-    COLORREF color = HexToColorRef(settings.crosshairColor);
+    COLORREF color = dustfx::HexToRGB(settings.crosshairColor);
     int size = std::max(2, settings.crosshairSize);
     int thickness = std::max(1, settings.crosshairThickness);
     int gap = std::max(0, settings.crosshairGap);
@@ -324,7 +335,7 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 
                 // Draw Lens Border
                 int borderW = std::max(1, g_crosshairSettings.sniperZoomBorderWidth);
-                COLORREF borderColor = HexToColorRef(g_crosshairSettings.sniperZoomBorderColor);
+                COLORREF borderColor = dustfx::HexToRGB(g_crosshairSettings.sniperZoomBorderColor);
                 HPEN borderPen = CreatePen(PS_SOLID, borderW, borderColor);
                 HPEN oldPen = (HPEN)SelectObject(memDC, borderPen);
                 HBRUSH oldBrush = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));

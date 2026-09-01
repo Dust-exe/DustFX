@@ -73,3 +73,7 @@ enable_testing()
 add_executable(DustFX_Tests tests/test_http_server.cpp)
 target_link_libraries(DustFX_Tests PRIVATE DustFX_Lib)
 add_test(NAME HTTP_Server_Tests COMMAND DustFX_Tests)
+
+add_executable(DustFX_Overlay_Tests tests/test_overlay_toast.cpp)
+target_link_libraries(DustFX_Overlay_Tests PRIVATE DustFX_Lib)
+add_test(NAME Overlay_Toast_Tests COMMAND DustFX_Overlay_Tests)
