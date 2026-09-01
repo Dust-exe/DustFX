@@ -11,7 +11,13 @@
 #include <windows.h>
 #endif
 
+#ifndef RGB
+#define RGB(r,g,b) ((uint32_t)(((uint8_t)(r)|((uint16_t)((uint8_t)(g))<<8))|(((uint32_t)(uint8_t)(b))<<16)))
+#endif
+
 namespace dustfx {
+
+uint32_t HexToRGB(const std::string& hex);
 
 class OverlayToast {
 public:
