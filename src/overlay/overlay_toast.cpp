@@ -304,11 +304,13 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                 int srcX = (screenW - srcW) / 2;
                 int srcY = (screenH - srcH) / 2;
 
-                HDC screenDC = GetDC(NULL);
-                if (screenDC) {
-                    // Move overlay off-screen during capture to avoid self-zoom (no flicker, atomic with paint)
-                    SetWindowPos(hWnd, NULL, -32000, -32000, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+                HWND hwndGame = GetForegroundWindow();
+                if (!hwndGame || hwndGame == hWnd) {
+                    hwndGame = GetDesktopWindow();
+                }
 
+                HDC gameDC = GetDC(hwndGame);
+                if (gameDC) {
                     SetStretchBltMode(memDC, HALFTONE);
                     SetBrushOrgEx(memDC, 0, 0, NULL);
 
@@ -318,20 +320,19 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                         SelectClipRgn(memDC, clipRgn);
                     }
 
-                    StretchBlt(memDC, 0, 0, w, h, screenDC, srcX, srcY, srcW, srcH, SRCCOPY);
+                    // Map screen coordinates to the foreground window's client coordinates
+                    POINT ptTL = { srcX, srcY };
+                    ScreenToClient(hwndGame, &ptTL);
+
+                    // Capture only the game's DWM surface (ignores overlays on top of it)
+                    StretchBlt(memDC, 0, 0, w, h, gameDC, ptTL.x, ptTL.y, srcW, srcH, SRCCOPY);
 
                     if (clipRgn) {
                         SelectClipRgn(memDC, NULL);
                         DeleteObject(clipRgn);
                     }
 
-                    ReleaseDC(NULL, screenDC);
-
-                    // Restore overlay position (recalculate from settings since x/y/zoomSize not in WM_PAINT scope)
-                    int zoomSz = std::clamp(g_crosshairSettings.sniperZoomSize, 100, 500);
-                    int zoomX = (screenW - zoomSz) / 2;
-                    int zoomY = (screenH - zoomSz) / 2;
-                    SetWindowPos(hWnd, HWND_TOPMOST, zoomX, zoomY, zoomSz, zoomSz, SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+                    ReleaseDC(hwndGame, gameDC);
                 }
 
                 // Draw Lens Border
