@@ -73,3 +73,6 @@ enable_testing()
 add_executable(DustFX_Tests tests/test_http_server.cpp)
 target_link_libraries(DustFX_Tests PRIVATE DustFX_Lib)
 add_test(NAME HTTP_Server_Tests COMMAND DustFX_Tests)
+
+add_executable(ProfileBenchmark benchmark.cpp)
+target_link_libraries(ProfileBenchmark PRIVATE DustFX_Lib)
