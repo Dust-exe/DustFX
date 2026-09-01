@@ -125,31 +125,29 @@ bool AutoUpdater::CheckForUpdate(ReleaseInfo& outInfo) {
             outInfo.version = outInfo.version.substr(1);
         }
 
-        if (j.contains("assets") && j["assets"].is_array()) {
-            // First priority: look specifically for "DustFX_Setup.exe" or "Setup.exe"
+        if (j.contains("assets") && j["assets"].is_array() && !j["assets"].empty()) {
+            // Fallback: first asset
+            outInfo.downloadUrl = j["assets"][0].value("browser_download_url", "");
+            int bestPriority = 3;
+
             for (const auto& asset : j["assets"]) {
                 std::string name = asset.value("name", "");
+
+                // First priority: look specifically for "DustFX_Setup.exe" or "Setup.exe"
                 if (name.find("Setup.exe") != std::string::npos ||
                     name.find("setup.exe") != std::string::npos ||
                     name.find("Setup") != std::string::npos ||
                     name.find("Installer") != std::string::npos) {
                     outInfo.downloadUrl = asset.value("browser_download_url", "");
+                    bestPriority = 1;
                     break;
                 }
-            }
-            // Second priority: look for any .exe
-            if (outInfo.downloadUrl.empty()) {
-                for (const auto& asset : j["assets"]) {
-                    std::string name = asset.value("name", "");
-                    if (name.find(".exe") != std::string::npos) {
-                        outInfo.downloadUrl = asset.value("browser_download_url", "");
-                        break;
-                    }
+
+                // Second priority: look for any .exe
+                if (bestPriority > 2 && name.find(".exe") != std::string::npos) {
+                    outInfo.downloadUrl = asset.value("browser_download_url", "");
+                    bestPriority = 2;
                 }
-            }
-            // Fallback: first asset
-            if (outInfo.downloadUrl.empty() && !j["assets"].empty()) {
-                outInfo.downloadUrl = j["assets"][0].value("browser_download_url", "");
             }
         }
 
