@@ -4,6 +4,7 @@
   "version": "2.6.1",
   "type": "module",
   "scripts": {
+    "test": "vitest",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
@@ -17,14 +18,18 @@
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.5.0",
+    "jsdom": "^29.1.1",
     "postcss": "^8.5.15",
     "tailwindcss": "^3.4.10",
     "typescript": "~6.0.2",
-    "vite": "^8.0.12"
+    "vite": "^8.0.12",
+    "vitest": "^4.1.11"
   }
 }
