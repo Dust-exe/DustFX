@@ -1,0 +1,8 @@
+/root/DustFX/build-win/CMakeFiles/DustFX_Lib.dir
+/root/DustFX/build-win/CMakeFiles/DustFX.dir
+/root/DustFX/build-win/CMakeFiles/DustFX_Tests.dir
+/root/DustFX/build-win/CMakeFiles/ProfileBenchmark.dir
+/root/DustFX/build-win/CMakeFiles/DustFX_Settings_Tests.dir
+/root/DustFX/build-win/CMakeFiles/test.dir
+/root/DustFX/build-win/CMakeFiles/edit_cache.dir
+/root/DustFX/build-win/CMakeFiles/rebuild_cache.dir

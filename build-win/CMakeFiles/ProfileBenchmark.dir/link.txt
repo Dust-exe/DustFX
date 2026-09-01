@@ -1,0 +1,3 @@
+/usr/bin/cmake -E rm -f CMakeFiles/ProfileBenchmark.dir/objects.a
+/usr/bin/x86_64-w64-mingw32-ar qc CMakeFiles/ProfileBenchmark.dir/objects.a @CMakeFiles/ProfileBenchmark.dir/objects1.rsp
+/usr/bin/x86_64-w64-mingw32-g++ -Wl,--whole-archive CMakeFiles/ProfileBenchmark.dir/objects.a -Wl,--no-whole-archive -o bin/ProfileBenchmark.exe -Wl,--out-implib,libProfileBenchmark.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles/ProfileBenchmark.dir/linkLibs.rsp
