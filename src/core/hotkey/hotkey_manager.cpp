@@ -33,20 +33,32 @@ static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lP
 
 static LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode == HC_ACTION) {
-        MSLLHOOKSTRUCT* pMouse = reinterpret_cast<MSLLHOOKSTRUCT*>(lParam);
-        if (pMouse) {
-            bool isAlt = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
-            bool isCtrl = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
-            bool isShift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+        if (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP ||
+            wParam == WM_MBUTTONDOWN || wParam == WM_MBUTTONUP ||
+            wParam == WM_LBUTTONDOWN || wParam == WM_LBUTTONUP ||
+            wParam == WM_RBUTTONDOWN || wParam == WM_RBUTTONUP) {
 
-            if (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP) {
-                int xButton = HIWORD(pMouse->mouseData);
-                int vkCode = (xButton == 1) ? VK_XBUTTON1 : VK_XBUTTON2;
-                bool isDown = (wParam == WM_XBUTTONDOWN);
-                dustfx::HotkeyManager::Instance().HandleKeyEvent(vkCode, isAlt, isCtrl, isShift, isDown);
-            } else if (wParam == WM_MBUTTONDOWN || wParam == WM_MBUTTONUP) {
-                bool isDown = (wParam == WM_MBUTTONDOWN);
-                dustfx::HotkeyManager::Instance().HandleKeyEvent(VK_MBUTTON, isAlt, isCtrl, isShift, isDown);
+            MSLLHOOKSTRUCT* pMouse = reinterpret_cast<MSLLHOOKSTRUCT*>(lParam);
+            if (pMouse) {
+                bool isAlt = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+                bool isCtrl = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
+                bool isShift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+
+                if (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP) {
+                    int xButton = HIWORD(pMouse->mouseData);
+                    int vkCode = (xButton == 1) ? VK_XBUTTON1 : VK_XBUTTON2;
+                    bool isDown = (wParam == WM_XBUTTONDOWN);
+                    dustfx::HotkeyManager::Instance().HandleKeyEvent(vkCode, isAlt, isCtrl, isShift, isDown);
+                } else if (wParam == WM_MBUTTONDOWN || wParam == WM_MBUTTONUP) {
+                    bool isDown = (wParam == WM_MBUTTONDOWN);
+                    dustfx::HotkeyManager::Instance().HandleKeyEvent(VK_MBUTTON, isAlt, isCtrl, isShift, isDown);
+                } else if (wParam == WM_RBUTTONDOWN || wParam == WM_RBUTTONUP) {
+                    bool isDown = (wParam == WM_RBUTTONDOWN);
+                    dustfx::HotkeyManager::Instance().HandleKeyEvent(VK_RBUTTON, isAlt, isCtrl, isShift, isDown);
+                } else if (wParam == WM_LBUTTONDOWN || wParam == WM_LBUTTONUP) {
+                    bool isDown = (wParam == WM_LBUTTONDOWN);
+                    dustfx::HotkeyManager::Instance().HandleKeyEvent(VK_LBUTTON, isAlt, isCtrl, isShift, isDown);
+                }
             }
         }
     }
@@ -150,6 +162,25 @@ std::string HotkeyManager::BuildKeyComboString(int vkCode, bool isAlt, bool isCt
     else if (vkCode == VK_XBUTTON1) keyPart = "MOUSE4";
     else if (vkCode == VK_XBUTTON2) keyPart = "MOUSE5";
     else if (vkCode == VK_MBUTTON) keyPart = "MOUSE3";
+    else if (vkCode == VK_LBUTTON) keyPart = "MOUSE1";
+    else if (vkCode == VK_RBUTTON) keyPart = "MOUSE2";
+    else if (vkCode >= VK_NUMPAD0 && vkCode <= VK_NUMPAD9) {
+        keyPart = "NUM" + std::to_string(vkCode - VK_NUMPAD0);
+    } else if (vkCode == VK_MULTIPLY) keyPart = "NUM*";
+    else if (vkCode == VK_ADD) keyPart = "NUM+";
+    else if (vkCode == VK_SUBTRACT) keyPart = "NUM-";
+    else if (vkCode == VK_DECIMAL) keyPart = "NUM.";
+    else if (vkCode == VK_DIVIDE) keyPart = "NUM/";
+    else if (vkCode == VK_UP) keyPart = "UP";
+    else if (vkCode == VK_DOWN) keyPart = "DOWN";
+    else if (vkCode == VK_LEFT) keyPart = "LEFT";
+    else if (vkCode == VK_RIGHT) keyPart = "RIGHT";
+    else if (vkCode == VK_RETURN) keyPart = "ENTER";
+    else if (vkCode == VK_ESCAPE) keyPart = "ESC";
+    else if (vkCode == VK_TAB) keyPart = "TAB";
+    else if (vkCode == VK_BACK) keyPart = "BACKSPACE";
+    else if (vkCode == VK_PRIOR) keyPart = "PAGEUP";
+    else if (vkCode == VK_NEXT) keyPart = "PAGEDOWN";
 
     if (keyPart.empty()) return "";
     return combo + keyPart;
@@ -289,6 +320,29 @@ int HotkeyManager::ParseVirtualKey(const std::string& keyStr) {
     if (k == "MOUSE4") return VK_XBUTTON1;
     if (k == "MOUSE5") return VK_XBUTTON2;
     if (k == "MOUSE3") return VK_MBUTTON;
+    if (k == "MOUSE1") return VK_LBUTTON;
+    if (k == "MOUSE2") return VK_RBUTTON;
+
+    if (k.substr(0, 3) == "NUM") {
+        if (k == "NUM*") return VK_MULTIPLY;
+        if (k == "NUM+") return VK_ADD;
+        if (k == "NUM-") return VK_SUBTRACT;
+        if (k == "NUM.") return VK_DECIMAL;
+        if (k == "NUM/") return VK_DIVIDE;
+        if (k.length() == 4 && k[3] >= '0' && k[3] <= '9') {
+            return VK_NUMPAD0 + (k[3] - '0');
+        }
+    }
+    if (k == "UP" || k == "ARROWUP") return VK_UP;
+    if (k == "DOWN" || k == "ARROWDOWN") return VK_DOWN;
+    if (k == "LEFT" || k == "ARROWLEFT") return VK_LEFT;
+    if (k == "RIGHT" || k == "ARROWRIGHT") return VK_RIGHT;
+    if (k == "ENTER") return VK_RETURN;
+    if (k == "ESC" || k == "ESCAPE") return VK_ESCAPE;
+    if (k == "TAB") return VK_TAB;
+    if (k == "BACKSPACE") return VK_BACK;
+    if (k == "PAGEUP") return VK_PRIOR;
+    if (k == "PAGEDOWN") return VK_NEXT;
 #endif
     (void)keyStr;
     return 0;
