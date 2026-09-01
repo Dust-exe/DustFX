@@ -17,11 +17,49 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ releaseInfo, onClose, 
   if (!releaseInfo) return null;
 
   const handleDirectUpdate = async () => {
-    // Open GitHub release page directly - unsigned installer gets blocked by Windows SmartScreen
-    // when launched from within the app. Let the user download manually from the browser.
-    const url = releaseInfo?.htmlUrl || 'https://github.com/Dust-exe/DustFX/releases';
-    onOpenExternal(url);
-    setUpdateStatus('🌐 GitHub indirme sayfası açılıyor. Kurulumu indirip çalıştırın, DustFX otomatik güncellenecek.');
+    if (!releaseInfo?.downloadUrl) return;
+    setUpdating(true);
+    setUpdateError('');
+    setUpdateStatus('GitHub üzerinden yeni sürüm indiriliyor...');
+
+    try {
+      const res = await api.downloadAndApplyUpdate({
+        downloadUrl: releaseInfo.downloadUrl,
+        version: releaseInfo.latestVersion,
+        tagName: releaseInfo.tagName,
+        htmlUrl: releaseInfo.htmlUrl,
+      });
+      if (res.success) {
+        setUpdateStatus('✅ İndirme tamamlandı! Kurulum yapılıyor ve uygulama yeniden başlatılıyor...');
+
+        let attempts = 0;
+        const checkRebootInterval = setInterval(async () => {
+          attempts++;
+          try {
+            const status = await api.getStatus();
+            if (status && status.status === 'online') {
+              clearInterval(checkRebootInterval);
+              setUpdateStatus('🎉 Yeni sürüm başarıyla yüklendi! Sayfa yenileniyor...');
+              setTimeout(() => {
+                window.location.reload();
+              }, 1200);
+            }
+          } catch {
+            if (attempts > 30) {
+              clearInterval(checkRebootInterval);
+              setUpdateStatus('⚠️ Güncelleme arka planda tamamlandı. Sayfayı yenileyerek yeni sürüme geçebilirsiniz.');
+              setUpdating(false);
+            }
+          }
+        }, 1500);
+      } else {
+        setUpdateError(res.error || 'Güncelleme uygulanamadı. Manuel indirmeyi deneyin.');
+        setUpdating(false);
+      }
+    } catch (e) {
+      setUpdateError(`Güncelleme sunucusuna ulaşılamadı: ${e}`);
+      setUpdating(false);
+    }
   };
 
   return (
