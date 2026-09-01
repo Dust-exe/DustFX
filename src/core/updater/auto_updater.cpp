@@ -337,14 +337,15 @@ bool AutoUpdater::ApplyUpdate(const std::string& downloadedExePath) {
     std::thread([downloadedExePath]() {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         
-        // Execute installer with /S (Silent mode) so it terminates old process, extracts files, and relaunches DustFX
-        HINSTANCE hInst = ShellExecuteA(NULL, "open", downloadedExePath.c_str(), "/S", NULL, SW_SHOWNORMAL);
+        // Launch installer with runas to prompt for UAC if needed
+        // Do NOT use /S (silent) - it blocks UAC elevation and fails silently
+        HINSTANCE hInst = ShellExecuteA(NULL, "runas", downloadedExePath.c_str(), NULL, NULL, SW_SHOWNORMAL);
         if ((INT_PTR)hInst <= 32) {
-            // Fallback to normal execution if /S failed
+            // Fallback: open without runas
             ShellExecuteA(NULL, "open", downloadedExePath.c_str(), NULL, NULL, SW_SHOWNORMAL);
         }
         
-        // Terminate immediately so the installer can overwrite the current executable cleanly
+        // Terminate so the installer can overwrite files cleanly
         ExitProcess(0);
     }).detach();
 
