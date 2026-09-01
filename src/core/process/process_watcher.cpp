@@ -83,15 +83,17 @@ bool ProcessWatcher::IsProcessRunning(const std::string& processName) const {
     bool exists = false;
     HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnap != INVALID_HANDLE_VALUE) {
-        PROCESSENTRY32A pe;
-        pe.dwSize = sizeof(PROCESSENTRY32A);
-        if (Process32FirstA(hSnap, &pe)) {
+        PROCESSENTRY32W pe;
+        pe.dwSize = sizeof(PROCESSENTRY32W);
+        if (Process32FirstW(hSnap, &pe)) {
+            std::wstring target(processName.begin(), processName.end());
             do {
-                if (_stricmp(pe.szExeFile, processName.c_str()) == 0) {
+                std::wstring exeName(pe.szExeFile);
+                if (_wcsicmp(exeName.c_str(), target.c_str()) == 0) {
                     exists = true;
                     break;
                 }
-            } while (Process32NextA(hSnap, &pe));
+            } while (Process32NextW(hSnap, &pe));
         }
         CloseHandle(hSnap);
     }
