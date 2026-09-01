@@ -1,0 +1,5 @@
+Makefile linguist-detectable=false
+*.mk linguist-detectable=false
+build/ linguist-vendored
+build-win/ linguist-vendored
+node_modules/ linguist-vendored

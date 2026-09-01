@@ -2,12 +2,13 @@
 
 > High-Performance Hardware GPU Display Calibration, DCCW Gamma Boost, Digital Vibrance, PvP Crosshair Overlay Engine & Auto-Update System
 
-[![Release](https://img.shields.io/badge/Release-v2.1.0-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
+[![Release](https://img.shields.io/badge/Release-v3.0.4-brightgreen?style=for-the-badge&logo=windows)](https://github.com/Dust-exe/DustFX/releases)
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge)](LICENSE.txt)
 [![CPU Usage](https://img.shields.io/badge/CPU-%3C0.1%25-brightgreen?style=for-the-badge)](https://dust-studio.com)
 [![RAM Usage](https://img.shields.io/badge/RAM-%3C15MB-brightgreen?style=for-the-badge)](https://dust-studio.com)
 [![Tech](https://img.shields.io/badge/C%2B%2B20-React%20%2F%20Tailwind-purple?style=for-the-badge)](https://dust-studio.com)
 [![Status](https://img.shields.io/badge/DirectX%20%2F%20NVAPI-Zero--Lag-fuchsia?style=for-the-badge)](https://dust-studio.com)
+[![CI/CD](https://github.com/Dust-exe/DustFX/actions/workflows/build-test.yml/badge.svg)](https://github.com/Dust-exe/DustFX/actions)
 
 [English](#key-features) | [Performance & Resource Footprint](#performance--resource-footprint) | [Türkçe](#türkçe-kullanım-kılavuzu)
 
@@ -20,7 +21,7 @@ DustFX is engineered from the ground up in native C++20 for maximum gaming perfo
 - **CPU Utilization:** **< 0.1%** background idle load (zero impact on CPU-bound competitive games).
 - **RAM Footprint:** **< 15 MB RAM** (ultra-lightweight memory profile).
 - **GPU Overhead:** **0 FPS Loss (0.0 ms extra input latency)**.
-- **Anti-Cheat Safe:** Fully non-invasive external architecture.
+- **Anti-Cheat Safe:** Non-invasive Overlay Architecture (Read-only GDI/NVAPI calls).
 
 | Feature / Metric | DustFX (Native C++20) | ReShade / Heavy Game Overlays |
 |---|---|---|
@@ -28,7 +29,7 @@ DustFX is engineered from the ground up in native C++20 for maximum gaming perfo
 | **Memory (RAM)** | **< 15 MB** | 150 MB – 500 MB |
 | **FPS Drop** | **0 FPS (Zero Lag)** | 5 – 25 FPS Loss |
 | **Game Injection** | **None (External DWM/GDI)** | Hook / DLL Injection |
-| **Anti-Cheat Safety** | **100% Compliant** | Risk of Third-Party Flags |
+| **Anti-Cheat Safety** | **Non-invasive Overlay Architecture** | Risk of Third-Party Flags |
 
 ---
 
@@ -39,8 +40,8 @@ DustFX is engineered from the ground up in native C++20 for maximum gaming perfo
 - **Seamless Transitions:** Filters apply instantly and automatically when the game launches. If you Alt-Tab or close the game, your display reverts to standard Windows colors in milliseconds. No more eye strain!
 - **100% User Control:** You are not restricted by built-in profiles. You create, manage, and decide exactly which profile runs on which game.
 
-### 2. Invisible Shield: Ring 0 / DWM Level Execution (Stream-Proof)
-- **Absolute Privacy in Streams & Captures:** Because DustFX operates directly at the GPU driver level (NVAPI) and Ring 0 DWM layer, your active Crosshair, Sniper Zoom, and color filters **WILL NOT BE VISIBLE on OBS, Discord screen shares, or any other capture software**.
+### 2. Invisible Shield: Low-latency Direct DWM Hook & Hardware NVAPI Integration (Stream-Proof)
+- **Absolute Privacy in Streams & Captures:** Because DustFX operates directly at the GPU driver level (NVAPI) and uses direct DWM layers, your active Crosshair, Sniper Zoom, and color filters **WILL NOT BE VISIBLE on OBS, Discord screen shares, or any other capture software**.
 
 ### 3. PvP Crosshair & Advanced Sniper Zoom
 - **Sniper Zoom Lens:** Instantly magnifies the center of your screen (1.2x – 4.0x) to easily spot distant targets.
