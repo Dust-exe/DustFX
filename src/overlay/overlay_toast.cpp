@@ -306,6 +306,9 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 
                 HDC screenDC = GetDC(NULL);
                 if (screenDC) {
+                    // Move overlay off-screen during capture to avoid self-zoom (no flicker, atomic with paint)
+                    SetWindowPos(hWnd, NULL, -32000, -32000, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+
                     SetStretchBltMode(memDC, HALFTONE);
                     SetBrushOrgEx(memDC, 0, 0, NULL);
 
@@ -315,7 +318,6 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                         SelectClipRgn(memDC, clipRgn);
                     }
 
-                    // Perform high-speed screen magnification (overlay is hidden, no feedback loop)
                     StretchBlt(memDC, 0, 0, w, h, screenDC, srcX, srcY, srcW, srcH, SRCCOPY);
 
                     if (clipRgn) {
@@ -324,6 +326,12 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                     }
 
                     ReleaseDC(NULL, screenDC);
+
+                    // Restore overlay position (recalculate from settings since x/y/zoomSize not in WM_PAINT scope)
+                    int zoomSz = std::clamp(g_crosshairSettings.sniperZoomSize, 100, 500);
+                    int zoomX = (screenW - zoomSz) / 2;
+                    int zoomY = (screenH - zoomSz) / 2;
+                    SetWindowPos(hWnd, HWND_TOPMOST, zoomX, zoomY, zoomSz, zoomSz, SWP_NOACTIVATE | SWP_NOSENDCHANGING);
                 }
 
                 // Draw Lens Border
@@ -448,8 +456,6 @@ void OverlayToast::OverlayThreadProc() {
     if (m_hWnd) {
         g_hOverlayWnd = m_hWnd;
         SetLayeredWindowAttributes(m_hWnd, TRANSPARENT_COLOR_KEY, 255, LWA_COLORKEY);
-        // Exclude window from being captured by StretchBlt/BitBlt to prevent self-zoom without flickering
-        SetWindowDisplayAffinity(m_hWnd, WDA_EXCLUDEFROMCAPTURE);
         std::cout << "[OverlayToast] Dedicated crosshair overlay message pump active." << std::endl;
     }
 

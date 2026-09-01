@@ -1,3 +1,3 @@
 /usr/bin/cmake -E rm -f CMakeFiles/DustFX.dir/objects.a
 /usr/bin/x86_64-w64-mingw32-ar qc CMakeFiles/DustFX.dir/objects.a @CMakeFiles/DustFX.dir/objects1.rsp
-/usr/bin/x86_64-w64-mingw32-g++  -static-libgcc -static-libstdc++ -mwindows -Wl,--whole-archive CMakeFiles/DustFX.dir/objects.a -Wl,--no-whole-archive -o bin/DustFX.exe -Wl,--out-implib,libDustFX.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles/DustFX.dir/linkLibs.rsp
+/usr/bin/x86_64-w64-mingw32-g++ -O3 -DNDEBUG  -static-libgcc -static-libstdc++ -mwindows -Wl,--whole-archive CMakeFiles/DustFX.dir/objects.a -Wl,--no-whole-archive -o bin/DustFX.exe -Wl,--out-implib,libDustFX.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles/DustFX.dir/linkLibs.rsp
