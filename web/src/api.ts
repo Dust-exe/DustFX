@@ -3,6 +3,16 @@ import { AppStatus, DisplaySettings, GameProfile, ReleaseInfo, HotkeyConfig } fr
 const API_BASE = '/api';
 
 export const api = {
+  getSettings: async (): Promise<DisplaySettings | null> => {
+    try {
+      const response = await fetch(`${API_BASE}/settings`);
+      if (!response.ok) throw new Error('Settings fetch failed');
+      return await response.json();
+    } catch (e) {
+      return null;
+    }
+  },
+
   async getStatus(): Promise<AppStatus> {
     try {
       const res = await fetch(`${API_BASE}/status`);
