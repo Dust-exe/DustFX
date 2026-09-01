@@ -1,5 +1,5 @@
 import React from 'react';
-import { Flame, RotateCcw, Minus, Square, X, Download } from 'lucide-react';
+import { Flame, RotateCcw, X, Download } from 'lucide-react';
 import { ReleaseInfo } from '../types';
 
 interface TitleBarProps {

@@ -23,6 +23,13 @@ static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* use
     static_cast<std::string*>(userp)->append(static_cast<char*>(contents), total);
     return total;
 }
+
+static size_t DownloadWriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
+    size_t total = size * nmemb;
+    std::ofstream* out = static_cast<std::ofstream*>(userp);
+    out->write(static_cast<const char*>(contents), total);
+    return total;
+}
 #endif
 
 AutoUpdater& AutoUpdater::Instance() {
@@ -236,27 +243,58 @@ void AutoUpdater::BackgroundLoop() {
 #ifdef _WIN32
 #include <urlmon.h>
 
-static bool RunCommandSafe(const std::string& commandLine) {
+// Helper to run a command securely via CreateProcess to avoid cmd.exe injection vulnerabilities
+static int RunCommand(const std::string& cmdLine) {
     STARTUPINFOA si;
     PROCESS_INFORMATION pi;
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     si.dwFlags = STARTF_USESHOWWINDOW;
-    si.wShowWindow = SW_HIDE;
+    si.wShowWindow = SW_HIDE; // Hide console window
     ZeroMemory(&pi, sizeof(pi));
 
-    std::vector<char> cmdBuf(commandLine.begin(), commandLine.end());
-    cmdBuf.push_back('\0');
+    // Create a mutable copy of the command line as CreateProcessA may modify it
+    std::vector<char> cmdBuffer(cmdLine.begin(), cmdLine.end());
+    cmdBuffer.push_back('\0');
 
-    if (CreateProcessA(NULL, cmdBuf.data(), NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
-        WaitForSingleObject(pi.hProcess, INFINITE);
-        DWORD exitCode = 1;
-        GetExitCodeProcess(pi.hProcess, &exitCode);
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
-        return exitCode == 0;
+    if (!CreateProcessA(NULL, cmdBuffer.data(), NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+        return -1;
     }
-    return false;
+
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    DWORD exitCode = 1;
+    GetExitCodeProcess(pi.hProcess, &exitCode);
+
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    return static_cast<int>(exitCode);
+}
+
+// Helper to escape single quotes for PowerShell
+static std::string EscapePowerShell(const std::string& input) {
+    std::string output;
+    for (char c : input) {
+        if (c == '\'') {
+            output += "''"; // Escape single quote in PowerShell
+        } else {
+            output += c;
+        }
+    }
+    return output;
+}
+
+// Helper to escape double quotes for curl.exe
+static std::string EscapeDoubleQuotes(const std::string& input) {
+    std::string output;
+    for (char c : input) {
+        if (c == '\"') {
+            output += "\\\"";
+        } else {
+            output += c;
+        }
+    }
+    return output;
 }
 #endif
 
@@ -318,8 +356,11 @@ bool AutoUpdater::DownloadUpdate(const ReleaseInfo& info, const std::string& sav
 
     // Tier 2: Windows 10/11 built-in curl.exe
     {
-        std::string curlCmd = "curl.exe -f -s -S -L --connect-timeout 15 -o \"" + savePath + "\" \"" + info.downloadUrl + "\"";
-        if (RunCommandSafe(curlCmd) && checkValidFile(savePath)) {
+        std::string safeSavePath = EscapeDoubleQuotes(savePath);
+        std::string safeUrl = EscapeDoubleQuotes(info.downloadUrl);
+        std::string curlCmd = "curl.exe -f -s -S -L --connect-timeout 15 -o \"" + safeSavePath + "\" \"" + safeUrl + "\"";
+        int ret = RunCommand(curlCmd);
+        if (ret == 0 && checkValidFile(savePath)) {
             std::cout << "[AutoUpdater] Download successful via curl.exe." << std::endl;
             return true;
         }
@@ -327,8 +368,11 @@ bool AutoUpdater::DownloadUpdate(const ReleaseInfo& info, const std::string& sav
 
     // Tier 3: PowerShell WebClient with TLS 1.2
     {
-        std::string psCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object Net.WebClient).DownloadFile('" + info.downloadUrl + "', '" + savePath + "')\"";
-        if (RunCommandSafe(psCmd) && checkValidFile(savePath)) {
+        std::string safeSavePath = EscapePowerShell(savePath);
+        std::string safeUrl = EscapePowerShell(info.downloadUrl);
+        std::string psCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command \"[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object Net.WebClient).DownloadFile('" + safeUrl + "', '" + safeSavePath + "')\"";
+        int ret = RunCommand(psCmd);
+        if (ret == 0 && checkValidFile(savePath)) {
             std::cout << "[AutoUpdater] Download successful via PowerShell." << std::endl;
             return true;
         }
@@ -349,27 +393,27 @@ bool AutoUpdater::DownloadUpdate(const ReleaseInfo& info, const std::string& sav
     CURL* curl = curl_easy_init();
     if (!curl) return false;
 
-    FILE* fp = fopen(savePath.c_str(), "wb");
-    if (!fp) {
+    std::ofstream out(savePath, std::ios::binary);
+    if (!out.is_open()) {
         curl_easy_cleanup(curl);
         return false;
     }
 
     curl_easy_setopt(curl, CURLOPT_URL, info.downloadUrl.c_str());
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, NULL);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15L);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, DownloadWriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &out);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 60L); // Increase timeout for downloads
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 
     CURLcode res = curl_easy_perform(curl);
     long httpCode = 0;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
 
-    fclose(fp);
     curl_easy_cleanup(curl);
+    out.close();
 
     if (res != CURLE_OK || httpCode < 200 || httpCode >= 300) {
-        remove(savePath.c_str());
+        std::remove(savePath.c_str());
         return false;
     }
 
