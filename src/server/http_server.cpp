@@ -206,9 +206,6 @@ static std::string MakeHttpResponse(int code, const std::string& status, const s
     ss << "HTTP/1.1 " << code << " " << status << "\r\n";
     ss << "Content-Type: " << contentType << "; charset=utf-8\r\n";
     ss << "Content-Length: " << body.length() << "\r\n";
-    ss << "Access-Control-Allow-Origin: *\r\n";
-    ss << "Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS\r\n";
-    ss << "Access-Control-Allow-Headers: Content-Type\r\n";
     ss << "Connection: close\r\n\r\n";
     ss << body;
     return ss.str();
