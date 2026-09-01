@@ -306,10 +306,6 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 
                 HDC screenDC = GetDC(NULL);
                 if (screenDC) {
-                    // Temporarily hide ourselves so we don't zoom our own overlay
-                    SetLayeredWindowAttributes(hWnd, TRANSPARENT_COLOR_KEY, 0, LWA_ALPHA);
-                    UpdateWindow(hWnd);
-
                     SetStretchBltMode(memDC, HALFTONE);
                     SetBrushOrgEx(memDC, 0, 0, NULL);
 
@@ -328,9 +324,6 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                     }
 
                     ReleaseDC(NULL, screenDC);
-
-                    // Restore overlay visibility
-                    SetLayeredWindowAttributes(hWnd, TRANSPARENT_COLOR_KEY, 255, LWA_COLORKEY);
                 }
 
                 // Draw Lens Border
@@ -455,6 +448,8 @@ void OverlayToast::OverlayThreadProc() {
     if (m_hWnd) {
         g_hOverlayWnd = m_hWnd;
         SetLayeredWindowAttributes(m_hWnd, TRANSPARENT_COLOR_KEY, 255, LWA_COLORKEY);
+        // Exclude window from being captured by StretchBlt/BitBlt to prevent self-zoom without flickering
+        SetWindowDisplayAffinity(m_hWnd, WDA_EXCLUDEFROMCAPTURE);
         std::cout << "[OverlayToast] Dedicated crosshair overlay message pump active." << std::endl;
     }
 
