@@ -37,11 +37,20 @@ void test_invalid_json() {
     std::cout << "test_invalid_json passed\n";
 }
 
+void test_apply_invalid_json() {
+    dustfx::HttpServer server;
+    std::string resp = server.ProcessRequest("POST", "/api/apply", "{ invalid json ");
+    assert_contains(resp, "HTTP/1.1 400 Bad Request", "Invalid JSON should return 400 Bad Request for /api/apply");
+    assert_contains(resp, "Invalid JSON", "Invalid JSON should be mentioned in response for /api/apply");
+    std::cout << "test_apply_invalid_json passed\n";
+}
+
 int main() {
     std::cout << "Running HTTP Server Tests...\n";
     test_options();
     test_404_not_found();
     test_invalid_json();
+    test_apply_invalid_json();
     std::cout << "All HTTP Server Tests passed!\n";
     return 0;
 }
