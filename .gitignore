@@ -17,3 +17,7 @@ web/.tmp/
 .idea/
 .DS_Store
 Thumbs.db
+
+node_modules/
+build/
+build-win/

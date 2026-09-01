@@ -1,1 +1,0 @@
- libDustFX_Lib.a -lwininet -lurlmon -ldwmapi -lpthread -lgdi32 -luser32 -lshell32 -lole32 -lws2_32 -lwininet -lurlmon -ldwmapi -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 
