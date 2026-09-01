@@ -110,14 +110,30 @@ export const HotkeysTab: React.FC<HotkeysTabProps> = ({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     e.preventDefault();
+    if (e.repeat) return; // Prevent spam from held keys
+
+    // Don't trigger if only modifiers are pressed
+    if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) {
+      return;
+    }
+
     const keys: string[] = [];
     if (e.ctrlKey) keys.push('CTRL');
     if (e.altKey) keys.push('ALT');
     if (e.shiftKey) keys.push('SHIFT');
 
-    const key = e.key;
-    if (!['Control', 'Alt', 'Shift', 'Meta'].includes(key)) {
-      keys.push(key.toUpperCase());
+    let key = e.key.toUpperCase();
+    if (key === ' ') key = 'SPACE';
+    else if (key === 'ESCAPE') {
+      cancelListening();
+      return;
+    } else if (key === 'ARROWUP') key = 'UP';
+    else if (key === 'ARROWDOWN') key = 'DOWN';
+    else if (key === 'ARROWLEFT') key = 'LEFT';
+    else if (key === 'ARROWRIGHT') key = 'RIGHT';
+
+    if (!['CONTROL', 'ALT', 'SHIFT', 'META'].includes(key)) {
+      keys.push(key);
     }
 
     const combo = keys.join('+');
@@ -133,7 +149,9 @@ export const HotkeysTab: React.FC<HotkeysTabProps> = ({
     if (e.altKey) keys.push('ALT');
     if (e.shiftKey) keys.push('SHIFT');
 
-    if (e.button === 1) keys.push('MOUSE3');
+    if (e.button === 0) keys.push('MOUSE1');
+    else if (e.button === 1) keys.push('MOUSE3');
+    else if (e.button === 2) keys.push('MOUSE2');
     else if (e.button === 3) keys.push('MOUSE4');
     else if (e.button === 4) keys.push('MOUSE5');
     else return;
