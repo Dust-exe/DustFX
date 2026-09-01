@@ -1,3 +1,3 @@
 /usr/bin/cmake -E rm -f CMakeFiles/DustFX_Settings_Tests.dir/objects.a
 /usr/bin/x86_64-w64-mingw32-ar qc CMakeFiles/DustFX_Settings_Tests.dir/objects.a @CMakeFiles/DustFX_Settings_Tests.dir/objects1.rsp
-/usr/bin/x86_64-w64-mingw32-g++ -Wl,--whole-archive CMakeFiles/DustFX_Settings_Tests.dir/objects.a -Wl,--no-whole-archive -o bin/DustFX_Settings_Tests.exe -Wl,--out-implib,libDustFX_Settings_Tests.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles/DustFX_Settings_Tests.dir/linkLibs.rsp
+/usr/bin/x86_64-w64-mingw32-g++  -static-libgcc -static-libstdc++ -Wl,--whole-archive CMakeFiles/DustFX_Settings_Tests.dir/objects.a -Wl,--no-whole-archive -o bin/DustFX_Settings_Tests.exe -Wl,--out-implib,libDustFX_Settings_Tests.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles/DustFX_Settings_Tests.dir/linkLibs.rsp

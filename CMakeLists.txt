@@ -25,6 +25,8 @@ add_compile_definitions(
 if(WIN32)
     add_compile_definitions(DUSTFX_WIN32 WIN32_LEAN_AND_MEAN)
     find_package(Threads REQUIRED)
+    # Static link MinGW runtimes — eliminates libgcc_s_seh-1.dll / libstdc++-6.dll dependency
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 else()
     find_package(Threads REQUIRED)
     find_package(CURL REQUIRED)
@@ -48,7 +50,7 @@ add_library(DustFX_Lib STATIC ${DUSTFX_LIB_SOURCES})
 if(WIN32)
     target_link_libraries(DustFX_Lib PRIVATE
         Threads::Threads
-        gdi32 user32 shell32 ole32 ws2_32
+        gdi32 user32 shell32 ole32 ws2_32 wininet urlmon dwmapi
     )
 else()
     target_link_libraries(DustFX_Lib PRIVATE
@@ -64,6 +66,9 @@ else()
 endif()
 
 target_link_libraries(DustFX PRIVATE DustFX_Lib)
+if(WIN32)
+    target_link_libraries(DustFX PRIVATE wininet urlmon dwmapi)
+endif()
 
 set_target_properties(DustFX PROPERTIES
     OUTPUT_NAME "DustFX"
