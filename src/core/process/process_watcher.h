@@ -21,6 +21,10 @@ public:
 
     std::string GetCurrentForegroundProcess() const;
     std::vector<std::string> GetRunningProcesses() const;
+    bool IsProcessRunning(const std::string& processName) const;
+
+    void TrackProcess(const std::string& processName);
+    void UntrackProcess(const std::string& processName);
 
 private:
     ProcessWatcher();

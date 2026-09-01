@@ -4,6 +4,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <tlhelp32.h>
 #endif
 
 namespace dustfx {
@@ -76,6 +77,40 @@ std::vector<std::string> ProcessWatcher::GetRunningProcesses() const {
     return list;
 }
 
+bool ProcessWatcher::IsProcessRunning(const std::string& processName) const {
+#ifdef _WIN32
+    if (processName.empty()) return false;
+    bool exists = false;
+    HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnap != INVALID_HANDLE_VALUE) {
+        PROCESSENTRY32A pe;
+        pe.dwSize = sizeof(PROCESSENTRY32A);
+        if (Process32FirstA(hSnap, &pe)) {
+            do {
+                if (_stricmp(pe.szExeFile, processName.c_str()) == 0) {
+                    exists = true;
+                    break;
+                }
+            } while (Process32NextA(hSnap, &pe));
+        }
+        CloseHandle(hSnap);
+    }
+    return exists;
+#else
+    return false;
+#endif
+}
+
+void ProcessWatcher::TrackProcess(const std::string& processName) {
+    if (!processName.empty()) {
+        m_knownProcesses.insert(processName);
+    }
+}
+
+void ProcessWatcher::UntrackProcess(const std::string& processName) {
+    m_knownProcesses.erase(processName);
+}
+
 void ProcessWatcher::PollingLoop() {
     while (m_running.load()) {
         std::string currentForeground = DetectForegroundProcess();
@@ -85,6 +120,19 @@ void ProcessWatcher::PollingLoop() {
             if (m_onForegroundChanged) {
                 m_onForegroundChanged(currentForeground, true);
             }
+        }
+
+        std::vector<std::string> toRemove;
+        for (const auto& proc : m_knownProcesses) {
+            if (!IsProcessRunning(proc)) {
+                if (m_onProcessTerminated) {
+                    m_onProcessTerminated(proc, false);
+                }
+                toRemove.push_back(proc);
+            }
+        }
+        for (const auto& proc : toRemove) {
+            m_knownProcesses.erase(proc);
         }
 
         // Relaxed poll (1 second interval)

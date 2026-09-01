@@ -44,6 +44,9 @@ static LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lPara
                 int vkCode = (xButton == 1) ? VK_XBUTTON1 : VK_XBUTTON2;
                 bool isDown = (wParam == WM_XBUTTONDOWN);
                 dustfx::HotkeyManager::Instance().HandleKeyEvent(vkCode, isAlt, isCtrl, isShift, isDown);
+            } else if (wParam == WM_MBUTTONDOWN || wParam == WM_MBUTTONUP) {
+                bool isDown = (wParam == WM_MBUTTONDOWN);
+                dustfx::HotkeyManager::Instance().HandleKeyEvent(VK_MBUTTON, isAlt, isCtrl, isShift, isDown);
             }
         }
     }
@@ -70,6 +73,7 @@ bool HotkeyManager::Start() {
 #ifdef _WIN32
     m_thread = std::thread(&HotkeyManager::HookThreadProc, this);
 #endif
+    m_workerThread = std::thread(&HotkeyManager::WorkerThreadProc, this);
     std::cout << "[HotkeyManager] Non-blocking global keyboard hook active (0% key lock)." << std::endl;
     return true;
 }
@@ -83,6 +87,10 @@ void HotkeyManager::Stop() {
         }
         if (m_thread.joinable()) {
             m_thread.join();
+        }
+        m_cv.notify_all();
+        if (m_workerThread.joinable()) {
+            m_workerThread.join();
         }
         if (g_hKeyboardHook) {
             UnhookWindowsHookEx(g_hKeyboardHook);
@@ -141,6 +149,7 @@ std::string HotkeyManager::BuildKeyComboString(int vkCode, bool isAlt, bool isCt
     else if (vkCode == VK_OEM_3) keyPart = "~";
     else if (vkCode == VK_XBUTTON1) keyPart = "MOUSE4";
     else if (vkCode == VK_XBUTTON2) keyPart = "MOUSE5";
+    else if (vkCode == VK_MBUTTON) keyPart = "MOUSE3";
 
     if (keyPart.empty()) return "";
     return combo + keyPart;
@@ -151,11 +160,31 @@ std::string HotkeyManager::BuildKeyComboString(int vkCode, bool isAlt, bool isCt
 }
 
 void HotkeyManager::HandleKeyEvent(int vkCode, bool isAlt, bool isCtrl, bool isShift, bool isKeyDown) {
-    std::string pressedCombo = BuildKeyComboString(vkCode, isAlt, isCtrl, isShift);
-    std::string baseKey = BuildKeyComboString(vkCode, false, false, false);
-    if (pressedCombo.empty()) return;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_eventQueue.push({vkCode, isAlt, isCtrl, isShift, isKeyDown});
+    }
+    m_cv.notify_one();
+}
 
-    HotkeyActionCallback cb;
+void HotkeyManager::WorkerThreadProc() {
+    while (m_running.load()) {
+        KeyEvent ev;
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            m_cv.wait(lock, [this] { return !m_eventQueue.empty() || !m_running.load(); });
+            if (!m_running.load() && m_eventQueue.empty()) {
+                break;
+            }
+            ev = m_eventQueue.front();
+            m_eventQueue.pop();
+        }
+
+        std::string pressedCombo = BuildKeyComboString(ev.vkCode, ev.isAlt, ev.isCtrl, ev.isShift);
+        std::string baseKey = BuildKeyComboString(ev.vkCode, false, false, false);
+        if (pressedCombo.empty()) continue;
+
+        HotkeyActionCallback cb;
     HotkeyConfig cfg;
     std::unordered_map<std::string, std::string> profHotkeys;
     {
@@ -182,27 +211,28 @@ void HotkeyManager::HandleKeyEvent(int vkCode, bool isAlt, bool isCtrl, bool isS
     };
 
     if (matches(cfg.maxGammaKey)) {
-        cb(HotkeyAction::MAX_GAMMA_TOGGLE, "", isKeyDown);
+        cb(HotkeyAction::MAX_GAMMA_TOGGLE, "", ev.isKeyDown);
     } else if (matches(cfg.vibranceKey)) {
-        cb(HotkeyAction::VIBRANCE_TOGGLE, "", isKeyDown);
+        cb(HotkeyAction::VIBRANCE_TOGGLE, "", ev.isKeyDown);
     } else if (matches(cfg.quickResetKey)) {
-        cb(HotkeyAction::QUICK_RESET, "", isKeyDown);
+        cb(HotkeyAction::QUICK_RESET, "", ev.isKeyDown);
     } else if (matches(cfg.toggleCrosshairKey)) {
-        cb(HotkeyAction::TOGGLE_CROSSHAIR, "", isKeyDown);
+        cb(HotkeyAction::TOGGLE_CROSSHAIR, "", ev.isKeyDown);
     } else if (matches(cfg.sniperZoomKey)) {
-        cb(HotkeyAction::SNIPER_ZOOM_HOLD, "", isKeyDown);
+        cb(HotkeyAction::SNIPER_ZOOM_HOLD, "", ev.isKeyDown);
     } else if (matches(cfg.toggleOverlayKey)) {
-        cb(HotkeyAction::TOGGLE_OVERLAY, "", isKeyDown);
+        cb(HotkeyAction::TOGGLE_OVERLAY, "", ev.isKeyDown);
     } else {
         auto it = profHotkeys.find(upperCombo);
         if (it != profHotkeys.end()) {
-            cb(HotkeyAction::CUSTOM_PROFILE_TRIGGER, it->second, isKeyDown);
+            cb(HotkeyAction::CUSTOM_PROFILE_TRIGGER, it->second, ev.isKeyDown);
         } else if (!upperBase.empty() && upperBase != upperCombo) {
             auto itBase = profHotkeys.find(upperBase);
             if (itBase != profHotkeys.end()) {
-                cb(HotkeyAction::CUSTOM_PROFILE_TRIGGER, itBase->second, isKeyDown);
+                cb(HotkeyAction::CUSTOM_PROFILE_TRIGGER, itBase->second, ev.isKeyDown);
             }
         }
+    }
     }
 }
 
@@ -258,6 +288,7 @@ int HotkeyManager::ParseVirtualKey(const std::string& keyStr) {
     }
     if (k == "MOUSE4") return VK_XBUTTON1;
     if (k == "MOUSE5") return VK_XBUTTON2;
+    if (k == "MOUSE3") return VK_MBUTTON;
 #endif
     (void)keyStr;
     return 0;

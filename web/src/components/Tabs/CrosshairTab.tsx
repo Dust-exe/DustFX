@@ -1221,6 +1221,30 @@ export const CrosshairTab: React.FC<CrosshairTabProps> = ({ settings, onChange, 
               />
             </label>
 
+            {/* Borderless / DWM Warning Indicator */}
+            {settings.crosshairEnabled && (
+              <div className="mt-4 flex items-center justify-between bg-black/40 border border-fuchsia-500/20 p-3 rounded-2xl">
+                <div className="flex items-center gap-3">
+                  <div className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]"></span>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-bold text-emerald-400 tracking-wider">COMPATIBILITY: SAFE</div>
+                    <div className="text-[10px] text-zinc-400">{lang === 'tr' ? 'Oyunlarınızı Borderless modda oynayın' : 'Play your games in Borderless Windowed'}</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    alert(lang === 'tr' ? 'DustFX Overlay, Anti-Cheat sistemlerine takılmamak için Borderless (Penceresiz Tam Ekran) modunda çalışır. Oyununuz Exclusive Fullscreen ise crosshair gözükmeyebilir.' : 'DustFX Overlay runs in Borderless Windowed mode to stay safe from Anti-Cheats. If your game is in Exclusive Fullscreen, the crosshair might not be visible.');
+                  }}
+                  className="px-3 py-1.5 bg-fuchsia-500/10 hover:bg-fuchsia-500/20 text-fuchsia-300 text-[10px] rounded-xl font-bold transition-all border border-fuchsia-500/30 shadow-[0_0_10px_rgba(217,70,239,0.2)]"
+                >
+                  {lang === 'tr' ? 'Neden?' : 'Why?'}
+                </button>
+              </div>
+            )}
+
             {/* Live Interactive Scope Preview */}
             <div className="p-4 rounded-2xl bg-black/60 border border-white/10 flex flex-col items-center justify-center gap-3 relative overflow-hidden h-[180px]">
               {/* Background simulated enemy texture */}

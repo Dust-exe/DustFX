@@ -47,10 +47,13 @@ bool DustFxApp::Initialize() {
     });
     HotkeyManager::Instance().Start();
 
-    // 5. Process Watcher (Auto Game Detect & Alt+Tab Reset)
+    // 5. Process Watcher (Auto Game Detect & Process Exit Reset)
     ProcessWatcher::Instance().Start(
         [this](const std::string& processName, bool isForeground) {
             HandleProcessEvent(processName, isForeground);
+        },
+        [this](const std::string& processName, bool isForeground) {
+            HandleProcessTerminated(processName);
         }
     );
 
@@ -227,44 +230,37 @@ void DustFxApp::HandleProcessEvent(const std::string& processName, bool isForegr
         if (matched.autoApplyOnLaunch) {
             std::cout << "[DustFxApp] 🎮 Game detected: " << processName << " -> Applying " << matched.name << std::endl;
             OverlayToast::Instance().ShowToast("🎮 PROFIL AKTİF", matched.name + " (" + processName + ")");
+            ProcessWatcher::Instance().TrackProcess(processName);
             ApplyProfile(matched.id);
         } else {
             std::cout << "[DustFxApp] 🎮 Game detected: " << processName << " -> Auto-apply disabled, skipping." << std::endl;
-        }
-    } else {
-        // If desktop/explorer focused and policy is auto reset
-        // Ignore resets when switching to the DustFX app itself
-        if (processName == "explorer.exe" || processName == "dwm.exe") {
-            auto settings = SettingsManager::Instance().GetSettings();
-            if (settings.resetPolicy == AutoResetPolicy::ON_DESKTOP_FOCUS) {
-                m_maxGammaActive = false;
-                m_vibranceActive = false;
-                m_crosshairActive = false;
-                DisplaySettings s = SettingsManager::Instance().GetCurrentDisplaySettings();
-                s.gamma = 1.0f;
-                s.digitalVibrance = 0;
-                s.contrast = 1.0f;
-                s.brightnessOffset = 0.0f;
-                s.rgbRed = 1.0f;
-                s.rgbGreen = 1.0f;
-                s.rgbBlue = 1.0f;
-                s.crosshairEnabled = false;
-                s.sniperZoomEnabled = false;
-                
-                GpuController::Instance().ResetToDefault(-1);
-                SettingsManager::Instance().SetCurrentDisplaySettings(s);
-                OverlayToast::Instance().ToggleCrosshair(false);
-                OverlayToast::Instance().ToggleSniperZoom(false);
-                OverlayToast::Instance().ShowToast("🔄 OYUN KAPANDI", "Filtreler Devre Dışı Bırakıldı");
-            }
-        } else if (processName == "DustFX.exe" || processName == "msedge.exe" || processName == "chrome.exe") {
-            // Keep the active profile when using the DustFX UI
         }
     }
     
     // Always enforce overlay topmost position when foreground process changes 
     // to prevent it from hiding behind full-screen windowed games
     OverlayToast::Instance().RefreshOverlayPosition();
+}
+
+void DustFxApp::HandleProcessTerminated(const std::string& processName) {
+    auto settings = SettingsManager::Instance().GetSettings();
+    if (settings.resetPolicy == AutoResetPolicy::ON_DESKTOP_FOCUS) { // Repurposed as ON_EXIT
+        m_maxGammaActive = false;
+        m_vibranceActive = false;
+        
+        DisplaySettings s = SettingsManager::Instance().GetCurrentDisplaySettings();
+        s.gamma = 1.0f;
+        s.digitalVibrance = 0;
+        s.contrast = 1.0f;
+        s.brightnessOffset = 0.0f;
+        s.rgbRed = 1.0f;
+        s.rgbGreen = 1.0f;
+        s.rgbBlue = 1.0f;
+        
+        GpuController::Instance().ResetToDefault(-1);
+        SettingsManager::Instance().SetCurrentDisplaySettings(s);
+        OverlayToast::Instance().ShowToast("🔄 OYUN KAPANDI", "Renk Filtreleri Devre Dışı Bırakıldı");
+    }
 }
 
 void DustFxApp::OnUpdateDetected(bool available, const ReleaseInfo& info) {

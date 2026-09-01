@@ -126,7 +126,8 @@ export const HotkeysTab: React.FC<HotkeysTabProps> = ({
     if (e.altKey) keys.push('ALT');
     if (e.shiftKey) keys.push('SHIFT');
 
-    if (e.button === 3) keys.push('MOUSE4');
+    if (e.button === 1) keys.push('MOUSE3');
+    else if (e.button === 3) keys.push('MOUSE4');
     else if (e.button === 4) keys.push('MOUSE5');
     else return;
 
@@ -245,6 +246,9 @@ export const HotkeysTab: React.FC<HotkeysTabProps> = ({
                       tabIndex={0}
                       onKeyDown={handleKeyDown}
                       onMouseDown={handleMouseDown}
+                      onMouseUp={(e) => e.preventDefault()}
+                      onContextMenu={(e) => e.preventDefault()}
+                      onAuxClick={(e) => e.preventDefault()}
                       className="min-w-[130px] px-3 py-2 rounded-xl bg-fuchsia-950/80 border-2 border-fuchsia-500 text-sm font-mono text-fuchsia-200 text-center outline-none animate-pulse focus:outline-none cursor-text"
                       autoFocus
                     >
@@ -331,6 +335,9 @@ export const HotkeysTab: React.FC<HotkeysTabProps> = ({
                         tabIndex={0}
                         onKeyDown={handleKeyDown}
                         onMouseDown={handleMouseDown}
+                        onMouseUp={(e) => e.preventDefault()}
+                        onContextMenu={(e) => e.preventDefault()}
+                        onAuxClick={(e) => e.preventDefault()}
                         className="min-w-[90px] px-2 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-500 text-xs font-mono text-emerald-200 text-center outline-none animate-pulse"
                         autoFocus
                       >

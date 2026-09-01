@@ -249,18 +249,18 @@ export function App() {
       />
 
       {/* Top App Header */}
-      <header className="app-titlebar-drag flex items-center justify-between px-5 h-12 border-b border-purple-500/10 bg-[#08060f]/95 z-20 backdrop-blur-xl">
+      <header className="app-titlebar-drag flex items-center justify-between px-5 h-14 border-b border-fuchsia-500/20 bg-[#08060f]/80 z-20 backdrop-blur-2xl shadow-[0_4px_30px_rgba(217,70,239,0.05)]">
         {/* Left: Logo + App Name + GPU */}
         <div className="flex items-center gap-3">
           <img
             src="/logo.png"
             alt="DustFX Logo"
-            className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(168,85,247,0.5)]"
+            className="w-6 h-6 object-contain rounded-md shadow-[0_0_15px_rgba(217,70,239,0.5)] border border-fuchsia-400/30"
           />
-          <span className="text-xs font-bold text-white font-mono tracking-widest">
-            DUST<span className="text-fuchsia-400">FX</span>
+          <span className="text-xs font-bold text-white font-mono tracking-widest drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]">
+            DUST<span className="text-fuchsia-400 drop-shadow-[0_0_8px_rgba(217,70,239,0.6)]">FX</span>
           </span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30 font-bold">
+          <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-gradient-to-r from-fuchsia-500/20 to-purple-500/20 text-fuchsia-300 border border-fuchsia-500/40 font-bold shadow-[0_0_10px_rgba(217,70,239,0.2)]">
             v{status?.version || CURRENT_VERSION}
           </span>
           <span className="text-[11px] text-zinc-500 hidden sm:inline border-l border-white/10 pl-3">

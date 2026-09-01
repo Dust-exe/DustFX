@@ -26,6 +26,7 @@ private:
 
     void HandleHotkey(HotkeyAction action, const std::string& param, bool isKeyDown);
     void HandleProcessEvent(const std::string& processName, bool isForeground);
+    void HandleProcessTerminated(const std::string& processName);
     void OnUpdateDetected(bool available, const ReleaseInfo& info);
 
     std::atomic<bool> m_running{false};

@@ -195,15 +195,18 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                     int zoomSize = std::clamp(g_crosshairSettings.sniperZoomSize, 100, 500);
                     int x = (screenW - zoomSize) / 2;
                     int y = (screenH - zoomSize) / 2;
-                    SetWindowPos(hWnd, HWND_TOPMOST, x, y, zoomSize, zoomSize, SWP_NOACTIVATE);
+                    SetWindowPos(hWnd, HWND_TOPMOST, x, y, zoomSize, zoomSize, SWP_NOACTIVATE | SWP_NOSENDCHANGING);
                 } else if (g_crosshairVisible || g_crosshairSettings.crosshairEnabled) {
                     int overlaySize = 200;
                     int x = (screenW - overlaySize) / 2;
                     int y = (screenH - overlaySize) / 2;
-                    SetWindowPos(hWnd, HWND_TOPMOST, x, y, overlaySize, overlaySize, SWP_NOACTIVATE);
+                    SetWindowPos(hWnd, HWND_TOPMOST, x, y, overlaySize, overlaySize, SWP_NOACTIVATE | SWP_NOSENDCHANGING);
                 } else {
-                    SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                    SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
                 }
+                
+                // Extra safety to force it to top of Z-Order if it fell behind
+                BringWindowToTop(hWnd);
             }
             return 0;
         }
@@ -221,7 +224,7 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                 SetLayeredWindowAttributes(hWnd, TRANSPARENT_COLOR_KEY, 255, LWA_COLORKEY);
                 SetWindowPos(hWnd, HWND_TOPMOST, x, y, zoomSize, zoomSize, SWP_NOACTIVATE | SWP_SHOWWINDOW);
                 SetTimer(hWnd, TIMER_ID_ZOOM_REFRESH, 16, NULL); // 60 FPS live screen refresh
-                SetTimer(hWnd, TIMER_ID_TOPMOST_HEARTBEAT, 1000, NULL);
+                SetTimer(hWnd, TIMER_ID_TOPMOST_HEARTBEAT, 250, NULL);
                 InvalidateRect(hWnd, NULL, TRUE);
             }
             else if (g_crosshairVisible || g_crosshairSettings.crosshairEnabled) {
@@ -238,7 +241,7 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                 }
 
                 SetWindowPos(hWnd, HWND_TOPMOST, x, y, overlaySize, overlaySize, SWP_NOACTIVATE | SWP_SHOWWINDOW);
-                SetTimer(hWnd, TIMER_ID_TOPMOST_HEARTBEAT, 1000, NULL);
+                SetTimer(hWnd, TIMER_ID_TOPMOST_HEARTBEAT, 250, NULL);
                 InvalidateRect(hWnd, NULL, TRUE);
             } else {
                 KillTimer(hWnd, TIMER_ID_ZOOM_REFRESH);
@@ -434,7 +437,6 @@ void OverlayToast::OverlayThreadProc() {
     if (m_hWnd) {
         g_hOverlayWnd = m_hWnd;
         SetLayeredWindowAttributes(m_hWnd, TRANSPARENT_COLOR_KEY, 255, LWA_COLORKEY);
-        SetWindowDisplayAffinity(m_hWnd, WDA_EXCLUDEFROMCAPTURE);
         std::cout << "[OverlayToast] Dedicated crosshair overlay message pump active." << std::endl;
     }
 
