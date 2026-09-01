@@ -5,6 +5,9 @@
 #include <fstream>
 #include <filesystem>
 #include <algorithm>
+#include <thread>
+#include <vector>
+#include <mutex>
 
 namespace dustfx {
 
@@ -144,16 +147,47 @@ void ProfileManager::LoadUserProfiles() {
     try {
         if (!std::filesystem::exists(m_profilesDir)) return;
 
+        std::vector<std::filesystem::path> files;
         for (const auto& entry : std::filesystem::directory_iterator(m_profilesDir)) {
             if (entry.is_regular_file() && entry.path().extension() == ".json") {
-                std::ifstream f(entry.path());
+                files.push_back(entry.path());
+            }
+        }
+
+        if (files.empty()) return;
+
+        unsigned int numThreads = std::thread::hardware_concurrency();
+        if (numThreads == 0) numThreads = 4;
+
+        size_t filesPerThread = files.size() / numThreads;
+        if (filesPerThread == 0) {
+            numThreads = 1;
+            filesPerThread = files.size();
+        }
+
+        std::vector<std::thread> threads;
+        std::mutex mergeMutex;
+
+        auto worker = [&](size_t startIdx, size_t endIdx) {
+            std::vector<GameProfile> localProfiles;
+            for (size_t i = startIdx; i < endIdx; ++i) {
+                std::ifstream f(files[i]);
                 if (f.is_open()) {
-                    json j;
-                    f >> j;
-                    GameProfile p = JsonToGameProfile(j);
-                    p.isBuiltin = false;
-                    
-                    // Replace if ID already exists, or push
+                    try {
+                        json j;
+                        f >> j;
+                        GameProfile p = JsonToGameProfile(j);
+                        p.isBuiltin = false;
+                        localProfiles.push_back(p);
+                    } catch (const std::exception& e) {
+                        std::cerr << "[ProfileManager] Error parsing JSON in " << files[i] << ": " << e.what() << std::endl;
+                    }
+                }
+            }
+
+            if (!localProfiles.empty()) {
+                std::lock_guard<std::mutex> lock(mergeMutex);
+                for (const auto& p : localProfiles) {
                     auto it = std::find_if(m_profiles.begin(), m_profiles.end(), [&](const GameProfile& ex) {
                         return ex.id == p.id;
                     });
@@ -163,6 +197,19 @@ void ProfileManager::LoadUserProfiles() {
                         m_profiles.push_back(p);
                     }
                 }
+            }
+        };
+
+        size_t startIdx = 0;
+        for (unsigned int i = 0; i < numThreads; ++i) {
+            size_t endIdx = (i == numThreads - 1) ? files.size() : startIdx + filesPerThread;
+            threads.emplace_back(worker, startIdx, endIdx);
+            startIdx = endIdx;
+        }
+
+        for (auto& t : threads) {
+            if (t.joinable()) {
+                t.join();
             }
         }
     } catch (const std::exception& e) {
