@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Keyboard, Edit3, Check, X, Sparkles, Trash2 } from 'lucide-react';
 import { api } from '../../api';
 import { HotkeyConfig, GameProfile } from '../../types';
@@ -39,6 +39,13 @@ export const HotkeysTab: React.FC<HotkeysTabProps> = ({
   const [listeningFor, setListeningFor] = useState<string | null>(null);
   const [pressedKey, setPressedKey] = useState<string>('');
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const listenDivRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (listeningFor && listenDivRef.current) {
+      listenDivRef.current.focus();
+    }
+  }, [listeningFor]);
 
   useEffect(() => {
     if (hotkeys) {
@@ -243,6 +250,7 @@ export const HotkeysTab: React.FC<HotkeysTabProps> = ({
                 {isListening ? (
                   <>
                     <div
+                      ref={listenDivRef}
                       tabIndex={0}
                       onKeyDown={handleKeyDown}
                       onMouseDown={handleMouseDown}
@@ -250,7 +258,6 @@ export const HotkeysTab: React.FC<HotkeysTabProps> = ({
                       onContextMenu={(e) => e.preventDefault()}
                       onAuxClick={(e) => e.preventDefault()}
                       className="min-w-[130px] px-3 py-2 rounded-xl bg-fuchsia-950/80 border-2 border-fuchsia-500 text-sm font-mono text-fuchsia-200 text-center outline-none animate-pulse focus:outline-none cursor-text"
-                      autoFocus
                     >
                       {pressedKey || <span className="text-zinc-500">Tuşa bas...</span>}
                     </div>

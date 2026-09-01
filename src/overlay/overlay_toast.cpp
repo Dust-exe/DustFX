@@ -295,6 +295,10 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 
                 HDC screenDC = GetDC(NULL);
                 if (screenDC) {
+                    // Temporarily hide ourselves so we don't zoom our own overlay
+                    SetLayeredWindowAttributes(hWnd, TRANSPARENT_COLOR_KEY, 0, LWA_ALPHA);
+                    UpdateWindow(hWnd);
+
                     SetStretchBltMode(memDC, HALFTONE);
                     SetBrushOrgEx(memDC, 0, 0, NULL);
 
@@ -304,7 +308,7 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                         SelectClipRgn(memDC, clipRgn);
                     }
 
-                    // Perform high-speed screen magnification
+                    // Perform high-speed screen magnification (overlay is hidden, no feedback loop)
                     StretchBlt(memDC, 0, 0, w, h, screenDC, srcX, srcY, srcW, srcH, SRCCOPY);
 
                     if (clipRgn) {
@@ -313,6 +317,9 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                     }
 
                     ReleaseDC(NULL, screenDC);
+
+                    // Restore overlay visibility
+                    SetLayeredWindowAttributes(hWnd, TRANSPARENT_COLOR_KEY, 255, LWA_COLORKEY);
                 }
 
                 // Draw Lens Border
