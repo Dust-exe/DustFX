@@ -235,11 +235,41 @@ void AutoUpdater::BackgroundLoop() {
 
 #ifdef _WIN32
 #include <urlmon.h>
+
+static bool RunCommandSafe(const std::string& commandLine) {
+    STARTUPINFOA si;
+    PROCESS_INFORMATION pi;
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
+    ZeroMemory(&pi, sizeof(pi));
+
+    std::vector<char> cmdBuf(commandLine.begin(), commandLine.end());
+    cmdBuf.push_back('\0');
+
+    if (CreateProcessA(NULL, cmdBuf.data(), NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        DWORD exitCode = 1;
+        GetExitCodeProcess(pi.hProcess, &exitCode);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        return exitCode == 0;
+    }
+    return false;
+}
 #endif
 
 bool AutoUpdater::DownloadUpdate(const ReleaseInfo& info, const std::string& savePath) {
     if (info.downloadUrl.empty()) {
         std::cerr << "[AutoUpdater] Download URL is empty." << std::endl;
+        return false;
+    }
+
+    // Security validation to prevent command/argument injection
+    if (info.downloadUrl.find('\"') != std::string::npos || info.downloadUrl.find('\'') != std::string::npos ||
+        savePath.find('\"') != std::string::npos || savePath.find('\'') != std::string::npos) {
+        std::cerr << "[AutoUpdater] Security warning: URL or path contains quotes." << std::endl;
         return false;
     }
 
@@ -289,8 +319,7 @@ bool AutoUpdater::DownloadUpdate(const ReleaseInfo& info, const std::string& sav
     // Tier 2: Windows 10/11 built-in curl.exe
     {
         std::string curlCmd = "curl.exe -f -s -S -L --connect-timeout 15 -o \"" + savePath + "\" \"" + info.downloadUrl + "\"";
-        int ret = system(curlCmd.c_str());
-        if (ret == 0 && checkValidFile(savePath)) {
+        if (RunCommandSafe(curlCmd) && checkValidFile(savePath)) {
             std::cout << "[AutoUpdater] Download successful via curl.exe." << std::endl;
             return true;
         }
@@ -299,8 +328,7 @@ bool AutoUpdater::DownloadUpdate(const ReleaseInfo& info, const std::string& sav
     // Tier 3: PowerShell WebClient with TLS 1.2
     {
         std::string psCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object Net.WebClient).DownloadFile('" + info.downloadUrl + "', '" + savePath + "')\"";
-        int ret = system(psCmd.c_str());
-        if (ret == 0 && checkValidFile(savePath)) {
+        if (RunCommandSafe(psCmd) && checkValidFile(savePath)) {
             std::cout << "[AutoUpdater] Download successful via PowerShell." << std::endl;
             return true;
         }
@@ -318,9 +346,34 @@ bool AutoUpdater::DownloadUpdate(const ReleaseInfo& info, const std::string& sav
     std::cerr << "[AutoUpdater] All download tiers failed." << std::endl;
     return false;
 #else
-    std::string cmd = "curl -f -L -o '" + savePath + "' '" + info.downloadUrl + "' 2>/dev/null";
-    int ret = system(cmd.c_str());
-    return (ret == 0);
+    CURL* curl = curl_easy_init();
+    if (!curl) return false;
+
+    FILE* fp = fopen(savePath.c_str(), "wb");
+    if (!fp) {
+        curl_easy_cleanup(curl);
+        return false;
+    }
+
+    curl_easy_setopt(curl, CURLOPT_URL, info.downloadUrl.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, NULL);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15L);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+
+    CURLcode res = curl_easy_perform(curl);
+    long httpCode = 0;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+
+    fclose(fp);
+    curl_easy_cleanup(curl);
+
+    if (res != CURLE_OK || httpCode < 200 || httpCode >= 300) {
+        remove(savePath.c_str());
+        return false;
+    }
+
+    return true;
 #endif
 }
 
