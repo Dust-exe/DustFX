@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(DustFX VERSION 3.0.3 LANGUAGES C CXX)
+project(DustFX VERSION 3.0.5 LANGUAGES C CXX)
 
 
 set(CMAKE_CXX_STANDARD 20)

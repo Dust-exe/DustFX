@@ -4,6 +4,11 @@
 #include <algorithm>
 #include <string>
 #include <thread>
+#include <vector>
+
+#ifdef _WIN32
+#include <magnification.h>
+#endif
 
 namespace dustfx {
 
@@ -52,10 +57,36 @@ uint32_t HexToRGB(const std::string& hex) {
 #define TIMER_ID_TOPMOST_HEARTBEAT   102
 #define TRANSPARENT_COLOR_KEY RGB(255, 0, 255)
 
-static HWND g_hOverlayWnd = NULL;
 static dustfx::DisplaySettings g_crosshairSettings;
 static bool g_crosshairVisible = false;
-static bool g_sniperZoomActive = false;
+std::atomic<bool> g_sniperZoomActive{false};
+HWND g_hOverlayWnd = NULL;
+HWND g_hMagHostWnd = NULL;
+HWND g_hMagChildWnd = NULL;
+
+#ifdef _WIN32
+#define WC_MAGNIFIERA "Magnifier"
+typedef BOOL (WINAPI *MagInitialize_t)(void);
+typedef BOOL (WINAPI *MagUninitialize_t)(void);
+typedef BOOL (WINAPI *MagSetWindowSource_t)(HWND hwnd, RECT rect);
+typedef BOOL (WINAPI *MagSetWindowTransform_t)(HWND hwnd, PMAGTRANSFORM pTransform);
+
+static MagInitialize_t pMagInitialize = NULL;
+static MagUninitialize_t pMagUninitialize = NULL;
+static MagSetWindowSource_t pMagSetWindowSource = NULL;
+static MagSetWindowTransform_t pMagSetWindowTransform = NULL;
+
+static bool InitMagnificationAPI() {
+    HMODULE hMag = LoadLibraryA("Magnification.dll");
+    if (!hMag) return false;
+    pMagInitialize = (MagInitialize_t)GetProcAddress(hMag, "MagInitialize");
+    pMagUninitialize = (MagUninitialize_t)GetProcAddress(hMag, "MagUninitialize");
+    pMagSetWindowSource = (MagSetWindowSource_t)GetProcAddress(hMag, "MagSetWindowSource");
+    pMagSetWindowTransform = (MagSetWindowTransform_t)GetProcAddress(hMag, "MagSetWindowTransform");
+    if (pMagInitialize) return pMagInitialize();
+    return false;
+}
+#endif
 
 // Render unmagnified, pixel-perfect crosshair directly onto DC at specified center (cx, cy)
 static void RenderCrosshairOnDC(HDC memDC, int cx, int cy, const dustfx::DisplaySettings& settings) {
@@ -294,6 +325,10 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
             int screenW = GetSystemMetrics(SM_CXSCREEN);
             int screenH = GetSystemMetrics(SM_CYSCREEN);
 
+            if (!g_sniperZoomActive && g_hMagHostWnd) {
+                ShowWindow(g_hMagHostWnd, SW_HIDE);
+            }
+
             // ==========================================
             // CASE 1: SNIPER ZOOM LENS ACTIVE
             // ==========================================
@@ -304,35 +339,32 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                 int srcX = (screenW - srcW) / 2;
                 int srcY = (screenH - srcH) / 2;
 
-                HWND hwndGame = GetForegroundWindow();
-                if (!hwndGame || hwndGame == hWnd) {
-                    hwndGame = GetDesktopWindow();
-                }
+                int zoomSz = std::clamp(g_crosshairSettings.sniperZoomSize, 100, 500);
+                int zoomX = (screenW - zoomSz) / 2;
+                int zoomY = (screenH - zoomSz) / 2;
 
-                HDC gameDC = GetDC(hwndGame);
-                if (gameDC) {
-                    SetStretchBltMode(memDC, HALFTONE);
-                    SetBrushOrgEx(memDC, 0, 0, NULL);
-
-                    HRGN clipRgn = NULL;
+                if (g_hMagHostWnd && g_hMagChildWnd) {
+                    SetWindowPos(g_hMagHostWnd, HWND_TOPMOST, zoomX, zoomY, zoomSz, zoomSz, SWP_SHOWWINDOW | SWP_NOACTIVATE);
+                    // Ensure crosshair overlay is strictly ON TOP of mag host
+                    SetWindowPos(hWnd, HWND_TOPMOST, zoomX, zoomY, zoomSz, zoomSz, SWP_NOACTIVATE);
+                    
+                    SetWindowPos(g_hMagChildWnd, NULL, 0, 0, zoomSz, zoomSz, SWP_NOZORDER | SWP_NOACTIVATE);
+                    
                     if (g_crosshairSettings.sniperZoomShape == "circle") {
-                        clipRgn = CreateEllipticRgn(0, 0, w, h);
-                        SelectClipRgn(memDC, clipRgn);
+                        HRGN rgn = CreateEllipticRgn(0, 0, zoomSz, zoomSz);
+                        SetWindowRgn(g_hMagChildWnd, rgn, TRUE);
+                    } else {
+                        SetWindowRgn(g_hMagChildWnd, NULL, TRUE);
                     }
+                    
+                    MAGTRANSFORM matrix = {0};
+                    matrix.v[0][0] = scale;
+                    matrix.v[1][1] = scale;
+                    matrix.v[2][2] = 1.0f;
+                    if (pMagSetWindowTransform) pMagSetWindowTransform(g_hMagChildWnd, &matrix);
 
-                    // Map screen coordinates to the foreground window's client coordinates
-                    POINT ptTL = { srcX, srcY };
-                    ScreenToClient(hwndGame, &ptTL);
-
-                    // Capture only the game's DWM surface (ignores overlays on top of it)
-                    StretchBlt(memDC, 0, 0, w, h, gameDC, ptTL.x, ptTL.y, srcW, srcH, SRCCOPY);
-
-                    if (clipRgn) {
-                        SelectClipRgn(memDC, NULL);
-                        DeleteObject(clipRgn);
-                    }
-
-                    ReleaseDC(hwndGame, gameDC);
+                    RECT srcRect = {srcX, srcY, srcX + srcW, srcY + srcH};
+                    if (pMagSetWindowSource) pMagSetWindowSource(g_hMagChildWnd, srcRect);
                 }
 
                 // Draw Lens Border
@@ -435,6 +467,8 @@ void OverlayToast::Shutdown() {
 
 #ifdef _WIN32
 void OverlayToast::OverlayThreadProc() {
+    InitMagnificationAPI();
+
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASSEXA wc = {0};
     wc.cbSize = sizeof(WNDCLASSEXA);
@@ -444,7 +478,37 @@ void OverlayToast::OverlayThreadProc() {
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     RegisterClassExA(&wc);
 
+    // Magnifier Host Class
+    WNDCLASSEXA wcm = {0};
+    wcm.cbSize = sizeof(WNDCLASSEXA);
+    wcm.lpfnWndProc = DefWindowProc;
+    wcm.hInstance = hInstance;
+    wcm.lpszClassName = "DustFXMagHostClass";
+    RegisterClassExA(&wcm);
+
     int overlaySize = 200;
+    
+    // Create Magnifier Host (must be layered for Mag to work)
+    m_hMagHost = CreateWindowExA(
+        WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW,
+        "DustFXMagHostClass", "DustFXMagHost",
+        WS_POPUP, 0, 0, overlaySize, overlaySize,
+        NULL, NULL, hInstance, NULL
+    );
+    if (m_hMagHost) {
+        g_hMagHostWnd = m_hMagHost;
+        SetLayeredWindowAttributes(m_hMagHost, 0, 255, LWA_ALPHA);
+        
+        m_hMagChild = CreateWindowExA(
+            0, WC_MAGNIFIERA, "MagChild",
+            WS_CHILD | WS_VISIBLE, 0, 0, overlaySize, overlaySize,
+            m_hMagHost, NULL, hInstance, NULL
+        );
+        if (m_hMagChild) {
+            g_hMagChildWnd = m_hMagChild;
+        }
+    }
+
     m_hWnd = CreateWindowExA(
         WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW,
         "DustFXCrosshairOverlayClass",
@@ -470,6 +534,12 @@ void OverlayToast::OverlayThreadProc() {
         DestroyWindow(m_hWnd);
         m_hWnd = NULL;
     }
+    if (m_hMagHost && IsWindow(m_hMagHost)) {
+        DestroyWindow(m_hMagHost);
+        m_hMagHost = NULL;
+        m_hMagChild = NULL;
+    }
+    if (pMagUninitialize) pMagUninitialize();
 }
 #endif
 

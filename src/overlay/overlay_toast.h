@@ -56,6 +56,8 @@ private:
 
 #ifdef _WIN32
     HWND m_hWnd = NULL;
+    HWND m_hMagHost = NULL;
+    HWND m_hMagChild = NULL;
     void OverlayThreadProc();
 #endif
 };
