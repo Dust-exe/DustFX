@@ -70,11 +70,13 @@ typedef BOOL (WINAPI *MagInitialize_t)(void);
 typedef BOOL (WINAPI *MagUninitialize_t)(void);
 typedef BOOL (WINAPI *MagSetWindowSource_t)(HWND hwnd, RECT rect);
 typedef BOOL (WINAPI *MagSetWindowTransform_t)(HWND hwnd, PMAGTRANSFORM pTransform);
+typedef BOOL (WINAPI *MagSetWindowFilterList_t)(HWND hwnd, DWORD dwFilterMode, int count, HWND *pHWND);
 
 static MagInitialize_t pMagInitialize = NULL;
 static MagUninitialize_t pMagUninitialize = NULL;
 static MagSetWindowSource_t pMagSetWindowSource = NULL;
 static MagSetWindowTransform_t pMagSetWindowTransform = NULL;
+static MagSetWindowFilterList_t pMagSetWindowFilterList = NULL;
 
 static bool InitMagnificationAPI() {
     HMODULE hMag = LoadLibraryA("Magnification.dll");
@@ -83,6 +85,7 @@ static bool InitMagnificationAPI() {
     pMagUninitialize = (MagUninitialize_t)GetProcAddress(hMag, "MagUninitialize");
     pMagSetWindowSource = (MagSetWindowSource_t)GetProcAddress(hMag, "MagSetWindowSource");
     pMagSetWindowTransform = (MagSetWindowTransform_t)GetProcAddress(hMag, "MagSetWindowTransform");
+    pMagSetWindowFilterList = (MagSetWindowFilterList_t)GetProcAddress(hMag, "MagSetWindowFilterList");
     if (pMagInitialize) return pMagInitialize();
     return false;
 }
@@ -353,8 +356,11 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
                     if (g_crosshairSettings.sniperZoomShape == "circle") {
                         HRGN rgn = CreateEllipticRgn(0, 0, zoomSz, zoomSz);
                         SetWindowRgn(g_hMagChildWnd, rgn, TRUE);
+                        HRGN hostRgn = CreateEllipticRgn(0, 0, zoomSz, zoomSz);
+                        SetWindowRgn(g_hMagHostWnd, hostRgn, TRUE);
                     } else {
                         SetWindowRgn(g_hMagChildWnd, NULL, TRUE);
+                        SetWindowRgn(g_hMagHostWnd, NULL, TRUE);
                     }
                     
                     MAGTRANSFORM matrix = {0};
@@ -365,6 +371,11 @@ static LRESULT CALLBACK CrosshairWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 
                     RECT srcRect = {srcX, srcY, srcX + srcW, srcY + srcH};
                     if (pMagSetWindowSource) pMagSetWindowSource(g_hMagChildWnd, srcRect);
+
+                    if (pMagSetWindowFilterList && hWnd) {
+                        HWND excludeList[1] = { hWnd };
+                        pMagSetWindowFilterList(g_hMagChildWnd, 0 /*MW_FILTERMODE_EXCLUDE*/, 1, excludeList);
+                    }
                 }
 
                 // Draw Lens Border
